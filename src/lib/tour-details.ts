@@ -27,6 +27,9 @@ export interface TourFact {
   label: string;
   value: string;
   icon: TourIconId;
+  /** When false the card is kept in the admin editor but hidden on the
+   *  public salida page. Defaults to true for pre-existing stored data. */
+  enabled: boolean;
 }
 
 export interface TourDetailCopy {
@@ -152,16 +155,16 @@ export function getDefaultTourDetail(slug: string, variables: DetailVariables = 
     lead: preset.lead,
     paragraphs: preset.paragraphs,
     facts: [
-      { key: "activity", label: "Actividad", value: preset.activity, icon: "compass" },
-      { key: "difficulty", label: "Dificultad", value: preset.difficulty, icon: "gauge" },
-      { key: "time", label: "Tiempo", value: variables.duration ?? "Por confirmar", icon: "clock" },
-      { key: "altitude", label: "Altura", value: preset.altitude, icon: "mountain" },
-      { key: "elevation", label: "Desnivel", value: "Por confirmar", icon: "elevation" },
-      { key: "temperature", label: "Temperatura", value: preset.temperature, icon: "temperature" },
-      { key: "ecosystem", label: "Ecosistema", value: preset.ecosystem, icon: "trees" },
-      { key: "distance", label: "Distancia", value: preset.distance, icon: "route" },
-      { key: "people", label: "Aventureros", value: "Cupo limitado", icon: "people" },
-      { key: "price", label: "Precio", value: variables.price ?? "Consultar", icon: "price" },
+      { key: "activity", label: "Actividad", value: preset.activity, icon: "compass", enabled: true },
+      { key: "difficulty", label: "Dificultad", value: preset.difficulty, icon: "gauge", enabled: true },
+      { key: "time", label: "Tiempo", value: variables.duration ?? "Por confirmar", icon: "clock", enabled: true },
+      { key: "altitude", label: "Altura", value: preset.altitude, icon: "mountain", enabled: true },
+      { key: "elevation", label: "Desnivel", value: "Por confirmar", icon: "elevation", enabled: true },
+      { key: "temperature", label: "Temperatura", value: preset.temperature, icon: "temperature", enabled: true },
+      { key: "ecosystem", label: "Ecosistema", value: preset.ecosystem, icon: "trees", enabled: true },
+      { key: "distance", label: "Distancia", value: preset.distance, icon: "route", enabled: true },
+      { key: "people", label: "Aventureros", value: "Cupo limitado", icon: "people", enabled: true },
+      { key: "price", label: "Precio", value: variables.price ?? "Consultar", icon: "price", enabled: true },
     ],
   };
 }
@@ -184,6 +187,8 @@ export function normalizeTourDetail(value: unknown, fallback: TourDetailCopy): T
           label: item.label,
           value: item.value,
           icon: item.icon,
+          // Missing on data written before per-card visibility existed — treat as shown.
+          enabled: typeof item.enabled === "boolean" ? item.enabled : true,
         }];
       })
     : [];
@@ -193,6 +198,6 @@ export function normalizeTourDetail(value: unknown, fallback: TourDetailCopy): T
     paragraphs: Array.isArray(candidate.paragraphs)
       ? candidate.paragraphs.filter((paragraph): paragraph is string => typeof paragraph === "string" && Boolean(paragraph))
       : fallback.paragraphs,
-    facts: facts.length === 10 ? facts : fallback.facts,
+    facts: facts.length >= 1 && facts.length <= 24 ? facts : fallback.facts,
   };
 }

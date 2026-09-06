@@ -200,6 +200,16 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
     }));
   }
 
+  function setAllFacts(enabled: boolean) {
+    setForm((current) => ({
+      ...current,
+      details: {
+        ...current.details,
+        facts: current.details.facts.map((fact) => ({ ...fact, enabled })),
+      },
+    }));
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <div>
@@ -276,12 +286,34 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
               ))}
             </div>
             <div>
-              <p className="mb-3 text-xs font-bold text-[var(--gn-palette-3)]">Tarjetas informativas</p>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-bold text-[var(--gn-palette-3)]">Tarjetas informativas</p>
+                <span className="text-[11px] text-[var(--gn-palette-5)]">
+                  {form.details.facts.filter((fact) => fact.enabled).length} visibles en la salida
+                </span>
+              </div>
+              <p className="mb-3 text-[11px] leading-4 text-[var(--gn-palette-5)]">
+                Marca solo las tarjetas que quieres mostrar en la página. Las demás se guardan pero quedan ocultas.
+              </p>
+              <div className="mb-3 flex gap-3">
+                <button type="button" onClick={() => setAllFacts(true)} className="text-[11px] font-bold text-[var(--gn-palette-1)] hover:underline">Mostrar todas</button>
+                <button type="button" onClick={() => setAllFacts(false)} className="text-[11px] font-bold text-[var(--gn-palette-1)] hover:underline">Ocultar todas</button>
+              </div>
               <div className="grid gap-3 xl:grid-cols-2">
                 {form.details.facts.map((fact, index) => {
                   const Icon = ICONS[fact.icon] ?? Activity;
                   return (
-                    <div key={fact.key} className="grid grid-cols-[42px_minmax(105px,.7fr)_minmax(0,1.3fr)] items-center gap-2 rounded-lg border border-[#e2e6e2] bg-white p-2">
+                    <div
+                      key={fact.key}
+                      className={`grid grid-cols-[26px_36px_minmax(90px,.7fr)_minmax(0,1.3fr)] items-center gap-2 rounded-lg border p-2 transition-colors ${fact.enabled ? "border-[#e2e6e2] bg-white" : "border-[#e8e8e8] bg-[#f4f5f4] opacity-60"}`}
+                    >
+                      <input
+                        type="checkbox"
+                        aria-label={`Mostrar ${fact.label}`}
+                        checked={fact.enabled}
+                        onChange={(e) => updateFact(index, { enabled: e.target.checked })}
+                        className="h-4 w-4 accent-[var(--gn-palette-1)]"
+                      />
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--gn-palette-8)] text-[var(--gn-palette-1)]"><Icon className="h-5 w-5" /></div>
                       <div className="grid gap-1">
                         <input aria-label={`Nombre de tarjeta ${index + 1}`} className="admin-input h-9 px-2 text-xs font-bold" value={fact.label} onChange={(e) => updateFact(index, { label: e.target.value })} />

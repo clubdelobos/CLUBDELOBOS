@@ -187,6 +187,7 @@ export default async function TourPage({ params }: TourPageProps) {
   // wa.me wants a bare international number — reuse the public contact phone,
   // stripping the `tel:` scheme and every non-digit ("+", spaces, dashes).
   const whatsappNumber = settings.phoneHref.replace(/\D/g, "");
+  const visibleFacts = detail.facts.filter((fact) => fact.enabled);
   const eventJsonLd = buildTourEventJsonLd({
     title: tour.title,
     slug,
@@ -249,8 +250,9 @@ export default async function TourPage({ params }: TourPageProps) {
                 {detail.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
               </Reveal>
 
+              {visibleFacts.length > 0 ? (
               <section aria-label="Datos de la salida" className="mt-9 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
-                {detail.facts.map((fact, index) => {
+                {visibleFacts.map((fact, index) => {
                   const Icon = FACT_ICONS[fact.icon] ?? Activity;
                   return (
                     <Reveal
@@ -268,6 +270,7 @@ export default async function TourPage({ params }: TourPageProps) {
                   );
                 })}
               </section>
+              ) : null}
 
               <Reveal as="section" className="mt-10 rounded-2xl bg-[var(--gn-palette-8)] p-5 ring-1 ring-black/[0.04] sm:p-7">
                 <h2 className="text-xl font-extrabold text-[var(--gn-palette-3)]">Itinerario general</h2>

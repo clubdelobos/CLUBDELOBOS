@@ -12,12 +12,13 @@ const TourFactSchema = z.object({
   label: z.string().min(1).max(40),
   value: z.string().min(1).max(100),
   icon: z.enum(TOUR_ICON_IDS),
+  enabled: z.boolean().optional().default(true),
 });
 
 const TourDetailSchema = z.object({
   lead: z.string().min(1).max(600),
   paragraphs: z.array(z.string().min(1).max(1200)).min(1).max(4),
-  facts: z.array(TourFactSchema).length(10),
+  facts: z.array(TourFactSchema).min(1).max(24),
 });
 
 const TourImageSchema = z.object({
