@@ -155,10 +155,10 @@ function FotografiasEditor({ initial }: { initial: FotografiasBlock }) {
 
       <div className="flex flex-col gap-2">
         <span className="text-xs font-bold text-[var(--gn-palette-3)]">Presentación en la portada</span>
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="inline-flex w-fit rounded-lg border border-[var(--admin-line)] bg-white p-1">
           {([
-            { id: "grid", title: "Cuadrícula", desc: "Mosaico justificado, todas las fotos visibles." },
-            { id: "marquee", title: "Marquesina", desc: "Carrusel infinito que se desplaza solo. Ideal en móvil." },
+            { id: "grid", title: "Cuadrícula" },
+            { id: "marquee", title: "Marquesina" },
           ] as const).map((option) => {
             const selected = (form.layout ?? "grid") === option.id;
             return (
@@ -167,14 +167,22 @@ function FotografiasEditor({ initial }: { initial: FotografiasBlock }) {
                 type="button"
                 aria-pressed={selected}
                 onClick={() => setForm((f) => ({ ...f, layout: option.id }))}
-                className={`rounded-xl border p-3 text-left transition-colors ${selected ? "border-[var(--gn-palette-1)] bg-[var(--gn-palette-8)] ring-2 ring-[var(--gn-palette-1)]/10" : "border-[#e5e8e5] bg-white hover:border-[#bdc7c0]"}`}
+                className={`rounded-md px-4 py-1.5 text-sm font-semibold transition-colors ${
+                  selected
+                    ? "bg-[var(--gn-palette-1)] text-white"
+                    : "text-[var(--gn-palette-5)] hover:text-[var(--gn-palette-3)]"
+                }`}
               >
-                <strong className="block text-sm text-[var(--gn-palette-3)]">{option.title}</strong>
-                <span className="mt-0.5 block text-[11px] leading-4 text-[var(--gn-palette-5)]">{option.desc}</span>
+                {option.title}
               </button>
             );
           })}
         </div>
+        <span className="text-[11px] leading-4 text-[var(--gn-palette-5)]">
+          {(form.layout ?? "grid") === "marquee"
+            ? "Carrusel infinito que se desplaza solo. Ideal en móvil."
+            : "Mosaico justificado con todas las fotos visibles."}
+        </span>
       </div>
 
       <p className="text-xs text-[var(--gn-palette-5)]">Las fotos de la galería se administran en &quot;Galería&quot;.</p>

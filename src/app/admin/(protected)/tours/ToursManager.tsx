@@ -272,9 +272,9 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
           ) : null}
         </Field>
 
-        <details className="rounded-xl border border-[#e2e6e2] bg-[#fafbfa] sm:col-span-2">
-          <summary className="cursor-pointer px-4 py-3 text-sm font-extrabold text-[var(--gn-palette-3)]">Información completa e íconos de la salida</summary>
-          <div className="grid gap-4 border-t border-[#e2e6e2] p-4">
+        <details className="rounded-xl border border-[var(--admin-line)] bg-[var(--admin-surface-sunken)] sm:col-span-2">
+          <summary className="cursor-pointer px-4 py-3.5 text-sm font-extrabold text-[var(--gn-palette-3)]">Información completa e íconos de la salida</summary>
+          <div className="grid gap-5 border-t border-[var(--admin-line)] p-4 sm:p-5">
             <Field label="Introducción">
               <textarea className="admin-input min-h-24 px-3 py-2" value={form.details.lead} onChange={(e) => setForm((current) => ({ ...current, details: { ...current.details, lead: e.target.value } }))} />
             </Field>
@@ -299,29 +299,48 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
                 <button type="button" onClick={() => setAllFacts(true)} className="text-[11px] font-bold text-[var(--gn-palette-1)] hover:underline">Mostrar todas</button>
                 <button type="button" onClick={() => setAllFacts(false)} className="text-[11px] font-bold text-[var(--gn-palette-1)] hover:underline">Ocultar todas</button>
               </div>
-              <div className="grid gap-3 xl:grid-cols-2">
+              <div className="grid gap-3 lg:grid-cols-2">
                 {form.details.facts.map((fact, index) => {
                   const Icon = ICONS[fact.icon] ?? Activity;
                   return (
                     <div
                       key={fact.key}
-                      className={`grid grid-cols-[26px_36px_minmax(90px,.7fr)_minmax(0,1.3fr)] items-center gap-2 rounded-lg border p-2 transition-colors ${fact.enabled ? "border-[#e2e6e2] bg-white" : "border-[#e8e8e8] bg-[#f4f5f4] opacity-60"}`}
+                      className={`flex flex-col gap-3 rounded-xl border p-3.5 transition-colors ${fact.enabled ? "border-[var(--admin-line)] bg-white" : "border-transparent bg-black/[0.03] opacity-70"}`}
                     >
-                      <input
-                        type="checkbox"
-                        aria-label={`Mostrar ${fact.label}`}
-                        checked={fact.enabled}
-                        onChange={(e) => updateFact(index, { enabled: e.target.checked })}
-                        className="h-4 w-4 accent-[var(--gn-palette-1)]"
-                      />
-                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--gn-palette-8)] text-[var(--gn-palette-1)]"><Icon className="h-5 w-5" /></div>
-                      <div className="grid gap-1">
-                        <input aria-label={`Nombre de tarjeta ${index + 1}`} className="admin-input h-9 px-2 text-xs font-bold" value={fact.label} onChange={(e) => updateFact(index, { label: e.target.value })} />
-                        <select aria-label={`Ícono de ${fact.label}`} className="admin-input h-9 px-2 text-xs" value={fact.icon} onChange={(e) => updateFact(index, { icon: e.target.value as TourIconId })}>
-                          {TOUR_ICON_OPTIONS.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
-                        </select>
+                      <div className="flex items-center gap-2.5">
+                        <label className="flex items-center gap-2 text-[11px] font-bold text-[var(--gn-palette-3)]">
+                          <input
+                            type="checkbox"
+                            aria-label={`Mostrar ${fact.label}`}
+                            checked={fact.enabled}
+                            onChange={(e) => updateFact(index, { enabled: e.target.checked })}
+                            className="h-4 w-4 accent-[var(--gn-palette-1)]"
+                          />
+                          {fact.enabled ? "Visible" : "Oculta"}
+                        </label>
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--gn-palette-8)] text-[var(--gn-palette-1)]">
+                          <Icon className="h-[18px] w-[18px]" />
+                        </span>
+                        <span className="ml-auto text-[10px] font-semibold uppercase tracking-wide text-[var(--gn-palette-5)]">
+                          Tarjeta {index + 1}
+                        </span>
                       </div>
-                      <input aria-label={`Valor de ${fact.label}`} className="admin-input h-9 px-2 text-xs" value={fact.value} onChange={(e) => updateFact(index, { value: e.target.value })} />
+                      <label className="flex flex-col gap-1 text-[11px] font-bold text-[var(--gn-palette-5)]">
+                        Nombre
+                        <input className="admin-input h-9 px-2.5 text-xs font-semibold text-[var(--gn-palette-3)]" value={fact.label} onChange={(e) => updateFact(index, { label: e.target.value })} />
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="flex flex-col gap-1 text-[11px] font-bold text-[var(--gn-palette-5)]">
+                          Ícono
+                          <select className="admin-input h-9 px-2 text-xs" value={fact.icon} onChange={(e) => updateFact(index, { icon: e.target.value as TourIconId })}>
+                            {TOUR_ICON_OPTIONS.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+                          </select>
+                        </label>
+                        <label className="flex flex-col gap-1 text-[11px] font-bold text-[var(--gn-palette-5)]">
+                          Valor
+                          <input className="admin-input h-9 px-2.5 text-xs" value={fact.value} onChange={(e) => updateFact(index, { value: e.target.value })} />
+                        </label>
+                      </div>
                     </div>
                   );
                 })}

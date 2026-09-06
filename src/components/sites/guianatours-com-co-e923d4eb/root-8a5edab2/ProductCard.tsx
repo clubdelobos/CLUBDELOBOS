@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { TrackedLink } from "@/components/analytics/TrackedLink";
+import { SaveTourButton } from "./SaveTourButton";
 import type { ProductCard as ProductCardData } from "@/types/guianatours-com-co-e923d4eb";
 
 /**
@@ -24,6 +25,12 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           <b className="font-bold">Próxima salida:</b> {product.nextDeparture}
         </span>
       </div>
+
+      <SaveTourButton
+        slug={decodeURIComponent(product.href.split("/").pop() ?? "")}
+        title={product.title}
+        price={`${product.currencySymbol} ${product.price}`}
+      />
 
       {/* .woocommerce-loop-image-link */}
       <a

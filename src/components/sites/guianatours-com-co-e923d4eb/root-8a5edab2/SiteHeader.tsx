@@ -9,12 +9,11 @@ import {
   InstagramIcon,
   MenuIcon,
   PhoneAltIcon,
-  ShoppingCartIcon,
   YoutubeIcon,
 } from "@/components/sites/guianatours-com-co-e923d4eb/shared/icons";
+import { SalidasCart } from "./SalidasCart";
 import type { NavLink, SocialLink } from "@/types/guianatours-com-co-e923d4eb";
 
-const CART_HREF = "/proximas-salidas";
 const HOME_HREF = "/";
 
 const SOCIAL_GLYPH = {
@@ -34,21 +33,6 @@ function Logo({ className, logoUrl }: { className?: string; logoUrl: string | nu
         priority
         className="block h-auto w-[92px] max-[1024px]:w-[90px]"
       />
-    </a>
-  );
-}
-
-function CartButton({ className }: { className?: string }) {
-  return (
-    <a
-      href={CART_HREF}
-      aria-label="Carrito de la compra"
-      className={cn("relative flex items-center text-white", className)}
-    >
-      <ShoppingCartIcon className="h-6 w-6" />
-      <span className="absolute -right-1.5 -top-2 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-[var(--gn-palette-1)] px-1 text-[10px] leading-none text-white">
-        0
-      </span>
     </a>
   );
 }
@@ -104,7 +88,7 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
       className={cn(
         "inset-x-0 top-0 z-[100] transition-[transform,background-color,box-shadow] duration-300 ease-out",
         scrolled
-          ? "fixed bg-[var(--gn-palette-2)] shadow-[0_6px_24px_rgba(0,0,0,0.28)]"
+          ? "gn-header-pinned fixed shadow-[0_6px_22px_rgba(0,0,0,0.18)]"
           : "absolute bg-transparent",
         mode === "hidden" && !drawerOpen ? "-translate-y-full" : "translate-y-0",
       )}
@@ -148,8 +132,9 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
           </div>
         </div>
 
-        {/* row 2 — primary navigation + cart */}
-        <div className={cn("transition-[height] duration-300 ease-out", scrolled ? "h-[64px]" : "h-[50px]")}>
+        {/* row 2 — primary navigation + cart. Grows tall enough to hold the
+            full-size logo once the header pins (row 1 is gone by then). */}
+        <div className={cn("transition-[height] duration-300 ease-out", scrolled ? "h-[96px]" : "h-[50px]")}>
           <div className="mx-auto flex h-full max-w-[1140px] items-center justify-between px-5">
             {scrolled ? <Logo className="block" logoUrl={logoUrl} /> : <div aria-hidden="true" />}
             <div className="flex items-center">
@@ -171,7 +156,7 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
                   ))}
                 </ul>
               </nav>
-              <CartButton className="pl-[17px] pt-[3.4px]" />
+              <SalidasCart phoneHref={phoneHref} className="pl-[17px]" />
             </div>
           </div>
         </div>
@@ -182,12 +167,12 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
         <div
           className={cn(
             "flex items-center justify-between px-[5px] transition-[height] duration-300 ease-out min-[768px]:px-5",
-            scrolled ? "h-[62px]" : "h-[92px] min-[768px]:h-[75px]",
+            scrolled ? "h-[78px] min-[768px]:h-[72px]" : "h-[92px] min-[768px]:h-[75px]",
           )}
         >
           <Logo className="block" logoUrl={logoUrl} />
           <div className="flex items-center gap-[10px]">
-            <CartButton />
+            <SalidasCart phoneHref={phoneHref} />
             <button
               type="button"
               id="mobile-toggle"

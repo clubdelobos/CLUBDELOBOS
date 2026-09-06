@@ -259,7 +259,8 @@ export default async function TourPage({ params }: TourPageProps) {
                     <Reveal
                       key={fact.key}
                       zoom
-                      delay={index * 55}
+                      delay={Math.min(index, 5) * 45}
+                      style={{ "--gn-fact-index": index } as React.CSSProperties}
                       className="gn-fact-card flex min-h-36 flex-col items-center justify-center rounded-2xl bg-[var(--gn-palette-7)] p-3 text-center outline-none ring-1 ring-black/[0.03] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-[var(--gn-palette-7)]/70 hover:shadow-[0_14px_30px_rgba(18,39,31,0.12)] focus-visible:ring-2 focus-visible:ring-[var(--gn-palette-1)]/40"
                     >
                       <span tabIndex={0} className="flex flex-col items-center outline-none">
@@ -319,6 +320,7 @@ export default async function TourPage({ params }: TourPageProps) {
 
             <TourBookingPanel
               tourId={tour.id}
+              tourSlug={tour.slug}
               tourTitle={tour.title}
               departureDates={tour.departureDates}
               duration={duration}

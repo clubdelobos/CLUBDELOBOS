@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { CalendarDays, Minus, Plus } from "lucide-react";
 import { BookingDialog } from "./BookingDialog";
+import { SaveTourButton } from "./SaveTourButton";
 
 interface TourBookingPanelProps {
   tourId: string;
+  tourSlug: string;
   tourTitle: string;
   departureDates: string[];
   duration: string;
@@ -20,6 +22,7 @@ function formatDate(iso: string) {
 
 export function TourBookingPanel({
   tourId,
+  tourSlug,
   tourTitle,
   departureDates,
   duration,
@@ -36,7 +39,9 @@ export function TourBookingPanel({
 
   return (
     <>
-      <aside className="rounded-2xl border border-black/5 bg-white p-5 shadow-[0_18px_45px_rgba(18,39,31,0.12)] sm:p-6 lg:sticky lg:top-6">
+      {/* top offset clears the pinned site header so "Duración / Precio" never
+          hide behind it when the panel sticks. */}
+      <aside className="rounded-2xl border border-black/5 bg-white p-5 shadow-[0_18px_45px_rgba(18,39,31,0.12)] sm:p-6 lg:sticky lg:top-[108px]">
         <dl className="mb-6 grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-sm">
           <dt className="font-bold text-[var(--gn-palette-1)]">Duración</dt>
           <dd className="text-[var(--gn-palette-5)]">{duration}</dd>
@@ -92,6 +97,9 @@ export function TourBookingPanel({
         >
           Solicitar reserva
         </button>
+        <div className="mt-3">
+          <SaveTourButton variant="panel" slug={tourSlug} title={tourTitle} price={price} />
+        </div>
         <p className="mt-3 text-center text-[11px] leading-4 text-[var(--gn-palette-5)]">
           La solicitud no genera ningún cobro. Confirmaremos disponibilidad contigo.
         </p>

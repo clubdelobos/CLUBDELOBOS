@@ -106,7 +106,8 @@ function AddPhotoModal({ onClose }: { onClose: () => void }) {
           value={image}
           onChange={setImage}
           label="Imagen"
-          previewClassName="aspect-[4/5] w-full max-w-[240px] rounded-xl object-cover"
+          centered
+          previewClassName="aspect-[4/5] w-full max-w-[220px] rounded-xl object-cover"
         />
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-bold text-[var(--gn-palette-3)]">Título (opcional)</span>
@@ -141,13 +142,11 @@ export function GalleryManager({ items: initial }: { items: GalleryItemRow[] }) 
           <h1 className="text-2xl font-extrabold tracking-tight text-[var(--gn-palette-3)] sm:text-3xl">Galería</h1>
           <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--gn-palette-5)]">Fotografías de rutas y experiencias visibles en la portada.</p>
         </div>
-        <button
-          type="button"
-          onClick={() => setAdding(true)}
-          className="gn-button inline-flex shrink-0 items-center gap-2 self-start"
-        >
-          <ImagePlus className="h-4 w-4" />
-          Agregar foto
+        <button type="button" onClick={() => setAdding(true)} className="gn-button shrink-0 self-start">
+          <span className="inline-flex items-center gap-2">
+            <ImagePlus className="h-4 w-4" />
+            Agregar foto
+          </span>
         </button>
       </div>
 

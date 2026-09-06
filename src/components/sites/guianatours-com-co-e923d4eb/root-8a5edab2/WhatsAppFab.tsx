@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 function WhatsAppGlyph(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -18,9 +19,9 @@ interface WhatsAppFabProps {
 }
 
 /**
- * Floating WhatsApp contact button, bottom-right on every public page.
- * Sits below the booking dialog (z-[1000]) and nudges up when the cookie
- * notice is showing so they never overlap.
+ * Floating WhatsApp contact button, bottom-right on every public page. Themed
+ * to the active palette; the face flips between the wolf mark and the
+ * WhatsApp glyph on a slow loop. Sits below the booking dialog (z-[1000]).
  */
 export function WhatsAppFab({
   phoneHref,
@@ -29,9 +30,8 @@ export function WhatsAppFab({
   const [shown, setShown] = useState(false);
   const number = phoneHref.replace(/\D/g, "");
 
-  // Ease it in shortly after load so it doesn't fight with the first paint.
   useEffect(() => {
-    const id = setTimeout(() => setShown(true), 600);
+    const id = setTimeout(() => setShown(true), 500);
     return () => clearTimeout(id);
   }, []);
 
@@ -45,11 +45,20 @@ export function WhatsAppFab({
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Escríbenos por WhatsApp"
-      className={`fixed bottom-5 right-4 z-[90] flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_10px_30px_rgba(0,0,0,0.28)] transition-all duration-300 ease-out hover:scale-105 hover:shadow-[0_14px_36px_rgba(0,0,0,0.34)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#25D366] sm:bottom-6 sm:right-6 sm:h-16 sm:w-16 ${
+      className={`fixed bottom-5 right-4 z-[90] flex h-14 w-14 items-center justify-center rounded-full bg-[var(--gn-palette-1)] shadow-[0_12px_30px_rgba(0,0,0,0.3)] transition-[transform,opacity,box-shadow] duration-300 ease-out hover:scale-105 hover:shadow-[0_16px_38px_rgba(0,0,0,0.36)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--gn-palette-1)] sm:bottom-6 sm:right-6 sm:h-16 sm:w-16 ${
         shown ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
       }`}
     >
-      <WhatsAppGlyph className="h-7 w-7" />
+      <span className="gn-fab-flip relative h-7 w-7 sm:h-8 sm:w-8">
+        {/* front — WhatsApp glyph, tinted with the palette accent */}
+        <span className="absolute inset-0 flex items-center justify-center [backface-visibility:hidden]">
+          <WhatsAppGlyph className="h-full w-full text-[var(--gn-palette-7)]" />
+        </span>
+        {/* back — the wolf mark */}
+        <span className="absolute inset-0 flex items-center justify-center [backface-visibility:hidden] [transform:rotateY(180deg)]">
+          <Image src="/brand/lobos/logo-white-640.png" alt="" width={64} height={64} className="h-full w-full object-contain" />
+        </span>
+      </span>
     </a>
   );
 }

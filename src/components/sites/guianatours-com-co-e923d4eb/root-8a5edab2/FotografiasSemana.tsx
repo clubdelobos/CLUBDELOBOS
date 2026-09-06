@@ -17,12 +17,14 @@ function GalleryTile({
   className = "",
   style,
   contain = false,
+  sizes = "(max-width: 1024px) 50vw, 33vw",
 }: {
   item: GalleryItem;
   className?: string;
   style?: React.CSSProperties;
   /** true → image keeps its aspect ratio (marquee); false → fills the box (grid). */
   contain?: boolean;
+  sizes?: string;
 }) {
   return (
     <a
@@ -39,7 +41,7 @@ function GalleryTile({
         width={item.width}
         height={item.height}
         className={`${contain ? "h-full w-auto" : "h-full w-full"} object-cover transition-transform duration-500 ease-out group-hover:scale-105`}
-        sizes="(max-width: 1024px) 50vw, 33vw"
+        sizes={sizes}
       />
       <span
         aria-hidden="true"
@@ -61,7 +63,7 @@ function GalleryMarquee({ gallery }: { gallery: GalleryItem[] }) {
     <ul aria-hidden={dup || undefined} className="flex shrink-0 items-center gap-3 pr-3">
       {gallery.map((item) => (
         <li key={`${dup ? "dup-" : ""}${item.id}`} className="shrink-0">
-          <GalleryTile item={item} contain className="h-[130px] min-[1025px]:h-[210px]" />
+          <GalleryTile item={item} contain sizes="360px" className="h-[130px] min-[1025px]:h-[190px]" />
         </li>
       ))}
     </ul>
@@ -84,7 +86,7 @@ function GalleryMarquee({ gallery }: { gallery: GalleryItem[] }) {
 export function FotografiasSemana({ block, gallery }: { block: FotografiasBlock; gallery: GalleryItem[] }) {
   return (
     <>
-      <section className="px-5 pb-[10px] pt-10">
+      <section className={`px-5 pt-10 ${block.layout === "marquee" ? "pb-5" : "pb-[10px]"}`}>
         <div className="mx-auto max-w-[1140px]">
           <div className="gn-widget-wrap">
             <h2 className="mb-3 text-center text-2xl leading-6 font-bold text-[var(--gn-palette-3)]">

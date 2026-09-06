@@ -14,9 +14,11 @@ export interface ImageUploaderProps {
   onChange: (image: UploadedImage) => void;
   label?: string;
   previewClassName?: string;
+  /** Center the preview + button (used inside modals). */
+  centered?: boolean;
 }
 
-export function ImageUploader({ bucket, value, onChange, label, previewClassName }: ImageUploaderProps) {
+export function ImageUploader({ bucket, value, onChange, label, previewClassName, centered }: ImageUploaderProps) {
   const { uploading, error, upload } = useImageUpload(bucket);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -26,8 +28,8 @@ export function ImageUploader({ bucket, value, onChange, label, previewClassName
   }
 
   return (
-    <div className="flex min-w-0 flex-col gap-2">
-      {label ? <span className="text-xs font-bold text-[var(--gn-palette-3)]">{label}</span> : null}
+    <div className={`flex min-w-0 flex-col gap-2 ${centered ? "items-center text-center" : ""}`}>
+      {label ? <span className={`text-xs font-bold text-[var(--gn-palette-3)] ${centered ? "self-start" : ""}`}>{label}</span> : null}
       {value ? (
         <Image src={value.url} alt="" width={value.width} height={value.height} className={previewClassName ?? "h-28 w-full rounded-xl object-cover"} />
       ) : (

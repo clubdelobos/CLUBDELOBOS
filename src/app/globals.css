@@ -234,20 +234,30 @@
   padding: 10px;
 }
 
-/* Shared controls used only by the redesigned administration panel. */
+/* Shared controls used only by the redesigned administration panel.
+   Surfaces are derived from the active site palette (set on #admin-shell) so
+   cards, modals and inputs pick up the chosen theme instead of staying a flat
+   white that clashes with a coloured palette. */
+#admin-shell {
+  --admin-surface: color-mix(in srgb, var(--gn-palette-8) 42%, #fff);
+  --admin-surface-sunken: color-mix(in srgb, var(--gn-palette-8) 78%, #fff);
+  --admin-line: color-mix(in srgb, var(--gn-palette-1) 15%, transparent);
+  --admin-field: color-mix(in srgb, var(--gn-palette-8) 16%, #fff);
+}
+
 .admin-card {
-  border: 1px solid rgb(23 32 26 / 9%);
+  border: 1px solid var(--admin-line, rgb(23 32 26 / 9%));
   border-radius: 16px;
-  background: #fff;
+  background: var(--admin-surface, #fff);
   box-shadow: 0 12px 34px rgb(11 15 13 / 6%);
 }
 
 .admin-input {
   width: 100%;
   min-width: 0;
-  border: 1px solid #d9ded9;
+  border: 1px solid color-mix(in srgb, var(--gn-palette-1) 16%, #d9ded9);
   border-radius: 10px;
-  background: #fff;
+  background: var(--admin-field, #fff);
   color: #17201a;
   font-size: 14px;
   line-height: 1.4;
@@ -258,6 +268,16 @@
   border-color: var(--gn-palette-1);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--gn-palette-1) 12%, transparent);
   outline: none;
+}
+
+/* Palette-aware modal surface — used by <Modal> and the booking dialog. */
+.admin-modal-surface {
+  background: var(--admin-surface, #fff);
+  border-color: var(--admin-line, rgb(0 0 0 / 10%));
+}
+.admin-modal-bar {
+  background: var(--admin-surface-sunken, #fff);
+  border-color: var(--admin-line, rgb(0 0 0 / 6%));
 }
 
 /* A deliberate "delete" affordance — a filled soft-red pill instead of a
@@ -283,18 +303,33 @@
   opacity: 0.5;
 }
 
-/* Tour detail "Datos de la salida" fact cards — the icon hops and settles
-   on hover/focus instead of sitting static. Transform-only, so it stays
-   smooth even with several cards animating on a fast hover sweep. */
+/* Tour detail "Datos de la salida" fact cards. The icon has a gentle,
+   always-on idle float (staggered per card via --gn-fact-index so they
+   don't move in lockstep) and a stronger hop on hover/focus. Transform-only
+   so it stays on the compositor. */
+@keyframes gn-fact-icon-idle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(-3deg); }
+}
 @keyframes gn-fact-icon-pop {
   0% { transform: translateY(0) scale(1) rotate(0deg); }
   35% { transform: translateY(-7px) scale(1.12) rotate(-6deg); }
   60% { transform: translateY(0) scale(1.05) rotate(4deg); }
   100% { transform: translateY(0) scale(1) rotate(0deg); }
 }
+.gn-fact-icon {
+  animation: gn-fact-icon-idle 3.4s ease-in-out infinite;
+  animation-delay: calc(var(--gn-fact-index, 0) * -0.42s);
+}
 .gn-fact-card:hover .gn-fact-icon,
 .gn-fact-card:focus-visible .gn-fact-icon {
   animation: gn-fact-icon-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gn-fact-icon {
+    animation: none;
+  }
 }
 
 /* ------------------------------------------------------------------
@@ -306,10 +341,10 @@
    ------------------------------------------------------------------ */
 .gn-reveal {
   opacity: 0;
-  transform: translateY(24px);
+  transform: translateY(16px);
   transition:
-    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   transition-delay: var(--gn-reveal-delay, 0ms);
   will-change: opacity, transform;
 }
@@ -318,7 +353,7 @@
   transform: none;
 }
 .gn-reveal-zoom {
-  transform: translateY(24px) scale(0.96);
+  transform: translateY(16px) scale(0.97);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -327,6 +362,32 @@
     opacity: 1;
     transform: none;
     transition: none;
+  }
+}
+
+/* Pinned site header — softened so the transparent-to-solid change isn't
+   jarring: a translucent palette wash plus a blur. */
+.gn-header-pinned {
+  background: color-mix(in srgb, var(--gn-palette-2) 82%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Floating WhatsApp button — flips between the wolf mark and the WhatsApp
+   glyph on a slow loop (mostly resting on the glyph). */
+@keyframes gn-fab-flip {
+  0%, 44% { transform: rotateY(0deg); }
+  54%, 66% { transform: rotateY(180deg); }
+  76%, 100% { transform: rotateY(0deg); }
+}
+.gn-fab-flip {
+  transform-style: preserve-3d;
+  animation: gn-fab-flip 7s ease-in-out infinite;
+  animation-delay: 2s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gn-fab-flip {
+    animation: none;
   }
 }
 
