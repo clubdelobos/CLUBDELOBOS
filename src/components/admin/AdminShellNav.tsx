@@ -4,23 +4,55 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, Menu, X, type LucideIcon } from "lucide-react";
+import {
+  BookOpen,
+  CalendarDays,
+  GalleryHorizontalEnd,
+  House,
+  Images,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  MessageSquareText,
+  Settings,
+  Users,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { logout } from "@/app/admin/login/actions";
 
-export interface AdminNavItem {
+interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
 }
+
+// Kept here (not in the server layout) so the icon components never have to
+// cross the server→client boundary as props — see the "plain objects only"
+// RSC rule.
+const ADMIN_NAV: NavItem[] = [
+  { href: "/admin", label: "Panel", icon: LayoutDashboard },
+  { href: "/admin/settings", label: "Ajustes del sitio", icon: Settings },
+  { href: "/admin/hero", label: "Portada", icon: Images },
+  { href: "/admin/tours", label: "Aventuras y salidas", icon: CalendarDays },
+  { href: "/admin/sections", label: "Secciones", icon: BookOpen },
+  { href: "/admin/gallery", label: "Galería", icon: GalleryHorizontalEnd },
+  { href: "/admin/reviews", label: "Testimonios", icon: MessageSquareText },
+  { href: "/admin/bookings", label: "Reservas", icon: House },
+  { href: "/admin/users", label: "Usuarios", icon: Users },
+];
+
+const WORKER_NAV: NavItem[] = [{ href: "/admin/bookings", label: "Reservas", icon: House }];
 
 /**
  * Admin navigation. Desktop (lg+) is a static sticky sidebar; on smaller
  * screens it collapses to a top bar with a slide-in drawer instead of the
  * old horizontally-scrolling strip of nine links.
  */
-export function AdminShellNav({ nav, email }: { nav: readonly AdminNavItem[]; email: string | null }) {
+export function AdminShellNav({ role, email }: { role: "admin" | "worker"; email: string | null }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const nav = role === "admin" ? ADMIN_NAV : WORKER_NAV;
 
   useEffect(() => {
     if (!open) return;

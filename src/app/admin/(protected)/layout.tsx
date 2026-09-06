@@ -1,26 +1,10 @@
 import { cookies } from "next/headers";
-import { BookOpen, CalendarDays, GalleryHorizontalEnd, House, Images, LayoutDashboard, MessageSquareText, Settings, Users } from "lucide-react";
 import { requireRole } from "@/lib/auth/dal";
 import { AdminShellNav } from "@/components/admin/AdminShellNav";
 import { SITE_PALETTES, type SitePaletteId } from "@/lib/site-palettes";
 
-const ADMIN_NAV = [
-  { href: "/admin", label: "Panel", icon: LayoutDashboard },
-  { href: "/admin/settings", label: "Ajustes del sitio", icon: Settings },
-  { href: "/admin/hero", label: "Portada", icon: Images },
-  { href: "/admin/tours", label: "Aventuras y salidas", icon: CalendarDays },
-  { href: "/admin/sections", label: "Secciones", icon: BookOpen },
-  { href: "/admin/gallery", label: "Galería", icon: GalleryHorizontalEnd },
-  { href: "/admin/reviews", label: "Testimonios", icon: MessageSquareText },
-  { href: "/admin/bookings", label: "Reservas", icon: House },
-  { href: "/admin/users", label: "Usuarios", icon: Users },
-] as const;
-
-const WORKER_NAV = [{ href: "/admin/bookings", label: "Reservas", icon: House }] as const;
-
 export default async function ProtectedAdminLayout({ children }: { children: React.ReactNode }) {
   const [session, cookieStore] = await Promise.all([requireRole(["admin", "worker"]), cookies()]);
-  const nav = session.role === "admin" ? ADMIN_NAV : WORKER_NAV;
   const requestedPalette = cookieStore.get("lobos-site-palette")?.value;
   const paletteId: SitePaletteId = requestedPalette && requestedPalette in SITE_PALETTES
     ? requestedPalette as SitePaletteId
@@ -40,7 +24,7 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
         "--gn-palette-8": palette[8],
       } as React.CSSProperties}
     >
-      <AdminShellNav nav={nav} email={session.email ?? null} />
+      <AdminShellNav role={session.role} email={session.email ?? null} />
 
       <main className="min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-9 xl:px-12">
         <div className="mx-auto w-full max-w-[1180px]">{children}</div>

@@ -30,6 +30,7 @@ import { Reveal } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5e
 import { SiteFooter } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/SiteFooter";
 import { SiteHeader } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/SiteHeader";
 import { TourBookingPanel } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/TourBookingPanel";
+import { WhatsAppFab } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/WhatsAppFab";
 import {
   getNavLinks,
   getPublishedTourSlugs,
@@ -339,6 +340,10 @@ export default async function TourPage({ params }: TourPageProps) {
         copyright={settings.footerCopyright}
         creditLabel={settings.footerCreditLabel}
         creditHref={settings.footerCreditHref}
+      />
+      <WhatsAppFab
+        phoneHref={settings.phoneHref}
+        message={`Hola, quiero información sobre la salida "${tour.title}" de Club de Lobos.`}
       />
       <CookieNotice />
       <PageViewBeacon />

@@ -5,6 +5,7 @@ import { GuiasExpertos } from "@/components/sites/guianatours-com-co-e923d4eb/ro
 import { CampingSection } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/CampingSection";
 import { ReviewsSection } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/ReviewsSection";
 import { FotografiasSemana } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/FotografiasSemana";
+import { WhatsAppFab } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/WhatsAppFab";
 import { SiteFooter } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/SiteFooter";
 import { CookieNotice } from "@/components/CookieNotice";
 import { PageViewBeacon } from "@/components/analytics/PageViewBeacon";
@@ -90,6 +91,7 @@ export default async function Home() {
         creditLabel={settings.footerCreditLabel}
         creditHref={settings.footerCreditHref}
       />
+      <WhatsAppFab phoneHref={settings.phoneHref} />
       <CookieNotice />
       <PageViewBeacon />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(buildOrganizationJsonLd(settings)) }} />

@@ -63,6 +63,10 @@ export interface SiteHeaderProps {
 
 export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoUrl }: SiteHeaderProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // "top": overlays the hero, transparent, scrolls away (original behaviour).
+  // "pinned": scrolled down and the user is scrolling back up — a solid bar
+  // slides in and stays. "hidden": scrolled down and still going down.
+  const [mode, setMode] = useState<"top" | "pinned" | "hidden">("top");
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -73,12 +77,48 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
     return () => document.removeEventListener("keydown", onKey);
   }, [drawerOpen]);
 
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let ticking = false;
+    const evaluate = () => {
+      const y = window.scrollY;
+      if (y < 120) setMode("top");
+      else if (y > lastY + 6) setMode("hidden");
+      else if (y < lastY - 6) setMode("pinned");
+      lastY = y;
+      ticking = false;
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(evaluate);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const scrolled = mode !== "top";
+
   return (
-    <header className="absolute inset-x-0 top-0 z-[100] bg-transparent">
+    <header
+      className={cn(
+        "inset-x-0 top-0 z-[100] transition-[transform,background-color,box-shadow] duration-300 ease-out",
+        scrolled
+          ? "fixed bg-[var(--gn-palette-2)] shadow-[0_6px_24px_rgba(0,0,0,0.28)]"
+          : "absolute bg-transparent",
+        mode === "hidden" && !drawerOpen ? "-translate-y-full" : "translate-y-0",
+      )}
+    >
       {/* ---------- desktop header (>=1025px) ---------- */}
       <div className="hidden min-[1025px]:block">
-        {/* row 1 — logo / contact / social */}
-        <div className="h-[83.47px]">
+        {/* row 1 — logo / contact / social. Collapses out of the way once the
+            header pins so the sticky bar stays compact. */}
+        <div
+          className={cn(
+            "overflow-hidden transition-[height,opacity] duration-300 ease-out",
+            scrolled ? "h-0 opacity-0" : "h-[83.47px] opacity-100",
+          )}
+        >
           <div className="mx-auto flex h-full max-w-[1140px] items-start justify-between px-5">
             <Logo className="block" logoUrl={logoUrl} />
             <div className="flex items-start justify-end">
@@ -109,9 +149,9 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
         </div>
 
         {/* row 2 — primary navigation + cart */}
-        <div className="h-[50px]">
+        <div className={cn("transition-[height] duration-300 ease-out", scrolled ? "h-[64px]" : "h-[50px]")}>
           <div className="mx-auto flex h-full max-w-[1140px] items-center justify-between px-5">
-            <div aria-hidden="true" />
+            {scrolled ? <Logo className="block" logoUrl={logoUrl} /> : <div aria-hidden="true" />}
             <div className="flex items-center">
               <nav aria-label="Menú principal">
                 <ul className="flex items-center">
@@ -139,7 +179,12 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
 
       {/* ---------- mobile header (<=1024px) ---------- */}
       <div className="min-[1025px]:hidden">
-        <div className="flex h-[92px] items-center justify-between px-[5px] max-[767px]:h-[92px] min-[768px]:h-[75px] min-[768px]:px-5">
+        <div
+          className={cn(
+            "flex items-center justify-between px-[5px] transition-[height] duration-300 ease-out min-[768px]:px-5",
+            scrolled ? "h-[62px]" : "h-[92px] min-[768px]:h-[75px]",
+          )}
+        >
           <Logo className="block" logoUrl={logoUrl} />
           <div className="flex items-center gap-[10px]">
             <CartButton />

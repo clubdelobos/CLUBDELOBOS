@@ -4,6 +4,7 @@ import { PageViewBeacon } from "@/components/analytics/PageViewBeacon";
 import { getNavLinks, getSiteSettings } from "@/lib/queries/site-content";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
+import { WhatsAppFab } from "./WhatsAppFab";
 
 interface PublicPageShellProps {
   currentPath: string;
@@ -70,6 +71,7 @@ export async function PublicPageShell({
         creditLabel={settings.footerCreditLabel}
         creditHref={settings.footerCreditHref}
       />
+      <WhatsAppFab phoneHref={settings.phoneHref} />
       <CookieNotice />
       <PageViewBeacon />
     </div>
