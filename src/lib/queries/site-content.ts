@@ -238,6 +238,18 @@ export interface CampingBlock {
 export interface FotografiasBlock {
   heading: string;
   body: string;
+  /** Portada gallery presentation: justified grid (default) or an
+   *  auto-scrolling marquee strip. */
+  layout: "grid" | "marquee";
+}
+
+function normalizeFotografias(raw: unknown): FotografiasBlock {
+  const value = raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
+  return {
+    heading: typeof value.heading === "string" ? value.heading : "",
+    body: typeof value.body === "string" ? value.body : "",
+    layout: value.layout === "marquee" ? "marquee" : "grid",
+  };
 }
 
 export async function getContentBlocks(): Promise<{
@@ -259,7 +271,7 @@ export async function getContentBlocks(): Promise<{
       buttonHref: SALIDAS_URL,
       image: null,
     },
-    fotografias: (byKey.fotografias as unknown as FotografiasBlock) ?? { heading: "", body: "" },
+    fotografias: normalizeFotografias(byKey.fotografias),
   };
 }
 
