@@ -188,6 +188,12 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      // 0008_security_hardening.sql — server-side booking rate-limit check.
+      recent_booking_count: {
+        Args: { p_email: string };
+        Returns: number;
+      };
+    };
   };
 }

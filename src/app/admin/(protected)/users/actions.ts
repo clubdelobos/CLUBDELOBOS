@@ -8,7 +8,7 @@ import type { ProfileRole } from "@/lib/supabase/types";
 
 const CreateUserSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8, { message: "Mínimo 8 caracteres." }),
+  password: z.string().min(12, { message: "Mínimo 12 caracteres." }),
   fullName: z.string().min(1),
   role: z.enum(["admin", "worker"]),
 });

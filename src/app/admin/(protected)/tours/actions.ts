@@ -113,11 +113,15 @@ export async function upsertTour(raw: z.infer<typeof TourSchema>): Promise<Actio
   return { success: true };
 }
 
+const OrderedIdsSchema = z.array(z.string().uuid()).min(1).max(200);
+
 export async function reorderTours(orderedIds: string[]): Promise<ActionState> {
   await requireRole(["admin"]);
+  const parsed = OrderedIdsSchema.safeParse(orderedIds);
+  if (!parsed.success) return { error: "Orden no válido." };
   const supabase = createServiceRoleClient();
   const results = await Promise.all(
-    orderedIds.map((id, i) => supabase.from("tours").update({ sort_order: i }).eq("id", id)),
+    parsed.data.map((id, i) => supabase.from("tours").update({ sort_order: i }).eq("id", id)),
   );
   const failed = results.find((r) => r.error);
   if (failed?.error) return { error: failed.error.message };

@@ -61,12 +61,16 @@ export async function deleteHeroSlide(id: string): Promise<ActionState> {
   return { success: true };
 }
 
+const OrderedIdsSchema = z.array(z.string().uuid()).min(1).max(200);
+
 /** One Server Action wrapping every row's new position — not N sequential calls. */
 export async function reorderHeroSlides(orderedIds: string[]): Promise<ActionState> {
   await requireRole(["admin"]);
+  const parsed = OrderedIdsSchema.safeParse(orderedIds);
+  if (!parsed.success) return { error: "Orden no válido." };
   const supabase = await createClient();
   const results = await Promise.all(
-    orderedIds.map((id, i) => supabase.from("hero_slides").update({ sort_order: i }).eq("id", id)),
+    parsed.data.map((id, i) => supabase.from("hero_slides").update({ sort_order: i }).eq("id", id)),
   );
   const failed = results.find((r) => r.error);
   if (failed?.error) return { error: failed.error.message };

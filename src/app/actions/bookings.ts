@@ -76,14 +76,17 @@ export async function createBooking(raw: unknown): Promise<BookingState> {
     return { error: "Esa fecha ya no está disponible para esta salida." };
   }
 
-  // Basic throttle: refuse a second request from the same email within 2 minutes.
-  const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
-  const { count } = await supabase
-    .from("bookings")
-    .select("id", { count: "exact", head: true })
-    .eq("email", d.email)
-    .gte("created_at", twoMinutesAgo);
-  if (count && count > 0) {
+  // Basic throttle: refuse a second request from the same email within 2
+  // minutes. Runs through a SECURITY DEFINER function (0008) because the anon
+  // role has no SELECT policy on `bookings` — a direct `.from("bookings")`
+  // count here always returned 0. Fails open if the function isn't deployed
+  // yet (the honeypot + DB constraints still apply).
+  const { data: recentCount, error: throttleError } = await supabase.rpc("recent_booking_count", {
+    p_email: d.email,
+  });
+  if (throttleError) {
+    console.error("recent_booking_count rpc failed:", throttleError.message);
+  } else if (typeof recentCount === "number" && recentCount > 0) {
     return { error: "Ya recibimos tu solicitud. Te contactaremos pronto — intenta de nuevo en unos minutos." };
   }
 

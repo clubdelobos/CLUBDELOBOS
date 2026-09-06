@@ -39,7 +39,7 @@ export function CreateUserForm() {
           name="password"
           type="password"
           required
-          minLength={8}
+          minLength={12}
           className="admin-input h-10 px-3"
         />
       </div>
