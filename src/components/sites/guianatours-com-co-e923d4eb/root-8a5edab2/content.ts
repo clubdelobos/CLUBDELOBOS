@@ -239,7 +239,7 @@ export const FOOTER = {
   sitemapHeading: "Mapa del sitio",
   legalHeading: "Legal",
   subscribeHeading: "Únete a la manada",
-  subscribeBody: "No manejamos listas de correo. Síguenos y escríbenos directamente para enterarte de cada salida.",
+  subscribeBody: "Síguenos y escríbenos directamente para enterarte de cada salida.",
   legalLinks: [
     { label: "Términos y condiciones", href: "/legal/terminos" },
     { label: "Política de privacidad", href: "/legal/privacidad" },

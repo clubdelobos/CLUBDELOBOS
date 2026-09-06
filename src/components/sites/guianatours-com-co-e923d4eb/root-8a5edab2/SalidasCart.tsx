@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, CalendarCheck2, Heart, Mountain, Trash2, X } from "lucide-react";
+import { ArrowLeft, CalendarCheck2, Heart, Trash2, X } from "lucide-react";
 import { getTourBookingInfo, type TourBookingInfo } from "@/app/actions/bookings";
 import { ShoppingCartIcon } from "@/components/sites/guianatours-com-co-e923d4eb/shared/icons";
 import { WhatsAppGlyph } from "@/components/sites/guianatours-com-co-e923d4eb/shared/WhatsAppGlyph";
@@ -123,22 +123,20 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
                 </div>
               ) : (
                 <>
-                  <ul className="no-scrollbar max-h-[280px] overflow-y-auto px-2 pb-1">
+                  <ul className="no-scrollbar max-h-[300px] space-y-1 overflow-y-auto px-2 pb-1">
                     {items.map((item) => (
-                      <li key={item.slug} className="rounded-xl px-2 py-1.5 transition-colors hover:bg-[var(--gn-palette-8)]">
+                      <li key={item.slug} className="rounded-xl px-2 py-2 transition-colors hover:bg-[var(--gn-palette-8)]">
                         <div className="flex items-center gap-2.5">
                           <Link
                             href={`/salidas/${encodeURIComponent(item.slug)}`}
                             onClick={() => setOpen(false)}
                             className="flex min-w-0 flex-1 items-center gap-2.5"
                           >
-                            <span className="relative flex h-11 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[var(--gn-palette-8)] text-[var(--gn-palette-1)]/40">
-                              {item.image ? (
+                            {item.image ? (
+                              <span className="relative h-11 w-14 shrink-0 overflow-hidden rounded-lg bg-[var(--gn-palette-8)]">
                                 <Image src={item.image} alt="" fill sizes="56px" className="object-cover" />
-                              ) : (
-                                <Mountain className="h-4 w-4" />
-                              )}
-                            </span>
+                              </span>
+                            ) : null}
                             <span className="min-w-0">
                               <span className="block truncate text-sm font-semibold text-[var(--gn-palette-3)]">{item.title}</span>
                               {item.price ? <span className="block text-xs text-[var(--gn-palette-5)]">{item.price}</span> : null}
@@ -157,7 +155,7 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
                           type="button"
                           onClick={() => startBooking(item.slug)}
                           disabled={loadingSlug === item.slug}
-                          className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-lg bg-[var(--gn-palette-8)] px-3 py-1.5 text-xs font-bold text-[var(--gn-palette-1)] transition-colors hover:bg-[var(--gn-palette-1)] hover:text-white disabled:opacity-50"
+                          className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[var(--gn-palette-1)]/30 px-3 py-1.5 text-xs font-bold text-[var(--gn-palette-1)] transition-colors hover:bg-[var(--gn-palette-1)] hover:text-white disabled:opacity-50"
                         >
                           <CalendarCheck2 className="h-3.5 w-3.5" />
                           {loadingSlug === item.slug ? "Abriendo…" : "Terminar reserva"}
@@ -171,7 +169,7 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
                         href={waHref}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 rounded-lg bg-[#25D366] px-3 py-2 text-[13px] font-bold text-white transition-transform hover:scale-[1.02]"
+                        className="flex items-center justify-center gap-2 rounded-lg bg-[var(--gn-palette-1)] px-3 py-2 text-[13px] font-bold text-white transition-colors hover:bg-[var(--gn-palette-2)]"
                       >
                         <WhatsAppGlyph className="h-4 w-4 shrink-0" />
                         Consultar por WhatsApp

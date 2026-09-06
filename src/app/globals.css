@@ -442,17 +442,18 @@
 
 /* Floating WhatsApp button — flips between the wolf mark and the WhatsApp
    glyph on a slow loop (mostly resting on the glyph). */
-/* Coin spin — continuous rotation with a long rest on the wolf face, a
-   quick full turn, then rest again. */
+/* Coin spin — rests ~1.5s on the wolf, spins once, rests ~1.5s on the
+   WhatsApp glyph, spins once, and repeats. 540° per spin so the resting
+   face alternates. */
 @keyframes gn-fab-coin {
-  0%, 46% { transform: rotateY(0deg); }
-  62% { transform: rotateY(540deg); }
-  70%, 100% { transform: rotateY(720deg); }
+  0%, 20% { transform: rotateY(0deg); }        /* wolf */
+  36%, 62% { transform: rotateY(540deg); }     /* WhatsApp (180° mod 360) */
+  78%, 100% { transform: rotateY(1080deg); }   /* wolf (0° mod 360) */
 }
 .gn-fab-coin {
   transform-style: preserve-3d;
-  animation: gn-fab-coin 6s cubic-bezier(0.45, 0, 0.2, 1) infinite;
-  animation-delay: 1.5s;
+  animation: gn-fab-coin 7s cubic-bezier(0.5, 0, 0.15, 1) infinite;
+  animation-delay: 1.2s;
 }
 @media (prefers-reduced-motion: reduce) {
   .gn-fab-coin {

@@ -63,11 +63,11 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
   // Falls back to the original static values if the singleton row is ever
   // missing (should not happen — the migration inserts it), so the public
   // site never hard-crashes on a data problem.
+  // Order here is the order the icons render in the footer / header.
   const socialLinks: SocialLink[] = [];
-  if (data?.social_facebook_url) socialLinks.push({ label: "Facebook", href: data.social_facebook_url, network: "facebook" });
   if (data?.social_instagram_url) socialLinks.push({ label: "Instagram", href: data.social_instagram_url, network: "instagram" });
   if (data?.social_tiktok_url) socialLinks.push({ label: "TikTok", href: data.social_tiktok_url, network: "tiktok" });
-  if (data?.social_youtube_url) socialLinks.push({ label: "YouTube", href: data.social_youtube_url, network: "youtube" });
+  if (data?.social_facebook_url) socialLinks.push({ label: "Facebook", href: data.social_facebook_url, network: "facebook" });
 
   return {
     logoHeaderUrl: data?.logo_header_url ?? "/brand/lobos/logo-white-640.png",

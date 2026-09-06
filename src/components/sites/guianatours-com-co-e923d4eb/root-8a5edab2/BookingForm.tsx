@@ -102,14 +102,14 @@ export function BookingForm({
         Teléfono
         <input name="phone" type="tel" required className={inputCls} />
       </label>
-      <div className="flex gap-3">
+      <div className={compact ? "flex flex-col gap-2.5" : "flex gap-3"}>
         <div className="flex flex-1 flex-col gap-1 text-sm text-[var(--gn-palette-3)]">
           Fecha deseada
           <DateSelect name="requestedDate" size="sm" dates={availableDates} value={date} onChange={setDate} />
         </div>
-        <label className="flex w-24 flex-col gap-1 text-sm text-[var(--gn-palette-3)]">
+        <label className={`flex flex-col gap-1 text-sm text-[var(--gn-palette-3)] ${compact ? "" : "w-24"}`}>
           Personas
-          <input name="numPeople" type="number" min={1} max={50} defaultValue={initialPeople} required className={inputCls} />
+          <input name="numPeople" type="number" min={1} max={50} defaultValue={initialPeople} required className={`${inputCls} ${compact ? "w-24" : ""}`} />
         </label>
       </div>
       {!compact ? (

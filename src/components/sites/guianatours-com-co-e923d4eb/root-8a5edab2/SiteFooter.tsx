@@ -156,7 +156,9 @@ export function SiteFooter({
 
           <FooterColumn divider={false}>
             <FooterHeading>{FOOTER.subscribeHeading}</FooterHeading>
-            <p className="mb-5 text-center text-[13px] leading-5 text-white/70">{FOOTER.subscribeBody}</p>
+            <p className="mb-4 text-center text-[13px] leading-5 text-white/70">
+              {FOOTER.subscribeBody} Síguenos en nuestras redes sociales:
+            </p>
             <div className="flex flex-wrap items-center justify-center gap-2.5">
               <a
                 href={`https://wa.me/${phoneHref.replace(/\D/g, "")}?text=${encodeURIComponent(
@@ -166,9 +168,9 @@ export function SiteFooter({
                 rel="noopener noreferrer"
                 aria-label="Escríbenos por WhatsApp"
                 onClick={() => track("cta_click", "footer_whatsapp")}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-[#25D366]"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-[var(--gn-palette-7)] hover:text-[var(--gn-palette-1)]"
               >
-                <WhatsAppGlyph className="h-4 w-4" />
+                <WhatsAppGlyph className="h-[18px] w-[18px]" />
               </a>
               {socialLinks.map((social) => {
                 const Glyph = SOCIAL_GLYPH[social.network];
@@ -180,58 +182,27 @@ export function SiteFooter({
                     rel="noopener noreferrer"
                     aria-label={social.label}
                     onClick={() => track("social_click", social.network)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-[var(--gn-palette-7)] hover:text-[var(--gn-palette-1)]"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-[var(--gn-palette-7)] hover:text-[var(--gn-palette-1)]"
                   >
-                    <Glyph className="h-4 w-4" />
+                    <Glyph className="h-[18px] w-[18px]" />
                   </a>
                 );
               })}
+            </div>
+
+            <div className="mt-6 flex flex-col items-center gap-1.5 border-t border-white/10 pt-5">
+              <a href={phoneHref} onClick={() => track("cta_click", "phone")} className="inline-flex items-center gap-2 text-[13px] font-medium text-white transition-colors hover:text-[var(--gn-palette-7)]">
+                <PhoneSolidIcon className="h-3.5 w-3.5 shrink-0" />
+                {phoneLabel}
+              </a>
+              {email ? (
+                <a href={`mailto:${email}`} className="inline-flex items-center gap-2 text-[13px] font-medium text-white transition-colors hover:text-[var(--gn-palette-7)]">
+                  <EnvelopeIcon className="h-3.5 w-3.5 shrink-0" />
+                  {email}
+                </a>
+              ) : null}
             </div>
           </FooterColumn>
-        </div>
-      </section>
-
-      {/* ---------- section 21cf77c — contact bar ---------- */}
-      <section className="relative bg-[var(--gn-palette-1)] px-5 pb-10 pt-5">
-        <div className="mx-auto flex max-w-[1140px] flex-col min-[768px]:flex-row">
-          <div className="flex items-center p-[10px] min-[768px]:w-1/2">
-            <ul className="-mx-2 flex flex-wrap max-[767px]:w-full max-[767px]:justify-center">
-              <li className="mx-2 flex items-center">
-                <a href={phoneHref} onClick={() => track("cta_click", "phone")} className="flex items-center text-white">
-                  <PhoneSolidIcon className="h-[14px] w-[14px] shrink-0" />
-                  <span className="pl-[5px] text-[14px] leading-[22.4px] font-normal text-white">{phoneLabel}</span>
-                </a>
-              </li>
-              {email ? (
-                <li className="mx-2 flex items-center">
-                  <a href={`mailto:${email}`} className="flex items-center text-white">
-                    <EnvelopeIcon className="h-[14px] w-[14px] shrink-0" />
-                    <span className="pl-[5px] text-[14px] leading-[22.4px] font-normal text-white">{email}</span>
-                  </a>
-                </li>
-              ) : null}
-            </ul>
-          </div>
-          <div className="flex items-center p-[10px] min-[768px]:w-1/2">
-            <div className="flex w-full justify-center gap-[5px] min-[768px]:justify-end">
-              {socialLinks.map((social) => {
-                const Glyph = SOCIAL_GLYPH[social.network];
-                return (
-                  <a
-                    key={social.network}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => track("social_click", social.network)}
-                    className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[var(--gn-palette-1)]"
-                  >
-                    <span className="sr-only">{social.label}</span>
-                    <Glyph className="h-[14px] w-[14px]" />
-                  </a>
-                );
-              })}
-            </div>
-          </div>
         </div>
       </section>
 
@@ -239,8 +210,9 @@ export function SiteFooter({
       <section className="relative bg-[var(--gn-palette-2)]">
         {/* the copy widget carries an 80px bottom margin below 768px */}
         <div className="mx-auto max-w-[1140px] p-[10px]">
-          <p className="my-[17px] text-center text-[17px] leading-[27.2px] font-normal text-white max-[767px]:mb-20">
+          <p className="my-[17px] text-center text-[15px] leading-6 font-normal text-white">
             {copyright}
+            {creditLabel ? " " : null}
             {creditHref ? (
               <a href={creditHref} target="_blank" rel="noopener" className="font-bold text-white">
                 {creditLabel}

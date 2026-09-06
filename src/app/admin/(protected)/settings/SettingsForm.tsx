@@ -15,7 +15,7 @@ const inputCls = "admin-input h-10 px-3";
 interface FormState {
   logoHeader: string | null; logoFooter: string | null; favicon: string | null;
   phoneLabel: string; phoneHref: string; email: string; address: string;
-  facebook: string; instagram: string; youtube: string; tiktok: string;
+  facebook: string; instagram: string; tiktok: string;
   palette1: string; palette2: string; palette3: string; palette5: string; palette7: string; palette8: string;
   registro: string; copyright: string; creditLabel: string; creditHref: string;
 }
@@ -25,7 +25,7 @@ function toFormState(settings: SiteSettingsData): FormState {
   return {
     logoHeader: settings.logoHeaderUrl, logoFooter: settings.logoFooterUrl, favicon: settings.faviconUrl,
     phoneLabel: settings.phoneLabel, phoneHref: settings.phoneHref, email: settings.email, address: settings.address ?? "",
-    facebook: social("facebook"), instagram: social("instagram"), youtube: social("youtube"), tiktok: social("tiktok"),
+    facebook: social("facebook"), instagram: social("instagram"), tiktok: social("tiktok"),
     palette1: settings.palette[1], palette2: settings.palette[2], palette3: settings.palette[3], palette5: settings.palette[5], palette7: settings.palette[7], palette8: settings.palette[8],
     registro: settings.footerRegistro ?? "", copyright: settings.footerCopyright, creditLabel: settings.footerCreditLabel, creditHref: settings.footerCreditHref ?? "",
   };
@@ -118,7 +118,7 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
       const result = await updateSiteSettings({
         logoHeaderUrl: state.logoHeader, logoFooterUrl: state.logoFooter, faviconUrl: state.favicon,
         phoneLabel: state.phoneLabel, phoneHref: state.phoneHref, email: state.email, address: state.address || null,
-        socialFacebookUrl: state.facebook || null, socialInstagramUrl: state.instagram || null, socialYoutubeUrl: state.youtube || null, socialTiktokUrl: state.tiktok || null,
+        socialFacebookUrl: state.facebook || null, socialInstagramUrl: state.instagram || null, socialTiktokUrl: state.tiktok || null,
         palette1: state.palette1, palette2: state.palette2, palette3: state.palette3, palette5: state.palette5, palette7: state.palette7, palette8: state.palette8,
         footerRegistro: state.registro || null, footerCopyright: state.copyright, footerCreditLabel: state.creditLabel, footerCreditHref: state.creditHref || null,
       });
@@ -141,11 +141,13 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
         </div>
       </Section>
 
-      <Section title="Redes sociales" description="Deja en blanco las redes que no estén verificadas.">
+      <Section title="Redes sociales" description="Deja en blanco las redes que no estén verificadas. Solo se muestran en el sitio las que tengan enlace.">
         <div className="grid gap-4">
           <Field label="Instagram"><input className={inputCls} value={state.instagram} onChange={(e) => set("instagram", e.target.value)} /></Field>
-          <div className="grid gap-4 sm:grid-cols-2"><Field label="Facebook"><input className={inputCls} value={state.facebook} onChange={(e) => set("facebook", e.target.value)} placeholder="Sin verificar" /></Field><Field label="TikTok"><input className={inputCls} value={state.tiktok} onChange={(e) => set("tiktok", e.target.value)} placeholder="Sin verificar" /></Field></div>
-          <Field label="YouTube"><input className={inputCls} value={state.youtube} onChange={(e) => set("youtube", e.target.value)} placeholder="Sin verificar" /></Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="TikTok"><input className={inputCls} value={state.tiktok} onChange={(e) => set("tiktok", e.target.value)} placeholder="Sin verificar" /></Field>
+            <Field label="Facebook"><input className={inputCls} value={state.facebook} onChange={(e) => set("facebook", e.target.value)} placeholder="Sin verificar" /></Field>
+          </div>
         </div>
       </Section>
 
