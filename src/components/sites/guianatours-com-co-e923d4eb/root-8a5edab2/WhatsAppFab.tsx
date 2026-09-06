@@ -49,14 +49,14 @@ export function WhatsAppFab({
         shown ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
       }`}
     >
-      <span className="gn-fab-flip relative h-7 w-7 sm:h-8 sm:w-8">
-        {/* front — WhatsApp glyph, tinted with the palette accent */}
+      <span className="gn-fab-flip relative h-9 w-9 sm:h-11 sm:w-11">
+        {/* front — the wolf mark, the button's resting face */}
         <span className="absolute inset-0 flex items-center justify-center [backface-visibility:hidden]">
-          <WhatsAppGlyph className="h-full w-full text-[var(--gn-palette-7)]" />
+          <Image src="/brand/lobos/logo-white-640.png" alt="" width={64} height={64} className="h-full w-full scale-125 object-contain" />
         </span>
-        {/* back — the wolf mark */}
+        {/* back — WhatsApp glyph in the palette accent, flashed briefly */}
         <span className="absolute inset-0 flex items-center justify-center [backface-visibility:hidden] [transform:rotateY(180deg)]">
-          <Image src="/brand/lobos/logo-white-640.png" alt="" width={64} height={64} className="h-full w-full object-contain" />
+          <WhatsAppGlyph className="h-[85%] w-[85%] text-[var(--gn-palette-7)]" />
         </span>
       </span>
     </a>

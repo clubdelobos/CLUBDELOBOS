@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { requireRole } from "@/lib/auth/dal";
 import { AdminShellNav } from "@/components/admin/AdminShellNav";
+import { StaffFlag } from "@/components/admin/StaffFlag";
 import { SITE_PALETTES, type SitePaletteId } from "@/lib/site-palettes";
 
 export default async function ProtectedAdminLayout({ children }: { children: React.ReactNode }) {
@@ -24,6 +25,7 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
         "--gn-palette-8": palette[8],
       } as React.CSSProperties}
     >
+      <StaffFlag />
       <AdminShellNav role={session.role} email={session.email ?? null} />
 
       <main className="min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-9 xl:px-12">

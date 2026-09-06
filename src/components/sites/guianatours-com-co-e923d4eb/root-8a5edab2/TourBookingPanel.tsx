@@ -9,11 +9,10 @@ interface TourBookingPanelProps {
   tourId: string;
   tourSlug: string;
   tourTitle: string;
+  tourImage?: string;
   departureDates: string[];
   duration: string;
   price: string;
-  /** Bare international WhatsApp number for the post-request handoff. */
-  whatsappNumber: string;
 }
 
 function formatDate(iso: string) {
@@ -24,10 +23,10 @@ export function TourBookingPanel({
   tourId,
   tourSlug,
   tourTitle,
+  tourImage,
   departureDates,
   duration,
   price,
-  whatsappNumber,
 }: TourBookingPanelProps) {
   // Only future (or today's) dates are bookable — a date that already
   // passed stays visible elsewhere on the page but never in the picker.
@@ -98,7 +97,7 @@ export function TourBookingPanel({
           Solicitar reserva
         </button>
         <div className="mt-3">
-          <SaveTourButton variant="panel" slug={tourSlug} title={tourTitle} price={price} />
+          <SaveTourButton variant="panel" slug={tourSlug} title={tourTitle} price={price} image={tourImage} />
         </div>
         <p className="mt-3 text-center text-[11px] leading-4 text-[var(--gn-palette-5)]">
           La solicitud no genera ningún cobro. Confirmaremos disponibilidad contigo.
@@ -113,7 +112,6 @@ export function TourBookingPanel({
           availableDates={availableDates}
           initialDate={requestedDate}
           initialPeople={people}
-          whatsappNumber={whatsappNumber}
         />
       ) : null}
     </>

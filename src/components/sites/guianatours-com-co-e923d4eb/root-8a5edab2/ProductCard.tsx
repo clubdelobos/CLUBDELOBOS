@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { TrackedLink } from "@/components/analytics/TrackedLink";
 import { SaveTourButton } from "./SaveTourButton";
 import type { ProductCard as ProductCardData } from "@/types/guianatours-com-co-e923d4eb";
@@ -30,10 +31,11 @@ export function ProductCard({ product }: { product: ProductCardData }) {
         slug={decodeURIComponent(product.href.split("/").pop() ?? "")}
         title={product.title}
         price={`${product.currencySymbol} ${product.price}`}
+        image={product.image}
       />
 
       {/* .woocommerce-loop-image-link */}
-      <a
+      <Link
         href={product.href}
         className="relative block aspect-[600/360] w-full overflow-hidden"
         aria-label={product.title}
@@ -53,12 +55,12 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           height={360}
           className="absolute inset-0 h-full min-h-full w-full object-cover opacity-0 transition-opacity duration-[400ms] group-hover:opacity-100"
         />
-      </a>
+      </Link>
 
       {/* .product-details / .entry-content-wrap */}
       <div className="relative mx-[8.5px] flex flex-col rounded-[4px] bg-white px-4 pb-6 pt-4 transition-transform duration-300 [transition-timing-function:cubic-bezier(0.17,0.67,0.35,0.95)] group-hover:-translate-y-8 group-focus-within:-translate-y-8">
         <h2 className="py-2 text-[15px] leading-[22.5px] font-semibold text-[var(--gn-palette-3)]">
-          <a href={product.href}>{product.title}</a>
+          <Link href={product.href}>{product.title}</Link>
         </h2>
         <span className="mb-[14.569px] block text-[14.569px] leading-[23.31px] font-normal text-[var(--gn-palette-5)]">
           <span>{product.currencySymbol}</span>

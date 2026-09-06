@@ -185,9 +185,6 @@ export default async function TourPage({ params }: TourPageProps) {
   const price = [tour.currencySymbol, tour.price].filter(Boolean).join(" ");
   const detail = resolveTourDetailCopy({ id: tour.id, slug, price }, storedDetails);
   const duration = detail.facts.find((fact) => fact.key === "time")?.value ?? "Por confirmar";
-  // wa.me wants a bare international number — reuse the public contact phone,
-  // stripping the `tel:` scheme and every non-digit ("+", spaces, dashes).
-  const whatsappNumber = settings.phoneHref.replace(/\D/g, "");
   const visibleFacts = detail.facts.filter((fact) => fact.enabled);
   const eventJsonLd = buildTourEventJsonLd({
     title: tour.title,
@@ -260,11 +257,10 @@ export default async function TourPage({ params }: TourPageProps) {
                       key={fact.key}
                       zoom
                       delay={Math.min(index, 5) * 45}
-                      style={{ "--gn-fact-index": index } as React.CSSProperties}
                       className="gn-fact-card flex min-h-36 flex-col items-center justify-center rounded-2xl bg-[var(--gn-palette-7)] p-3 text-center outline-none ring-1 ring-black/[0.03] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-[var(--gn-palette-7)]/70 hover:shadow-[0_14px_30px_rgba(18,39,31,0.12)] focus-visible:ring-2 focus-visible:ring-[var(--gn-palette-1)]/40"
                     >
                       <span tabIndex={0} className="flex flex-col items-center outline-none">
-                        <Icon strokeWidth={1.55} className="gn-fact-icon mb-3 h-11 w-11 text-[var(--gn-palette-1)]" />
+                        <Icon strokeWidth={1.55} className={`gn-fact-icon gn-fi-${fact.icon} mb-3 h-11 w-11 text-[var(--gn-palette-1)]`} />
                         <strong className="text-sm text-[var(--gn-palette-3)]">{fact.label}</strong>
                         <span className="mt-1 text-[11px] leading-4 text-[var(--gn-palette-5)]">{fact.value}</span>
                       </span>
@@ -322,10 +318,10 @@ export default async function TourPage({ params }: TourPageProps) {
               tourId={tour.id}
               tourSlug={tour.slug}
               tourTitle={tour.title}
+              tourImage={tour.images[0]?.url}
               departureDates={tour.departureDates}
               duration={duration}
               price={price}
-              whatsappNumber={whatsappNumber}
             />
           </div>
         </div>

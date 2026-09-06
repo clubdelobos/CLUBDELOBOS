@@ -168,12 +168,18 @@ export interface Database {
           path: string;
           label: string | null;
           created_at: string;
+          // Added in 0006_analytics_meta.sql — null on rows written before it,
+          // and on installs that haven't applied the migration yet.
+          country: string | null;
+          device: string | null;
         };
         Insert: {
           id?: string;
           event_type: AnalyticsEventType;
           path: string;
           label?: string | null;
+          country?: string | null;
+          device?: string | null;
         };
         Update: never;
         Relationships: [];

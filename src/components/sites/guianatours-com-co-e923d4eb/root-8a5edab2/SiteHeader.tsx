@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import {
   CloseIcon,
@@ -24,7 +25,7 @@ const SOCIAL_GLYPH = {
 
 function Logo({ className, logoUrl }: { className?: string; logoUrl: string | null }) {
   return (
-    <a href={HOME_HREF} aria-label="Club de Lobos" className={className}>
+    <Link href={HOME_HREF} aria-label="Club de Lobos" className={className}>
       <Image
         src={logoUrl ?? "/brand/lobos/logo-white-640.png"}
         alt="Club de Lobos"
@@ -33,7 +34,7 @@ function Logo({ className, logoUrl }: { className?: string; logoUrl: string | nu
         priority
         className="block h-auto w-[92px] max-[1024px]:w-[90px]"
       />
-    </a>
+    </Link>
   );
 }
 
@@ -142,7 +143,7 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
                 <ul className="flex items-center">
                   {navLinks.map((link) => (
                     <li key={link.id}>
-                      <a
+                      <Link
                         href={link.href}
                         aria-current={link.active ? "page" : undefined}
                         className={cn(
@@ -151,7 +152,7 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
                         )}
                       >
                         {link.label}
-                      </a>
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -215,7 +216,7 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
             <ul className="flex flex-col">
               {navLinks.map((link) => (
                 <li key={link.id}>
-                  <a
+                  <Link
                     href={link.href}
                     onClick={() => setDrawerOpen(false)}
                     aria-current={link.active ? "page" : undefined}
@@ -225,7 +226,7 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
                     )}
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

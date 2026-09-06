@@ -15,6 +15,7 @@ export interface SavedSalida {
   slug: string;
   title: string;
   price?: string;
+  image?: string;
 }
 
 const KEY = "lobos:salidas-guardadas";

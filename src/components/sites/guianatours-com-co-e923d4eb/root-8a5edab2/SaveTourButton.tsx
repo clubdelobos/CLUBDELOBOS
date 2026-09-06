@@ -8,19 +8,21 @@ interface SaveTourButtonProps {
   slug: string;
   title: string;
   price?: string;
+  image?: string;
   /** "card" floats over a product image; "panel" is a full-width row button. */
   variant?: "card" | "panel";
 }
 
-export function SaveTourButton({ slug, title, price, variant = "card" }: SaveTourButtonProps) {
+export function SaveTourButton({ slug, title, price, image, variant = "card" }: SaveTourButtonProps) {
   const { has, toggle } = useSalidasCart();
   const saved = has(slug);
+  const entry = { slug, title, price, image };
 
   if (variant === "panel") {
     return (
       <button
         type="button"
-        onClick={() => toggle({ slug, title, price })}
+        onClick={() => toggle(entry)}
         aria-pressed={saved}
         className={cn(
           "flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-colors",
@@ -38,7 +40,7 @@ export function SaveTourButton({ slug, title, price, variant = "card" }: SaveTou
   return (
     <button
       type="button"
-      onClick={() => toggle({ slug, title, price })}
+      onClick={() => toggle(entry)}
       aria-pressed={saved}
       aria-label={saved ? `Quitar ${title} de mi lista` : `Guardar ${title} en mi lista`}
       className={cn(

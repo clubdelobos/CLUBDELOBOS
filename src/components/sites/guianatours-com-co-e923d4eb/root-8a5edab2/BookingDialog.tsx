@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CalendarCheck2, CheckCircle2, X } from "lucide-react";
+import Image from "next/image";
+import { CalendarCheck2, Check, X } from "lucide-react";
 import { createBooking } from "@/app/actions/bookings";
 
 const inputCls =
@@ -14,20 +15,10 @@ export interface BookingDialogProps {
   availableDates: string[];
   initialDate?: string;
   initialPeople?: number;
-  whatsappNumber: string;
 }
 
 function formatDate(iso: string) {
   return new Date(`${iso}T00:00:00Z`).toLocaleDateString("es-SV", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
-}
-
-/** WhatsApp glyph — inlined so the success screen needs no icon-font/CDN. */
-function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.074-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.71.306 1.263.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.885-9.887 9.885M20.52 3.449C18.24 1.245 15.24 0 12.045 0 5.463 0 .104 5.359.101 11.945c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.652a11.98 11.98 0 005.71 1.454h.005c6.582 0 11.941-5.359 11.944-11.945a11.86 11.86 0 00-3.48-8.408" />
-    </svg>
-  );
 }
 
 /**
@@ -37,8 +28,7 @@ function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
  * resets for free on every open instead of needing a setState-in-effect.
  * Submits through the createBooking Server Action — see
  * src/app/actions/bookings.ts for the honeypot + throttle + RLS story.
- * After a successful save it offers a one-tap WhatsApp handoff (wa.me) so
- * the team gets the request on their phone right away.
+ * The request lands in the admin panel; the team follows up by WhatsApp.
  */
 export function BookingDialog({
   onClose,
@@ -47,12 +37,10 @@ export function BookingDialog({
   availableDates,
   initialDate = "",
   initialPeople = 1,
-  whatsappNumber,
 }: BookingDialogProps) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
-  const [waUrl, setWaUrl] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -76,50 +64,19 @@ export function BookingDialog({
     if (done) closeRef.current?.focus();
   }, [done]);
 
-  function buildWaUrl(fields: {
-    name: string;
-    date: string;
-    people: number;
-    email: string;
-    phone: string;
-    notes: string;
-  }) {
-    if (!whatsappNumber) return null;
-    const lines = [
-      `Hola, quiero reservar una salida con Club de Lobos.`,
-      ``,
-      `Salida: ${tourTitle}`,
-      `Nombre: ${fields.name}`,
-      `Fecha deseada: ${fields.date ? formatDate(fields.date) : "Por confirmar"}`,
-      `Personas: ${fields.people}`,
-      `Correo: ${fields.email}`,
-      `Teléfono: ${fields.phone}`,
-    ];
-    if (fields.notes.trim()) lines.push(`Notas: ${fields.notes.trim()}`);
-    return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(lines.join("\n"))}`;
-  }
-
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setPending(true);
     setError(null);
     const form = new FormData(e.currentTarget);
-    const fields = {
-      name: String(form.get("customerName") ?? ""),
-      email: String(form.get("email") ?? ""),
-      phone: String(form.get("phone") ?? ""),
-      date: String(form.get("requestedDate") ?? ""),
-      people: Number(form.get("numPeople") ?? 1),
-      notes: String(form.get("notes") ?? ""),
-    };
     const result = await createBooking({
       tourId,
-      customerName: fields.name,
-      email: fields.email,
-      phone: fields.phone,
-      requestedDate: fields.date,
-      numPeople: fields.people,
-      notes: fields.notes,
+      customerName: String(form.get("customerName") ?? ""),
+      email: String(form.get("email") ?? ""),
+      phone: String(form.get("phone") ?? ""),
+      requestedDate: String(form.get("requestedDate") ?? ""),
+      numPeople: Number(form.get("numPeople") ?? 1),
+      notes: String(form.get("notes") ?? ""),
       website: String(form.get("website") ?? ""),
     });
     setPending(false);
@@ -127,13 +84,7 @@ export function BookingDialog({
       setError(result.error);
       return;
     }
-    const url = buildWaUrl(fields);
-    setWaUrl(url);
     setDone(true);
-    // Best-effort: this runs inside the submit handler's gesture chain, so
-    // most browsers still allow the pop-up. The on-screen button is the
-    // reliable fallback if it's blocked.
-    if (url) window.open(url, "_blank", "noopener,noreferrer");
   }
 
   return (
@@ -146,37 +97,23 @@ export function BookingDialog({
       />
       <div className="relative flex w-full max-w-md flex-col gap-4 rounded-3xl bg-white p-6 shadow-[0_30px_80px_-12px_rgba(18,39,31,0.45)] duration-200 animate-in fade-in zoom-in-95 sm:p-7">
         {done ? (
-          <div className="flex flex-col items-center gap-4 py-2 text-center">
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 duration-500 animate-in zoom-in-50">
-              <CheckCircle2 className="h-9 w-9" strokeWidth={2} />
+          <div className="flex flex-col items-center gap-4 py-3 text-center">
+            <span className="relative flex h-20 w-20 items-center justify-center rounded-full bg-[var(--gn-palette-8)] duration-500 animate-in zoom-in-50">
+              <Image src="/brand/lobos/logo-black-640.png" alt="Club de Lobos" width={80} height={80} className="h-12 w-12 object-contain" />
+              <span className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-emerald-500 text-white">
+                <Check className="h-4 w-4" strokeWidth={3} />
+              </span>
             </span>
             <div>
-              <h2 className="text-lg font-extrabold text-[var(--gn-palette-3)]">¡Solicitud recibida!</h2>
+              <h2 className="text-lg font-extrabold text-[var(--gn-palette-3)]">¡Tu solicitud fue recibida!</h2>
               <p className="mt-2 text-sm leading-6 text-[var(--gn-palette-5)]">
-                Registramos tu solicitud para <strong className="text-[var(--gn-palette-3)]">{tourTitle}</strong>.
-                Nos pondremos en contacto contigo lo más pronto posible para confirmar disponibilidad.
+                Guardamos tu solicitud para <strong className="text-[var(--gn-palette-3)]">{tourTitle}</strong>. El
+                equipo de Club de Lobos se pondrá en contacto contigo por WhatsApp lo antes posible para confirmar
+                los detalles. 🐺
               </p>
             </div>
-
-            {waUrl ? (
-              <>
-                <a
-                  href={waUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 py-3 text-sm font-bold text-white transition-transform hover:scale-[1.02] active:scale-100"
-                >
-                  <WhatsAppIcon className="h-5 w-5" />
-                  Enviar confirmación por WhatsApp
-                </a>
-                <p className="text-[11px] leading-4 text-[var(--gn-palette-5)]">
-                  Se abrió una ventana de WhatsApp con tu solicitud lista para enviar. Si no apareció, usa el botón.
-                </p>
-              </>
-            ) : null}
-
-            <button ref={closeRef} type="button" onClick={onClose} className="text-sm font-semibold text-[var(--gn-palette-1)] hover:underline">
-              Cerrar
+            <button ref={closeRef} type="button" onClick={onClose} className="gn-button mt-1">
+              <span className="inline-flex items-center">Entendido</span>
             </button>
           </div>
         ) : (

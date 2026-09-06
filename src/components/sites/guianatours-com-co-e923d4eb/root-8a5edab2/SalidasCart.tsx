@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Trash2, X } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { Heart, Mountain, X } from "lucide-react";
 import { ShoppingCartIcon } from "@/components/sites/guianatours-com-co-e923d4eb/shared/icons";
 import { cn } from "@/lib/utils";
 import { useSalidasCart } from "./salidas-cart";
@@ -61,50 +63,77 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
       </button>
 
       {open ? (
-        <div className="absolute right-0 top-[calc(100%+12px)] z-50 w-[300px] max-w-[85vw] overflow-hidden rounded-xl border border-black/10 bg-white text-left shadow-[0_20px_50px_rgba(0,0,0,0.25)]">
-          <div className="flex items-center justify-between border-b border-black/5 px-4 py-3">
+        <div className="absolute right-0 top-[calc(100%+14px)] z-50 w-[320px] max-w-[88vw] overflow-hidden rounded-2xl border border-black/[0.06] bg-white text-left shadow-[0_28px_70px_-12px_rgba(0,0,0,0.4)] duration-150 animate-in fade-in slide-in-from-top-1">
+          <div className="flex items-center justify-between px-4 pb-2 pt-4">
             <p className="text-sm font-extrabold text-[var(--gn-palette-3)]">Mis salidas guardadas</p>
-            <button type="button" onClick={() => setOpen(false)} aria-label="Cerrar" className="text-[var(--gn-palette-5)] hover:text-[var(--gn-palette-3)]">
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Cerrar"
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--gn-palette-5)] transition-colors hover:bg-black/5"
+            >
               <X className="h-4 w-4" />
             </button>
           </div>
 
           {items.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-[var(--gn-palette-5)]">
-              Aún no guardas ninguna salida. Usa el corazón en cada aventura para agregarla aquí.
-            </p>
+            <div className="flex flex-col items-center gap-2 px-6 pb-6 pt-2 text-center">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--gn-palette-8)] text-[var(--gn-palette-1)]">
+                <Heart className="h-5 w-5" />
+              </span>
+              <p className="text-sm leading-5 text-[var(--gn-palette-5)]">
+                Aún no guardas ninguna salida. Toca el corazón en cada aventura para agregarla aquí.
+              </p>
+            </div>
           ) : (
             <>
-              <ul className="max-h-[240px] divide-y divide-black/5 overflow-y-auto">
+              <ul className="no-scrollbar max-h-[260px] overflow-y-auto px-2 pb-2">
                 {items.map((item) => (
-                  <li key={item.slug} className="flex items-center gap-2 px-4 py-2.5">
-                    <a href={`/salidas/${encodeURIComponent(item.slug)}`} className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold text-[var(--gn-palette-3)]">{item.title}</span>
-                      {item.price ? <span className="text-xs text-[var(--gn-palette-5)]">{item.price}</span> : null}
-                    </a>
+                  <li key={item.slug} className="group flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-[var(--gn-palette-8)]">
+                    <Link
+                      href={`/salidas/${encodeURIComponent(item.slug)}`}
+                      onClick={() => setOpen(false)}
+                      className="flex min-w-0 flex-1 items-center gap-3"
+                    >
+                      <span className="relative flex h-11 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[var(--gn-palette-8)] text-[var(--gn-palette-1)]/40">
+                        {item.image ? (
+                          <Image src={item.image} alt="" fill sizes="56px" className="object-cover" />
+                        ) : (
+                          <Mountain className="h-4 w-4" />
+                        )}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-[var(--gn-palette-3)]">{item.title}</span>
+                        {item.price ? <span className="block text-xs text-[var(--gn-palette-5)]">{item.price}</span> : null}
+                      </span>
+                    </Link>
                     <button
                       type="button"
                       onClick={() => remove(item.slug)}
                       aria-label={`Quitar ${item.title}`}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[var(--gn-palette-5)] transition-colors hover:bg-black/5 hover:text-red-600"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[var(--gn-palette-5)] opacity-60 transition-colors hover:bg-black/5 hover:text-[var(--gn-palette-3)] group-hover:opacity-100"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <X className="h-4 w-4" />
                     </button>
                   </li>
                 ))}
               </ul>
-              <div className="flex flex-col gap-2 border-t border-black/5 p-3">
+              <div className="flex flex-col gap-2 border-t border-black/[0.06] p-3">
                 {waHref ? (
                   <a
                     href={waHref}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center rounded-lg bg-[var(--gn-palette-1)] px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[var(--gn-palette-2)]"
+                    className="flex items-center justify-center rounded-xl bg-[var(--gn-palette-1)] px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[var(--gn-palette-2)]"
                   >
-                    Consultar {items.length === 1 ? "esta salida" : `estas ${items.length}`} por WhatsApp
+                    Consultar {items.length === 1 ? "esta salida" : `las ${items.length}`} por WhatsApp
                   </a>
                 ) : null}
-                <button type="button" onClick={clear} className="text-xs font-semibold text-[var(--gn-palette-5)] hover:text-red-600">
+                <button
+                  type="button"
+                  onClick={clear}
+                  className="self-center text-xs font-semibold text-[var(--gn-palette-5)] transition-colors hover:text-[var(--gn-palette-3)]"
+                >
                   Vaciar lista
                 </button>
               </div>
