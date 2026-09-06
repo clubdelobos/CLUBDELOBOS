@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { CalendarCheck2, Check, X } from "lucide-react";
 import { createBooking } from "@/app/actions/bookings";
+import { DateSelect } from "./DateSelect";
 
 const inputCls =
   "h-10 rounded-lg border border-[#69727d] bg-white px-3 text-[15px] text-[#1f2124] outline-none transition-shadow focus:border-[var(--gn-palette-1)] focus:ring-2 focus:ring-[var(--gn-palette-1)]/25";
@@ -15,10 +16,6 @@ export interface BookingDialogProps {
   availableDates: string[];
   initialDate?: string;
   initialPeople?: number;
-}
-
-function formatDate(iso: string) {
-  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("es-SV", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 }
 
 /**
@@ -41,6 +38,7 @@ export function BookingDialog({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [date, setDate] = useState(initialDate || availableDates[0] || "");
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -162,13 +160,10 @@ export function BookingDialog({
                 <input name="phone" type="tel" required className={inputCls} />
               </label>
               <div className="flex gap-3">
-                <label className="flex flex-1 flex-col gap-1 text-sm text-[var(--gn-palette-3)]">
+                <div className="flex flex-1 flex-col gap-1 text-sm text-[var(--gn-palette-3)]">
                   Fecha deseada
-                  <select name="requestedDate" defaultValue={initialDate} required className={inputCls}>
-                    {availableDates.length === 0 ? <option value="">Sin fechas disponibles</option> : null}
-                    {availableDates.map((date) => <option key={date} value={date}>{formatDate(date)}</option>)}
-                  </select>
-                </label>
+                  <DateSelect name="requestedDate" size="sm" dates={availableDates} value={date} onChange={setDate} />
+                </div>
                 <label className="flex w-28 flex-col gap-1 text-sm text-[var(--gn-palette-3)]">
                   Personas
                   <input name="numPeople" type="number" min={1} max={50} defaultValue={initialPeople} required className={inputCls} />

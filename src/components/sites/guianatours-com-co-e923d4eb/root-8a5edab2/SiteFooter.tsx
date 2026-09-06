@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import {
   EnvelopeIcon,
@@ -9,6 +10,7 @@ import {
   PhoneSolidIcon,
   YoutubeBrandIcon,
 } from "@/components/sites/guianatours-com-co-e923d4eb/shared/icons";
+import { WhatsAppGlyph } from "@/components/sites/guianatours-com-co-e923d4eb/shared/WhatsAppGlyph";
 import { track } from "@/lib/analytics/track";
 import type { NavLink, SocialLink } from "@/types/guianatours-com-co-e923d4eb";
 import { FOOTER } from "./content";
@@ -118,7 +120,7 @@ export function SiteFooter({
               <ul className="flex flex-col">
                 {navLinks.map((link) => (
                   <li key={link.id}>
-                    <a
+                    <Link
                       href={link.href}
                       aria-current={link.active ? "page" : undefined}
                       className={cn(
@@ -127,7 +129,7 @@ export function SiteFooter({
                       )}
                     >
                       {link.label}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -139,14 +141,12 @@ export function SiteFooter({
             <ul>
               {FOOTER.legalLinks.map((link) => (
                 <li key={link.label} className="flex pb-[2px] text-center">
-                  <a
+                  <Link
                     href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     className="w-full text-center text-[14px] leading-[22.4px] font-normal text-white transition-colors hover:text-[var(--gn-palette-7)]"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -156,44 +156,36 @@ export function SiteFooter({
             <h3 className="mb-[10px] text-center text-[18px] leading-[18px] font-bold text-white">
               {FOOTER.subscribeHeading}
             </h3>
-            <form onSubmit={(e) => e.preventDefault()} name="Footer form">
-              <div className="mb-[10px] px-[5px]">
-                <label htmlFor="gn-footer-name" className="sr-only">
-                  Nombre
-                </label>
-                <input
-                  id="gn-footer-name"
-                  name="form_fields[name]"
-                  type="text"
-                  required
-                  placeholder={FOOTER.form.namePlaceholder}
-                  className="block h-10 w-full rounded-lg border border-[#69727d] bg-white px-[7.5px] py-[6px] text-[15px] leading-[21px] text-[#1f2124]"
-                />
-              </div>
-              <div className="mb-[10px] px-[5px]">
-                <label htmlFor="gn-footer-email" className="sr-only">
-                  Email
-                </label>
-                <input
-                  id="gn-footer-email"
-                  name="form_fields[email]"
-                  type="email"
-                  required
-                  placeholder={FOOTER.form.emailPlaceholder}
-                  className="block h-10 w-full rounded-lg border border-[#69727d] bg-white px-[7.5px] py-[6px] text-[15px] leading-[21px] text-[#1f2124]"
-                />
-              </div>
-              {/* no bottom margin on the last group — Elementor cancels it with a
-                  -10px margin on the fields wrapper, so it must not leak out */}
-              <div className="px-[5px]">
-                <button
-                  type="submit"
-                  className="block h-10 w-full rounded-lg bg-[var(--gn-palette-7)] px-6 text-center text-[15px] leading-[15px] font-normal text-[var(--gn-palette-1)] transition-all duration-300"
-                >
-                  {FOOTER.form.submitLabel}
-                </button>
-              </div>
-            </form>
+            <p className="mb-4 text-center text-[13px] leading-5 text-white/70">{FOOTER.subscribeBody}</p>
+            <div className="flex flex-col gap-2.5 px-[5px]">
+              <a
+                href={`https://wa.me/${phoneHref.replace(/\D/g, "")}?text=${encodeURIComponent(
+                  "Hola, quiero enterarme de las próximas salidas de Club de Lobos.",
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => track("cta_click", "footer_whatsapp")}
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#25D366] px-4 text-[14px] font-bold text-white transition-transform hover:scale-[1.02]"
+              >
+                <WhatsAppGlyph className="h-4 w-4" />
+                Escríbenos por WhatsApp
+              </a>
+              {socialLinks
+                .filter((s) => s.network === "instagram")
+                .map((s) => (
+                  <a
+                    key={s.network}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => track("social_click", "instagram")}
+                    className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[var(--gn-palette-7)] px-4 text-[14px] font-bold text-[var(--gn-palette-1)] transition-opacity hover:opacity-90"
+                  >
+                    <InstagramBrandIcon className="h-4 w-4" />
+                    Síguenos en Instagram
+                  </a>
+                ))}
+            </div>
           </FooterColumn>
         </div>
       </section>

@@ -433,17 +433,34 @@
 /* Floating WhatsApp button — flips between the wolf mark and the WhatsApp
    glyph on a slow loop (mostly resting on the glyph). */
 @keyframes gn-fab-flip {
-  0%, 58% { transform: rotateY(0deg); }
-  68%, 80% { transform: rotateY(180deg); }
-  90%, 100% { transform: rotateY(0deg); }
+  0%, 62% { transform: rotateY(0deg); }
+  72%, 88% { transform: rotateY(180deg); }
+  96%, 100% { transform: rotateY(0deg); }
 }
 .gn-fab-flip {
   transform-style: preserve-3d;
-  animation: gn-fab-flip 8s ease-in-out infinite;
-  animation-delay: 3s;
+  animation: gn-fab-flip 5.5s cubic-bezier(0.6, 0, 0.3, 1) infinite;
+  animation-delay: 2s;
 }
 @media (prefers-reduced-motion: reduce) {
   .gn-fab-flip {
+    animation: none;
+  }
+}
+
+/* Vertical marquee — the login backdrop columns. */
+@keyframes gn-marquee-y {
+  from { transform: translateY(0); }
+  to { transform: translateY(-50%); }
+}
+.gn-marquee-col {
+  animation: gn-marquee-y var(--gn-col-duration, 70s) linear infinite;
+}
+.gn-marquee-col--reverse {
+  animation-direction: reverse;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gn-marquee-col {
     animation: none;
   }
 }

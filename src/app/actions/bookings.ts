@@ -20,6 +20,35 @@ export interface BookingState {
   success?: boolean;
 }
 
+export interface TourBookingInfo {
+  tourId: string;
+  title: string;
+  availableDates: string[];
+}
+
+/**
+ * Read-only helper for the "salidas guardadas" list — lets the cart open the
+ * booking form for a saved salida without the client having stored its id or
+ * date list. Only ever returns published tours.
+ */
+export async function getTourBookingInfo(slug: string): Promise<TourBookingInfo | null> {
+  if (typeof slug !== "string" || !slug || slug.length > 200) return null;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("tours")
+    .select("id, title, departure_dates")
+    .eq("slug", slug)
+    .eq("is_published", true)
+    .maybeSingle();
+  if (!data) return null;
+  const today = new Date().toISOString().slice(0, 10);
+  return {
+    tourId: data.id,
+    title: data.title,
+    availableDates: data.departure_dates.filter((d: string) => d >= today),
+  };
+}
+
 /**
  * Public Server Action — the only path a visitor has to write to `bookings`.
  * One choke point for: validation, a honeypot check, and per-email

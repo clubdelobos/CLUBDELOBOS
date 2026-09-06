@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getGalleryItems, getSiteSettings } from "@/lib/queries/site-content";
+import { LoginBackdrop } from "./LoginBackdrop";
 import { LoginForm } from "./LoginForm";
 
 export const metadata: Metadata = { title: "Ingresar", robots: { index: false, follow: false } };
@@ -17,7 +18,7 @@ export default async function LoginPage({
     getSiteSettings(),
     getGalleryItems(),
   ]);
-  const backdrop = gallery[0] ?? null;
+  const shots = gallery.map((g) => ({ full: g.full, width: g.width, height: g.height }));
 
   return (
     <div
@@ -31,17 +32,7 @@ export default async function LoginPage({
         "--gn-palette-8": settings.palette[8],
       } as React.CSSProperties}
     >
-      {backdrop ? (
-        <Image
-          src={backdrop.full}
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="scale-105 object-cover object-center"
-        />
-      ) : null}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-[var(--gn-palette-2)]/90" />
+      <LoginBackdrop shots={shots} />
 
       <Link
         href="/"

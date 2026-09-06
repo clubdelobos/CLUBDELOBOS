@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "lobos-cookie-notice-v1";
@@ -46,7 +47,12 @@ export function CookieNotice() {
       <div className="min-w-0 flex-1">
         <p className="text-sm font-bold">Aviso de cookies</p>
         <p className="mt-1 text-xs leading-5 text-white/80">
-          Este sitio utiliza únicamente cookies técnicas y almacenamiento local necesarios para funcionar, mantener la seguridad y recordar tus preferencias. No usamos cookies publicitarias.
+          Este sitio utiliza únicamente almacenamiento técnico y una medición de visitas anónima. No usamos cookies
+          publicitarias ni compartimos tus datos.{" "}
+          <Link href="/legal/cookies" className="font-semibold text-[var(--gn-palette-7)] underline underline-offset-2">
+            Más información
+          </Link>
+          .
         </p>
       </div>
       <button

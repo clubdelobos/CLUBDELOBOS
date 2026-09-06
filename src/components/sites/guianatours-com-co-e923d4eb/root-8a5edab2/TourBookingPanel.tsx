@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarDays, Minus, Plus } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { BookingDialog } from "./BookingDialog";
+import { DateSelect } from "./DateSelect";
 import { SaveTourButton } from "./SaveTourButton";
 
 interface TourBookingPanelProps {
@@ -13,10 +14,6 @@ interface TourBookingPanelProps {
   departureDates: string[];
   duration: string;
   price: string;
-}
-
-function formatDate(iso: string) {
-  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("es-SV", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 }
 
 export function TourBookingPanel({
@@ -48,21 +45,15 @@ export function TourBookingPanel({
           <dd className="text-[var(--gn-palette-5)]">{price}</dd>
         </dl>
 
-        <label className="flex flex-col gap-2 text-xs font-bold text-[var(--gn-palette-3)]">
+        <div className="flex flex-col gap-2 text-xs font-bold text-[var(--gn-palette-3)]">
           Fecha de la salida
-          <span className="relative">
-            <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--gn-palette-1)]" />
-            <select
-              value={requestedDate}
-              onChange={(event) => setRequestedDate(event.target.value)}
-              disabled={availableDates.length === 0}
-              className="h-12 w-full appearance-none rounded-xl border border-[#d9ded9] bg-white pl-10 pr-3 text-sm font-normal text-[var(--gn-palette-3)] disabled:opacity-60"
-            >
-              {availableDates.length === 0 ? <option value="">Sin fechas disponibles</option> : null}
-              {availableDates.map((date) => <option key={date} value={date}>{formatDate(date)}</option>)}
-            </select>
-          </span>
-        </label>
+          <DateSelect
+            dates={availableDates}
+            value={requestedDate}
+            onChange={setRequestedDate}
+            disabled={availableDates.length === 0}
+          />
+        </div>
 
         <fieldset className="mt-5">
           <legend className="text-xs font-bold text-[var(--gn-palette-3)]">Adultos</legend>

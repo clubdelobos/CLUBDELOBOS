@@ -237,19 +237,16 @@ export const REVIEWS: Review[] = [
 export const FOOTER = {
   registro: "El Salvador · Senderismo, camping y viajes en manada",
   sitemapHeading: "Mapa del sitio",
-  legalHeading: "Club de Lobos",
+  legalHeading: "Legal",
   subscribeHeading: "Únete a la manada",
+  subscribeBody: "No manejamos listas de correo. Síguenos y escríbenos directamente para enterarte de cada salida.",
   legalLinks: [
-    { label: "Aviso de cookies", href: "/#aviso-cookies" },
-    { label: "Próximas salidas", href: "/proximas-salidas" },
-    { label: "Conoce la manada", href: "/club-de-lobos" },
-    { label: "Instagram", href: "https://www.instagram.com/lobos_sv/" },
+    { label: "Términos y condiciones", href: "/legal/terminos" },
+    { label: "Política de privacidad", href: "/legal/privacidad" },
+    { label: "Política de cancelación", href: "/legal/cancelacion" },
+    { label: "Protocolos de bioseguridad", href: "/legal/bioseguridad" },
+    { label: "Política de cookies", href: "/legal/cookies" },
   ],
-  form: {
-    namePlaceholder: "Nombre y apellido",
-    emailPlaceholder: "Email",
-    submitLabel: "Quiero recibir novedades",
-  },
   copyright: "© 2026 Club de Lobos.",
   designer: { label: "", href: null as string | null },
 };
