@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { getGalleryItems, getSiteSettings } from "@/lib/queries/site-content";
 import { LoginForm } from "./LoginForm";
 
@@ -36,18 +38,29 @@ export default async function LoginPage({
           fill
           priority
           sizes="100vw"
-          className="object-cover object-center"
+          className="scale-105 object-cover object-center"
         />
       ) : null}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-[var(--gn-palette-2)]/85" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-[var(--gn-palette-2)]/90" />
 
-      <div className="relative flex w-full max-w-sm flex-col items-center gap-6 rounded-2xl bg-white/95 p-8 shadow-2xl backdrop-blur-sm">
-        <Image src="/brand/lobos/logo-black-640.png" alt="Club de Lobos" width={640} height={640} priority className="h-20 w-20 object-contain" />
+      <Link
+        href="/"
+        className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/90 backdrop-blur-sm transition-colors hover:bg-white/20 sm:left-6 sm:top-6"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Volver al sitio
+      </Link>
+
+      <div className="relative flex w-full max-w-sm flex-col items-center gap-6 rounded-3xl border border-white/20 bg-white/95 p-8 shadow-[0_30px_90px_-15px_rgba(0,0,0,0.6)] backdrop-blur-md duration-500 animate-in fade-in slide-in-from-bottom-4">
+        <Image src="/brand/lobos/logo-black-640.png" alt="Club de Lobos" width={640} height={640} priority className="h-16 w-16 object-contain sm:h-20 sm:w-20" />
         <div className="text-center">
-          <h1 className="text-xl font-bold text-[var(--gn-palette-3)]">Club de Lobos</h1>
+          <h1 className="text-xl font-extrabold text-[var(--gn-palette-3)]">Club de Lobos</h1>
           <p className="mt-1 text-sm text-[var(--gn-palette-5)]">Panel de administración</p>
         </div>
         <LoginForm next={next} />
+        <p className="text-center text-[11px] leading-4 text-[var(--gn-palette-5)]">
+          Acceso exclusivo para el equipo. Si perdiste tu contraseña, contacta al administrador del sitio.
+        </p>
       </div>
     </div>
   );

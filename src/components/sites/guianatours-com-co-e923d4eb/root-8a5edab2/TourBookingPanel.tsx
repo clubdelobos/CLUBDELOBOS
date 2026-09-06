@@ -10,6 +10,8 @@ interface TourBookingPanelProps {
   departureDates: string[];
   duration: string;
   price: string;
+  /** Bare international WhatsApp number for the post-request handoff. */
+  whatsappNumber: string;
 }
 
 function formatDate(iso: string) {
@@ -22,6 +24,7 @@ export function TourBookingPanel({
   departureDates,
   duration,
   price,
+  whatsappNumber,
 }: TourBookingPanelProps) {
   // Only future (or today's) dates are bookable — a date that already
   // passed stays visible elsewhere on the page but never in the picker.
@@ -102,6 +105,7 @@ export function TourBookingPanel({
           availableDates={availableDates}
           initialDate={requestedDate}
           initialPeople={people}
+          whatsappNumber={whatsappNumber}
         />
       ) : null}
     </>

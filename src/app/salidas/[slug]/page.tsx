@@ -4,11 +4,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   Activity,
+  Backpack,
+  Ban,
   Camera,
+  Check,
   CircleDollarSign,
   Clock3,
   Compass,
+  Flag,
   Gauge,
+  Info,
+  MapPin,
   Mountain,
   Route,
   Thermometer,
@@ -20,6 +26,7 @@ import {
 } from "lucide-react";
 import { CookieNotice } from "@/components/CookieNotice";
 import { PageViewBeacon } from "@/components/analytics/PageViewBeacon";
+import { Reveal } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/Reveal";
 import { SiteFooter } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/SiteFooter";
 import { SiteHeader } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/SiteHeader";
 import { TourBookingPanel } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/TourBookingPanel";
@@ -121,23 +128,46 @@ function TourGallery({ images, title }: { images: GalleryImage[]; title: string 
 const INFORMATION_SECTIONS = [
   {
     title: "Antes de salir",
+    icon: Info,
     body: "Te enviaremos el punto de encuentro, horario definitivo y recomendaciones cuando confirmemos tu solicitud.",
   },
   {
     title: "Qué haremos",
+    icon: Route,
     body: "Compartiremos la ruta con la manada, respetando el ritmo del grupo, el entorno y las indicaciones de seguridad.",
   },
   {
     title: "Qué incluye",
+    icon: Check,
     body: "Coordinación previa, acompañamiento del grupo y orientación general durante la experiencia. Los servicios específicos se detallan al confirmar.",
   },
   {
     title: "Qué llevar",
+    icon: Backpack,
     body: "Ropa cómoda, calzado adecuado, agua, protección solar y los artículos particulares que indiquemos para el destino.",
   },
   {
     title: "Qué no llevar",
+    icon: Ban,
     body: "Evita objetos innecesarios, envases desechables y cualquier elemento que pueda afectar el entorno o dificultar la caminata.",
+  },
+] as const;
+
+const ITINERARY_STEPS = [
+  {
+    icon: MapPin,
+    title: "Punto de encuentro",
+    body: "Lugar y hora por confirmar con las personas inscritas.",
+  },
+  {
+    icon: Compass,
+    title: "Experiencia",
+    body: "Recorrido, pausas y actividades de acuerdo con el destino y las condiciones del día.",
+  },
+  {
+    icon: Flag,
+    title: "Regreso",
+    body: "El horario estimado se compartirá junto con el itinerario definitivo.",
   },
 ] as const;
 
@@ -154,6 +184,9 @@ export default async function TourPage({ params }: TourPageProps) {
   const price = [tour.currencySymbol, tour.price].filter(Boolean).join(" ");
   const detail = resolveTourDetailCopy({ id: tour.id, slug, price }, storedDetails);
   const duration = detail.facts.find((fact) => fact.key === "time")?.value ?? "Por confirmar";
+  // wa.me wants a bare international number — reuse the public contact phone,
+  // stripping the `tel:` scheme and every non-digit ("+", spaces, dashes).
+  const whatsappNumber = settings.phoneHref.replace(/\D/g, "");
   const eventJsonLd = buildTourEventJsonLd({
     title: tour.title,
     slug,
@@ -211,52 +244,72 @@ export default async function TourPage({ params }: TourPageProps) {
                 <h2 className="mt-1 text-lg font-bold text-[var(--gn-palette-3)]">Información general de la salida</h2>
               </header>
 
-              <div className="mt-8 space-y-5 text-[17px] leading-7 text-[var(--gn-palette-5)]">
+              <Reveal as="div" className="mt-8 space-y-5 text-[17px] leading-7 text-[var(--gn-palette-5)]">
                 <p className="font-medium text-[var(--gn-palette-3)]">{detail.lead}</p>
                 {detail.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-              </div>
+              </Reveal>
 
               <section aria-label="Datos de la salida" className="mt-9 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
-                {detail.facts.map((fact) => {
+                {detail.facts.map((fact, index) => {
                   const Icon = FACT_ICONS[fact.icon] ?? Activity;
                   return (
-                    <div tabIndex={0} key={fact.key} className="gn-fact-card flex min-h-36 flex-col items-center justify-center bg-[var(--gn-palette-7)] p-3 text-center outline-none transition-colors duration-200 hover:bg-[var(--gn-palette-7)]/70">
-                      <Icon strokeWidth={1.55} className="gn-fact-icon mb-3 h-11 w-11 text-[var(--gn-palette-1)]" />
-                      <strong className="text-sm text-[var(--gn-palette-3)]">{fact.label}</strong>
-                      <span className="mt-1 text-[11px] leading-4 text-[var(--gn-palette-5)]">{fact.value}</span>
-                    </div>
+                    <Reveal
+                      key={fact.key}
+                      zoom
+                      delay={index * 55}
+                      className="gn-fact-card flex min-h-36 flex-col items-center justify-center rounded-2xl bg-[var(--gn-palette-7)] p-3 text-center outline-none ring-1 ring-black/[0.03] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-[var(--gn-palette-7)]/70 hover:shadow-[0_14px_30px_rgba(18,39,31,0.12)] focus-visible:ring-2 focus-visible:ring-[var(--gn-palette-1)]/40"
+                    >
+                      <span tabIndex={0} className="flex flex-col items-center outline-none">
+                        <Icon strokeWidth={1.55} className="gn-fact-icon mb-3 h-11 w-11 text-[var(--gn-palette-1)]" />
+                        <strong className="text-sm text-[var(--gn-palette-3)]">{fact.label}</strong>
+                        <span className="mt-1 text-[11px] leading-4 text-[var(--gn-palette-5)]">{fact.value}</span>
+                      </span>
+                    </Reveal>
                   );
                 })}
               </section>
 
-              <section className="mt-10 rounded-2xl bg-[var(--gn-palette-8)] p-5 sm:p-7">
+              <Reveal as="section" className="mt-10 rounded-2xl bg-[var(--gn-palette-8)] p-5 ring-1 ring-black/[0.04] sm:p-7">
                 <h2 className="text-xl font-extrabold text-[var(--gn-palette-3)]">Itinerario general</h2>
-                <div className="mt-5 space-y-5 border-l-2 border-[var(--gn-palette-7)] pl-5">
-                  <div>
-                    <p className="font-bold text-[var(--gn-palette-1)]">Punto de encuentro</p>
-                    <p className="mt-1 text-sm leading-6 text-[var(--gn-palette-5)]">Lugar y hora por confirmar con las personas inscritas.</p>
-                  </div>
-                  <div>
-                    <p className="font-bold text-[var(--gn-palette-1)]">Experiencia</p>
-                    <p className="mt-1 text-sm leading-6 text-[var(--gn-palette-5)]">Recorrido, pausas y actividades de acuerdo con el destino y las condiciones del día.</p>
-                  </div>
-                  <div>
-                    <p className="font-bold text-[var(--gn-palette-1)]">Regreso</p>
-                    <p className="mt-1 text-sm leading-6 text-[var(--gn-palette-5)]">El horario estimado se compartirá junto con el itinerario definitivo.</p>
-                  </div>
-                </div>
-              </section>
+                <ol className="mt-6 space-y-6">
+                  {ITINERARY_STEPS.map((step, index) => {
+                    const Icon = step.icon;
+                    return (
+                      <li key={step.title} className="relative flex gap-4 pl-1">
+                        {index < ITINERARY_STEPS.length - 1 ? (
+                          <span aria-hidden className="absolute left-[19px] top-11 h-[calc(100%-4px)] w-px bg-[var(--gn-palette-7)]" />
+                        ) : null}
+                        <span className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--gn-palette-1)] text-white">
+                          <Icon className="h-[18px] w-[18px]" strokeWidth={1.9} />
+                        </span>
+                        <div className="pt-1">
+                          <p className="font-bold text-[var(--gn-palette-1)]">{step.title}</p>
+                          <p className="mt-1 text-sm leading-6 text-[var(--gn-palette-5)]">{step.body}</p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </Reveal>
 
-              <section className="mt-8 divide-y divide-black/10 border-y border-black/10">
-                {INFORMATION_SECTIONS.map((section) => (
-                  <details key={section.title} className="group py-1">
-                    <summary className="flex cursor-pointer list-none items-center justify-between py-4 font-bold text-[var(--gn-palette-3)]">
-                      {section.title}
-                      <span className="text-xl font-normal text-[var(--gn-palette-1)] transition-transform group-open:rotate-45">+</span>
-                    </summary>
-                    <p className="pb-5 pr-8 text-sm leading-6 text-[var(--gn-palette-5)]">{section.body}</p>
-                  </details>
-                ))}
+              <section className="mt-8 space-y-2.5">
+                {INFORMATION_SECTIONS.map((section, index) => {
+                  const Icon = section.icon;
+                  return (
+                    <Reveal key={section.title} delay={index * 45}>
+                      <details className="group overflow-hidden rounded-xl border border-black/10 bg-white transition-colors open:border-[var(--gn-palette-1)]/30 open:bg-[var(--gn-palette-8)]">
+                        <summary className="flex cursor-pointer list-none items-center gap-3 p-4 font-bold text-[var(--gn-palette-3)]">
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--gn-palette-7)] text-[var(--gn-palette-1)]">
+                            <Icon className="h-4 w-4" strokeWidth={2} />
+                          </span>
+                          <span className="flex-1">{section.title}</span>
+                          <span className="text-xl font-normal text-[var(--gn-palette-1)] transition-transform duration-200 group-open:rotate-45">+</span>
+                        </summary>
+                        <p className="px-4 pb-4 pl-15 text-sm leading-6 text-[var(--gn-palette-5)]">{section.body}</p>
+                      </details>
+                    </Reveal>
+                  );
+                })}
               </section>
             </article>
 
@@ -266,6 +319,7 @@ export default async function TourPage({ params }: TourPageProps) {
               departureDates={tour.departureDates}
               duration={duration}
               price={price}
+              whatsappNumber={whatsappNumber}
             />
           </div>
         </div>

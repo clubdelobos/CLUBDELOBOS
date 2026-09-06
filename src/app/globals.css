@@ -126,6 +126,25 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
+    /* Anchor jumps (and the "Volver arriba" links) clear the sticky header
+       instead of landing under it. */
+    scroll-padding-top: 84px;
+  }
+
+  /* One global opt-out: kill smooth scrolling, scroll-triggered reveals, and
+     long transitions for anyone who asked their OS for reduced motion. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
   }
 }
 /* ------------------------------------------------------------------
@@ -276,4 +295,60 @@
 .gn-fact-card:hover .gn-fact-icon,
 .gn-fact-card:focus-visible .gn-fact-icon {
   animation: gn-fact-icon-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ------------------------------------------------------------------
+   Scroll-in reveals — the same "content rises and fades in once as it
+   enters the viewport" motion the reference Elementor site uses. The
+   <Reveal> client component toggles `data-revealed` via an
+   IntersectionObserver; everything here is transform/opacity only so it
+   stays on the compositor. Plays once — never loops.
+   ------------------------------------------------------------------ */
+.gn-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--gn-reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+.gn-reveal[data-revealed="true"] {
+  opacity: 1;
+  transform: none;
+}
+.gn-reveal-zoom {
+  transform: translateY(24px) scale(0.96);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gn-reveal,
+  .gn-reveal-zoom {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Slow, subtle edge-to-edge marquee for the mobile gallery strip. The
+   track holds two copies of the row, so a -50% shift loops seamlessly. */
+@keyframes gn-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.gn-marquee-track {
+  animation: gn-marquee var(--gn-marquee-duration, 40s) linear infinite;
+}
+.gn-marquee-viewport:hover .gn-marquee-track,
+.gn-marquee-viewport:focus-within .gn-marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gn-marquee-track {
+    animation: none;
+  }
 }
