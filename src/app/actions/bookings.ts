@@ -1,6 +1,8 @@
 "use server";
 
+import { headers } from "next/headers";
 import { z } from "zod";
+import { clientIpFrom } from "@/lib/net/client-ip";
 import { createClient } from "@/lib/supabase/server";
 
 const BookingSchema = z.object({
@@ -67,6 +69,18 @@ export async function createBooking(raw: unknown): Promise<BookingState> {
   if (d.website) return { success: true };
 
   const supabase = await createClient();
+
+  // Per-IP guard: at most 8 booking attempts an hour from one address, on top
+  // of the per-email check below. Fails open if 0009 isn't deployed.
+  const ip = clientIpFrom(await headers());
+  const { data: ipAllowed, error: ipRlError } = await supabase.rpc("rate_limit_hit", {
+    p_key: `booking:${ip}`,
+    p_limit: 8,
+    p_window_seconds: 3600,
+  });
+  if (!ipRlError && ipAllowed === false) {
+    return { error: "Recibimos demasiadas solicitudes desde tu conexión. Intenta de nuevo más tarde." };
+  }
 
   // The public form only ever renders a <select> of the tour's configured
   // dates, but that's a client-side constraint — re-check it here so a

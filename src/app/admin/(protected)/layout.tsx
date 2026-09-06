@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth/dal";
 import { AdminShellNav } from "@/components/admin/AdminShellNav";
+import { IdleLogout } from "@/components/admin/IdleLogout";
 import { StaffFlag } from "@/components/admin/StaffFlag";
 import { getSiteSettings } from "@/lib/queries/site-content";
 
@@ -24,6 +25,7 @@ export default async function ProtectedAdminLayout({ children }: { children: Rea
       } as React.CSSProperties}
     >
       <StaffFlag />
+      <IdleLogout />
       <AdminShellNav role={session.role} email={session.email ?? null} />
 
       <main className="min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-9 xl:px-12">

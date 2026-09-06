@@ -11,9 +11,9 @@ export const metadata: Metadata = { title: "Ingresar", robots: { index: false, f
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; reason?: string }>;
 }) {
-  const [{ next }, settings, gallery] = await Promise.all([
+  const [{ next, reason }, settings, gallery] = await Promise.all([
     searchParams,
     getSiteSettings(),
     getGalleryItems(),
@@ -48,6 +48,11 @@ export default async function LoginPage({
           <h1 className="text-xl font-extrabold text-[var(--gn-palette-3)]">Club de Lobos</h1>
           <p className="mt-1 text-sm text-[var(--gn-palette-5)]">Panel de administración</p>
         </div>
+        {reason === "idle" ? (
+          <p className="w-full rounded-lg bg-[var(--gn-palette-8)] px-3 py-2 text-center text-xs font-medium text-[var(--gn-palette-3)]">
+            Cerramos tu sesión por inactividad. Vuelve a ingresar para continuar.
+          </p>
+        ) : null}
         <LoginForm next={next} />
         <p className="text-center text-[11px] leading-4 text-[var(--gn-palette-5)]">
           Acceso exclusivo para el equipo. Si perdiste tu contraseña, contacta al administrador del sitio.

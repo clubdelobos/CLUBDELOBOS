@@ -2,7 +2,10 @@ import "server-only";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import { createClient as createSupabaseJsClient } from "@supabase/supabase-js";
+import { assertPublishableKey } from "@/lib/supabase/guard";
 import type { Database } from "@/lib/supabase/types";
+
+assertPublishableKey(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, "NEXT_PUBLIC_SUPABASE_ANON_KEY");
 
 /**
  * Server-side Supabase client — for Server Components, Server Actions, and
@@ -44,9 +47,15 @@ export async function createClient() {
  * URLs. Never import this module from a "use client" file.
  */
 export function createServiceRoleClient() {
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) {
+    throw new Error(
+      "SUPABASE_SERVICE_ROLE_KEY is not set. It is required for account creation and signed uploads, and must be a server-only (non-NEXT_PUBLIC) variable.",
+    );
+  }
   return createSupabaseJsClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    serviceKey,
     { auth: { persistSession: false } },
   );
 }

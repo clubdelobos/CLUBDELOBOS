@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { z } from "zod";
+import { clientIpFrom } from "@/lib/net/client-ip";
 import { createClient } from "@/lib/supabase/server";
 
 const EventSchema = z.object({
@@ -32,6 +33,16 @@ export async function trackEvent(raw: unknown): Promise<void> {
   const device = deviceFromUA(h.get("user-agent") ?? "");
 
   const supabase = await createClient();
+
+  // Per-IP flood guard. 120 events/minute is far above real browsing but
+  // stops a script pumping the endpoint. Fails open if 0009 isn't deployed.
+  const { data: allowed, error: rlError } = await supabase.rpc("rate_limit_hit", {
+    p_key: `analytics:${clientIpFrom(h)}`,
+    p_limit: 120,
+    p_window_seconds: 60,
+  });
+  if (!rlError && allowed === false) return;
+
   const base = {
     event_type: parsed.data.eventType,
     path: parsed.data.path,

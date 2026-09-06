@@ -44,3 +44,10 @@ export async function logout() {
   await supabase.auth.signOut();
   redirect("/admin/login");
 }
+
+/** Called by the client-side idle watcher after 15 min without activity. */
+export async function logoutForInactivity() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/admin/login?reason=idle");
+}

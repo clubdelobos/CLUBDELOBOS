@@ -194,6 +194,12 @@ export interface Database {
         Args: { p_email: string };
         Returns: number;
       };
+      // 0009_rate_limit.sql — generic fixed-window limiter. Returns true when
+      // the call is within the limit, false when the bucket is over.
+      rate_limit_hit: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number };
+        Returns: boolean;
+      };
     };
   };
 }
