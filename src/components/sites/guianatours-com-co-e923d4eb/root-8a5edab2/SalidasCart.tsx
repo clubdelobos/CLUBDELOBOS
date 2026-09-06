@@ -155,9 +155,9 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
                           type="button"
                           onClick={() => startBooking(item.slug)}
                           disabled={loadingSlug === item.slug}
-                          className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[var(--gn-palette-1)]/30 px-3 py-1.5 text-xs font-bold text-[var(--gn-palette-1)] transition-colors hover:bg-[var(--gn-palette-1)] hover:text-white disabled:opacity-50"
+                          className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-[var(--gn-palette-1)]/35 px-3 text-[13px] font-bold text-[var(--gn-palette-1)] transition-colors hover:bg-[var(--gn-palette-1)] hover:text-white disabled:opacity-50"
                         >
-                          <CalendarCheck2 className="h-3.5 w-3.5" />
+                          <CalendarCheck2 className="h-4 w-4 shrink-0" />
                           {loadingSlug === item.slug ? "Abriendo…" : "Terminar reserva"}
                         </button>
                       </li>
@@ -169,7 +169,7 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
                         href={waHref}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 rounded-lg bg-[var(--gn-palette-1)] px-3 py-2 text-[13px] font-bold text-white transition-colors hover:bg-[var(--gn-palette-2)]"
+                        className="flex h-9 items-center justify-center gap-2 rounded-lg bg-[var(--gn-palette-1)] px-3 text-[13px] font-bold text-white transition-colors hover:bg-[var(--gn-palette-2)]"
                       >
                         <WhatsAppGlyph className="h-4 w-4 shrink-0" />
                         Consultar por WhatsApp

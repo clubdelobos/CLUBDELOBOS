@@ -23,6 +23,7 @@ export interface DashboardMetrics {
   deviceSplit: { mobile: number; desktop: number };
   geoAvailable: boolean;
   socialClicks7d: number;
+  socialByNetwork: { label: string; count: number }[];
   pendingBookings: number;
   publishedTours: number;
 }
@@ -68,6 +69,7 @@ const EMPTY_METRICS: DashboardMetrics = {
   deviceSplit: { mobile: 0, desktop: 0 },
   geoAvailable: false,
   socialClicks7d: 0,
+  socialByNetwork: [],
   pendingBookings: 0,
   publishedTours: 0,
 };
@@ -98,7 +100,7 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     supabase.from("analytics_events").select("created_at, country, device").eq("event_type", "page_view").gte("created_at", sevenDaysAgo.toISOString()),
     supabase.from("analytics_events").select("label, created_at").eq("event_type", "tour_click").gte("created_at", sevenDaysAgo.toISOString()),
     supabase.from("analytics_events").select("label").eq("event_type", "cta_click").gte("created_at", sevenDaysAgo.toISOString()),
-    supabase.from("analytics_events").select("id", { count: "exact", head: true }).eq("event_type", "social_click").gte("created_at", sevenDaysAgo.toISOString()),
+    supabase.from("analytics_events").select("label").eq("event_type", "social_click").gte("created_at", sevenDaysAgo.toISOString()),
     supabase.from("bookings").select("id", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("tours").select("id", { count: "exact", head: true }).eq("is_published", true),
   ]);
@@ -174,7 +176,8 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
     topCountries,
     deviceSplit: { mobile, desktop },
     geoAvailable: geoAvailable && (mobile + desktop > 0 || countryCounts.size > 0),
-    socialClicks7d: socialClicks7dRes.count ?? 0,
+    socialClicks7d: (socialClicks7dRes.data ?? []).length,
+    socialByNetwork: topLabels(socialClicks7dRes.data, 5),
     pendingBookings: pendingBookingsRes.count ?? 0,
     publishedTours: publishedToursRes.count ?? 0,
   };

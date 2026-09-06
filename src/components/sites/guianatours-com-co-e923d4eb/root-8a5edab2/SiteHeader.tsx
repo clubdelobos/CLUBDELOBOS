@@ -13,6 +13,7 @@ import {
   TiktokBrandIcon,
   YoutubeIcon,
 } from "@/components/sites/guianatours-com-co-e923d4eb/shared/icons";
+import { WhatsAppGlyph } from "@/components/sites/guianatours-com-co-e923d4eb/shared/WhatsAppGlyph";
 import { SalidasCart } from "./SalidasCart";
 import type { NavLink, SocialLink } from "@/types/guianatours-com-co-e923d4eb";
 
@@ -85,6 +86,9 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
   }, []);
 
   const scrolled = mode !== "top";
+  const waHref = `https://wa.me/${phoneHref.replace(/\D/g, "")}?text=${encodeURIComponent(
+    "Hola, quiero más información sobre las próximas salidas de Club de Lobos.",
+  )}`;
 
   return (
     <header
@@ -106,15 +110,24 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
             scrolled ? "h-0 opacity-0" : "h-[83.47px] opacity-100",
           )}
         >
-          <div className="mx-auto flex h-full max-w-[1140px] items-start justify-between px-5">
+          <div className="mx-auto flex h-full max-w-[1140px] items-center justify-between px-5">
             <Logo className="block" logoUrl={logoUrl} />
-            <div className="flex items-start justify-end">
+            <div className="flex items-center gap-2">
+              <a
+                href={waHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Escríbenos por WhatsApp"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[var(--gn-palette-1)] transition-transform hover:scale-105"
+              >
+                <WhatsAppGlyph className="h-[15px] w-[15px]" />
+              </a>
               <a
                 href={phoneHref}
-                className="mx-[5.1px] mt-[10.2px] flex h-[27.19px] items-center text-[17px] leading-[27.2px] font-normal text-white transition-[color] duration-100 ease-linear"
+                aria-label={`Llamar: ${phoneLabel}`}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[var(--gn-palette-1)] transition-transform hover:scale-105"
               >
-                <PhoneAltIcon className="mr-[6px] h-[17px] w-[17px]" />
-                <span>{phoneLabel}</span>
+                <PhoneAltIcon className="h-[15px] w-[15px]" />
               </a>
               {socialLinks.map((social) => {
                 const Glyph = SOCIAL_GLYPH[social.network];
@@ -125,9 +138,9 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
                     aria-label={social.label}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mx-[2.55px] mt-[5.1px] flex h-[34px] w-[34px] items-center justify-center rounded-[50px] bg-white text-[var(--gn-palette-1)] transition-all duration-200 ease-in-out"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[var(--gn-palette-1)] transition-transform hover:scale-105"
                   >
-                    <Glyph className="h-[17px] w-[17px]" />
+                    <Glyph className="h-[15px] w-[15px]" />
                   </a>
                 );
               })}

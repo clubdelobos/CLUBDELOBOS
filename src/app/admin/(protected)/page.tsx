@@ -1,6 +1,29 @@
+import {
+  FacebookCircleIcon,
+  InstagramBrandIcon,
+  TiktokBrandIcon,
+  YoutubeBrandIcon,
+} from "@/components/sites/guianatours-com-co-e923d4eb/shared/icons";
+import { WhatsAppGlyph } from "@/components/sites/guianatours-com-co-e923d4eb/shared/WhatsAppGlyph";
 import { requireRole } from "@/lib/auth/dal";
 import { getDashboardMetrics } from "@/lib/queries/analytics";
 import { HourlyChart, TourClicksPanel, VisitsChart } from "./VisitsChart";
+
+const SOCIAL_ICON: Record<string, typeof InstagramBrandIcon> = {
+  instagram: InstagramBrandIcon,
+  facebook: FacebookCircleIcon,
+  tiktok: TiktokBrandIcon,
+  youtube: YoutubeBrandIcon,
+  phone: WhatsAppGlyph,
+};
+const SOCIAL_LABEL: Record<string, string> = {
+  instagram: "Instagram",
+  facebook: "Facebook",
+  tiktok: "TikTok",
+  youtube: "YouTube",
+  phone: "Teléfono",
+  footer_whatsapp: "WhatsApp",
+};
 
 function StatCard({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
   return (
@@ -15,7 +38,7 @@ function StatCard({ label, value, hint }: { label: string; value: string | numbe
 function RankedList({ title, items, emptyLabel }: { title: string; items: { label: string; count: number }[]; emptyLabel: string }) {
   const max = Math.max(1, ...items.map((i) => i.count));
   return (
-    <div className="admin-card p-5">
+    <div className="admin-card self-start p-5">
       <p className="text-xs font-bold uppercase tracking-wide text-[var(--gn-palette-5)]">{title}</p>
       {items.length === 0 ? (
         <p className="mt-3 text-sm text-[var(--gn-palette-5)]">{emptyLabel}</p>
@@ -38,23 +61,70 @@ function RankedList({ title, items, emptyLabel }: { title: string; items: { labe
   );
 }
 
+function SocialClicksCard({ total, byNetwork }: { total: number; byNetwork: { label: string; count: number }[] }) {
+  const top = byNetwork[0];
+  const TopIcon = top ? SOCIAL_ICON[top.label] : null;
+  return (
+    <div className="admin-card self-start p-5">
+      <p className="text-xs font-bold uppercase tracking-wide text-[var(--gn-palette-5)]">Redes sociales · 7 días</p>
+      <div className="mt-3 flex items-baseline gap-2">
+        <span className="text-3xl font-extrabold text-[var(--gn-palette-3)]">{total}</span>
+        <span className="text-xs font-semibold text-[var(--gn-palette-5)]">clics</span>
+      </div>
+      {byNetwork.length === 0 ? (
+        <p className="mt-2 text-xs text-[var(--gn-palette-5)]">Sin clics todavía.</p>
+      ) : (
+        <>
+          {top && TopIcon ? (
+            <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-[var(--gn-palette-3)]">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--gn-palette-1)] text-white">
+                <TopIcon className="h-3 w-3" />
+              </span>
+              {SOCIAL_LABEL[top.label] ?? top.label} lidera
+            </p>
+          ) : null}
+          <ul className="mt-3 flex flex-col gap-1.5">
+            {byNetwork.map((n) => {
+              const Icon = SOCIAL_ICON[n.label];
+              return (
+                <li key={n.label} className="flex items-center justify-between gap-2 text-xs text-[var(--gn-palette-5)]">
+                  <span className="flex items-center gap-1.5">
+                    {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
+                    {SOCIAL_LABEL[n.label] ?? n.label}
+                  </span>
+                  <span className="font-bold text-[var(--gn-palette-1)]">{n.count}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+}
+
 function DeviceSplit({ mobile, desktop }: { mobile: number; desktop: number }) {
   const total = mobile + desktop;
   const mobilePct = total ? Math.round((mobile / total) * 100) : 0;
   return (
-    <div className="admin-card p-5">
+    <div className="admin-card self-start p-5">
       <p className="text-xs font-bold uppercase tracking-wide text-[var(--gn-palette-5)]">Dispositivo · 7 días</p>
       {total === 0 ? (
         <p className="mt-3 text-sm text-[var(--gn-palette-5)]">Sin datos todavía.</p>
       ) : (
         <>
-          <div className="mt-4 flex h-3 overflow-hidden rounded-full">
+          <div className="mt-4 flex h-3 overflow-hidden rounded-full bg-[var(--gn-palette-1)]/15">
             <div className="bg-[var(--gn-palette-1)]" style={{ width: `${mobilePct}%` }} />
-            <div className="bg-[var(--gn-palette-1)]/30" style={{ width: `${100 - mobilePct}%` }} />
           </div>
-          <div className="mt-3 flex justify-between text-xs">
-            <span className="font-semibold text-[var(--gn-palette-3)]">Móvil · {mobile} ({mobilePct}%)</span>
-            <span className="text-[var(--gn-palette-5)]">Escritorio · {desktop}</span>
+          <div className="mt-3 flex flex-col gap-1 text-xs">
+            <span className="flex items-center justify-between font-semibold text-[var(--gn-palette-3)]">
+              <span>📱 Móvil</span>
+              <span>{mobile} · {mobilePct}%</span>
+            </span>
+            <span className="flex items-center justify-between text-[var(--gn-palette-5)]">
+              <span>💻 Escritorio</span>
+              <span>{desktop} · {100 - mobilePct}%</span>
+            </span>
           </div>
         </>
       )}
@@ -91,14 +161,20 @@ export default async function AdminDashboardPage() {
         <StatCard label="Salidas publicadas" value={metrics.publishedTours} hint="Visibles en la portada" />
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <div className="mt-4 grid items-start gap-4 sm:grid-cols-2">
         <VisitsChart dailyVisits={metrics.dailyVisits} weekdays={metrics.weekdays} />
         <HourlyChart hourly={metrics.hourly} />
+      </div>
+
+      <div className="mt-4 grid items-start gap-4 lg:grid-cols-3">
         <TourClicksPanel tours={metrics.tourSeries} weekdays={metrics.weekdays} />
+        <SocialClicksCard total={metrics.socialClicks7d} byNetwork={metrics.socialByNetwork} />
+        <DeviceSplit mobile={metrics.deviceSplit.mobile} desktop={metrics.deviceSplit.desktop} />
+      </div>
+
+      <div className="mt-4 grid items-start gap-4 sm:grid-cols-2">
         <RankedList title="Botones más usados · 7 días" items={metrics.topCtas} emptyLabel="Sin clics todavía." />
         <RankedList title="Visitas por país · 7 días" items={metrics.topCountries} emptyLabel="Sin datos de país todavía." />
-        <DeviceSplit mobile={metrics.deviceSplit.mobile} desktop={metrics.deviceSplit.desktop} />
-        <StatCard label="Clics en redes sociales · 7 días" value={metrics.socialClicks7d} />
       </div>
     </div>
   );
