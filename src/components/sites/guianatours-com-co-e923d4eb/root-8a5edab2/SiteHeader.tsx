@@ -10,6 +10,7 @@ import {
   InstagramIcon,
   MenuIcon,
   PhoneAltIcon,
+  TiktokBrandIcon,
   YoutubeIcon,
 } from "@/components/sites/guianatours-com-co-e923d4eb/shared/icons";
 import { SalidasCart } from "./SalidasCart";
@@ -21,6 +22,7 @@ const SOCIAL_GLYPH = {
   facebook: FacebookIcon,
   instagram: InstagramIcon,
   youtube: YoutubeIcon,
+  tiktok: TiktokBrandIcon,
 } as const;
 
 function Logo({ className, logoUrl }: { className?: string; logoUrl: string | null }) {

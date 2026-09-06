@@ -1,14 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-
-const WEEKDAY = new Intl.DateTimeFormat("es-SV", { weekday: "short", timeZone: "UTC" });
-const FULL_DATE = new Intl.DateTimeFormat("es-SV", { day: "numeric", month: "long", timeZone: "UTC" });
-
-export interface DayVisits {
-  date: string;
-  count: number;
-}
+import { ChevronDown } from "lucide-react";
+import type { TourSeries } from "@/lib/queries/analytics";
 
 function useReveal() {
   const ref = useRef<HTMLDivElement>(null);
@@ -26,7 +20,7 @@ function useReveal() {
           observer.disconnect();
         }
       },
-      { threshold: 0.3 },
+      { threshold: 0.25 },
     );
     observer.observe(node);
     return () => observer.disconnect();
@@ -34,104 +28,127 @@ function useReveal() {
   return { ref, shown };
 }
 
-/**
- * Visits over the last 7 days as a thin area chart: a smooth line, a soft
- * gradient fill, dots on each day, and a hover tooltip. The line draws itself
- * in when the card scrolls into view.
- */
-export function VisitsChart({ dailyVisits }: { dailyVisits: DayVisits[] }) {
-  const { ref, shown } = useReveal();
+/** Catmull-Rom → cubic-bezier, so a series of points reads as one smooth curve. */
+function smoothPath(pts: { x: number; y: number }[]): string {
+  if (pts.length < 2) return pts.length ? `M${pts[0].x},${pts[0].y}` : "";
+  let d = `M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
+  for (let i = 0; i < pts.length - 1; i += 1) {
+    const p0 = pts[i - 1] ?? pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] ?? p2;
+    const c1x = p1.x + (p2.x - p0.x) / 6;
+    const c1y = p1.y + (p2.y - p0.y) / 6;
+    const c2x = p2.x - (p3.x - p1.x) / 6;
+    const c2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+  }
+  return d;
+}
+
+interface CurveProps {
+  values: number[];
+  labels: string[];
+  gradientId: string;
+  height?: number;
+  shown: boolean;
+}
+
+/** A single smooth area curve. Non-scaling stroke keeps it crisp at any width. */
+function Curve({ values, labels, gradientId, height = 150, shown }: CurveProps) {
   const [hover, setHover] = useState<number | null>(null);
+  const W = 600;
+  const H = height;
+  const PAD_X = 10;
+  const PAD_Y = 14;
+  const max = Math.max(1, ...values);
+  const n = values.length;
 
-  const W = 320;
-  const H = 96;
-  const PAD = 6;
-  const max = Math.max(1, ...dailyVisits.map((d) => d.count));
-  const total = dailyVisits.reduce((sum, d) => sum + d.count, 0);
-  const n = dailyVisits.length;
-
-  const pts = dailyVisits.map((d, i) => ({
-    x: n <= 1 ? W / 2 : PAD + (i / (n - 1)) * (W - PAD * 2),
-    y: H - PAD - (d.count / max) * (H - PAD * 2),
-    d,
-    i,
+  const pts = values.map((v, i) => ({
+    x: n <= 1 ? W / 2 : PAD_X + (i / (n - 1)) * (W - PAD_X * 2),
+    y: H - PAD_Y - (v / max) * (H - PAD_Y * 2),
   }));
 
-  const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-  const area = `${line} L${pts[pts.length - 1]?.x.toFixed(1)},${H} L${pts[0]?.x.toFixed(1)},${H} Z`;
+  const line = smoothPath(pts);
+  const area = `${line} L${pts[pts.length - 1].x.toFixed(1)},${H} L${pts[0].x.toFixed(1)},${H} Z`;
 
   return (
-    <div ref={ref} className="admin-card p-5 sm:col-span-2">
+    <div className="relative">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full" style={{ height }}>
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--gn-palette-1)" stopOpacity="0.24" />
+            <stop offset="100%" stopColor="var(--gn-palette-1)" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={area} fill={`url(#${gradientId})`} style={{ opacity: shown ? 1 : 0, transition: "opacity 500ms" }} />
+        <path
+          d={line}
+          fill="none"
+          stroke="var(--gn-palette-1)"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
+          pathLength={1}
+          style={{ strokeDasharray: 1, strokeDashoffset: shown ? 0 : 1, transition: "stroke-dashoffset 900ms ease-out" }}
+        />
+        {pts.map((p, i) => (
+          <circle
+            key={i}
+            cx={p.x}
+            cy={p.y}
+            r={hover === i ? 5 : 3}
+            fill="var(--gn-palette-1)"
+            vectorEffect="non-scaling-stroke"
+            style={{ opacity: shown ? 1 : 0, transition: "opacity 400ms, r 150ms" }}
+          />
+        ))}
+        {pts.map((p, i) => (
+          <rect
+            key={`hit-${i}`}
+            x={i === 0 ? 0 : (pts[i - 1].x + p.x) / 2}
+            y={0}
+            width={W / n}
+            height={H}
+            fill="transparent"
+            onMouseEnter={() => setHover(i)}
+            onMouseLeave={() => setHover(null)}
+          />
+        ))}
+      </svg>
+
+      {hover !== null ? (
+        <div
+          className="pointer-events-none absolute top-0 z-10 -translate-x-1/2 -translate-y-1 whitespace-nowrap rounded-lg bg-[var(--gn-palette-3)] px-2 py-1 text-[11px] font-semibold text-white"
+          style={{ left: `${(pts[hover].x / W) * 100}%` }}
+        >
+          {values[hover]} · {labels[hover]}
+        </div>
+      ) : null}
+
+      <div className="mt-1 flex justify-between text-[10px] font-semibold uppercase text-[var(--gn-palette-5)]">
+        {labels.map((l, i) => (
+          <span key={i}>{l}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function VisitsChart({ dailyVisits, weekdays }: { dailyVisits: { date: string; count: number }[]; weekdays: string[] }) {
+  const { ref, shown } = useReveal();
+  const total = dailyVisits.reduce((s, d) => s + d.count, 0);
+  return (
+    <div ref={ref} className="admin-card p-5">
       <div className="flex items-baseline justify-between gap-3">
-        <p className="text-xs font-bold uppercase tracking-wide text-[var(--gn-palette-5)]">Visitas · últimos 7 días</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-[var(--gn-palette-5)]">Visitas · 7 días</p>
         <p className="text-sm font-extrabold text-[var(--gn-palette-3)]">
-          {total} <span className="text-xs font-semibold text-[var(--gn-palette-5)]">en total</span>
+          {total} <span className="text-xs font-semibold text-[var(--gn-palette-5)]">total</span>
         </p>
       </div>
-
-      <div className="relative mt-4">
-        <svg viewBox={`0 0 ${W} ${H}`} className="h-24 w-full overflow-visible" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="visits-fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--gn-palette-1)" stopOpacity="0.22" />
-              <stop offset="100%" stopColor="var(--gn-palette-1)" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <path d={area} fill="url(#visits-fill)" className="transition-opacity duration-500" style={{ opacity: shown ? 1 : 0 }} />
-          <path
-            d={line}
-            fill="none"
-            stroke="var(--gn-palette-1)"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            pathLength={1}
-            style={{
-              strokeDasharray: 1,
-              strokeDashoffset: shown ? 0 : 1,
-              transition: "stroke-dashoffset 900ms ease-out",
-            }}
-          />
-          {pts.map((p) => (
-            <circle
-              key={p.d.date}
-              cx={p.x}
-              cy={p.y}
-              r={hover === p.i ? 4 : 2.5}
-              fill="var(--gn-palette-1)"
-              className="transition-[r,opacity] duration-300"
-              style={{ opacity: shown ? 1 : 0 }}
-            />
-          ))}
-          {/* hover hit areas */}
-          {pts.map((p, i) => (
-            <rect
-              key={`hit-${p.d.date}`}
-              x={i === 0 ? 0 : (pts[i - 1].x + p.x) / 2}
-              y={0}
-              width={n <= 1 ? W : W / n}
-              height={H}
-              fill="transparent"
-              onMouseEnter={() => setHover(i)}
-              onMouseLeave={() => setHover(null)}
-            />
-          ))}
-        </svg>
-
-        {hover !== null ? (
-          <div
-            className="pointer-events-none absolute -top-2 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-lg bg-[var(--gn-palette-3)] px-2 py-1 text-[11px] font-semibold text-white"
-            style={{ left: `${(pts[hover].x / W) * 100}%` }}
-          >
-            {pts[hover].d.count} · {FULL_DATE.format(new Date(`${pts[hover].d.date}T00:00:00Z`))}
-          </div>
-        ) : null}
-      </div>
-
-      <div className="mt-2 flex justify-between text-[10px] font-semibold uppercase text-[var(--gn-palette-5)]">
-        {dailyVisits.map((day) => (
-          <span key={day.date}>{WEEKDAY.format(new Date(`${day.date}T00:00:00Z`))}</span>
-        ))}
+      <div className="mt-4">
+        <Curve values={dailyVisits.map((d) => d.count)} labels={weekdays} gradientId="visits-curve" shown={shown} />
       </div>
     </div>
   );
@@ -156,7 +173,7 @@ export function HourlyChart({ hourly }: { hourly: { hour: number; count: number 
             key={h.hour}
             title={`${String(h.hour).padStart(2, "0")}:00 · ${h.count}`}
             className={`flex-1 rounded-[2px] transition-[height,background-color] duration-500 ${h.hour === busiest.hour && busiest.count > 0 ? "bg-[var(--gn-palette-1)]" : "bg-[var(--gn-palette-1)]/30"}`}
-            style={{ height: shown ? `${Math.max(4, (h.count / max) * 100)}%` : "4%", transitionDelay: `${i * 18}ms` }}
+            style={{ height: shown ? `${Math.max(4, (h.count / max) * 100)}%` : "4%", transitionDelay: `${i * 16}ms` }}
           />
         ))}
       </div>
@@ -165,6 +182,59 @@ export function HourlyChart({ hourly }: { hourly: { hour: number; count: number 
         <span>12h</span>
         <span>23h</span>
       </div>
+    </div>
+  );
+}
+
+/** Per-tour clicks over the week — a ranked list where each row expands into
+ *  its own smooth curve. */
+export function TourClicksPanel({ tours, weekdays }: { tours: TourSeries[]; weekdays: string[] }) {
+  const { ref, shown } = useReveal();
+  const [openLabel, setOpenLabel] = useState<string | null>(tours[0]?.label ?? null);
+  const max = Math.max(1, ...tours.map((t) => t.total));
+
+  return (
+    <div ref={ref} className="admin-card p-5 sm:col-span-2">
+      <p className="text-xs font-bold uppercase tracking-wide text-[var(--gn-palette-5)]">Clics por salida · 7 días</p>
+      {tours.length === 0 ? (
+        <p className="mt-3 text-sm text-[var(--gn-palette-5)]">Sin clics en salidas todavía.</p>
+      ) : (
+        <ul className="mt-3 divide-y divide-black/[0.06]">
+          {tours.map((tour) => {
+            const open = openLabel === tour.label;
+            return (
+              <li key={tour.label}>
+                <button
+                  type="button"
+                  onClick={() => setOpenLabel(open ? null : tour.label)}
+                  aria-expanded={open}
+                  className="flex w-full items-center gap-3 py-2.5 text-left"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-[var(--gn-palette-3)]">{tour.label}</span>
+                    <span className="mt-1 block h-1.5 w-full overflow-hidden rounded-full bg-[var(--gn-palette-1)]/10">
+                      <span className="block h-full rounded-full bg-[var(--gn-palette-1)]/45" style={{ width: `${(tour.total / max) * 100}%` }} />
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-sm font-extrabold text-[var(--gn-palette-1)]">{tour.total}</span>
+                  <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--gn-palette-5)] transition-transform ${open ? "rotate-180" : ""}`} />
+                </button>
+                {open ? (
+                  <div className="pb-3 pt-1">
+                    <Curve
+                      values={tour.daily}
+                      labels={weekdays}
+                      gradientId={`tour-${tour.label.replace(/[^a-z0-9]/gi, "")}`}
+                      height={110}
+                      shown={shown}
+                    />
+                  </div>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

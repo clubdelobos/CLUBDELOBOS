@@ -1,6 +1,6 @@
 import { requireRole } from "@/lib/auth/dal";
 import { getDashboardMetrics } from "@/lib/queries/analytics";
-import { HourlyChart, VisitsChart } from "./VisitsChart";
+import { HourlyChart, TourClicksPanel, VisitsChart } from "./VisitsChart";
 
 function StatCard({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
   return (
@@ -92,9 +92,9 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <VisitsChart dailyVisits={metrics.dailyVisits} />
+        <VisitsChart dailyVisits={metrics.dailyVisits} weekdays={metrics.weekdays} />
         <HourlyChart hourly={metrics.hourly} />
-        <RankedList title="Salidas más vistas · 7 días" items={metrics.topTours} emptyLabel="Sin clics todavía." />
+        <TourClicksPanel tours={metrics.tourSeries} weekdays={metrics.weekdays} />
         <RankedList title="Botones más usados · 7 días" items={metrics.topCtas} emptyLabel="Sin clics todavía." />
         <RankedList title="Visitas por país · 7 días" items={metrics.topCountries} emptyLabel="Sin datos de país todavía." />
         <DeviceSplit mobile={metrics.deviceSplit.mobile} desktop={metrics.deviceSplit.desktop} />

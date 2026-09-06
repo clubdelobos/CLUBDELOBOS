@@ -245,6 +245,15 @@
   --admin-field: color-mix(in srgb, var(--gn-palette-8) 16%, #fff);
 }
 
+/* Every checkbox / radio / date input in the admin follows the active
+   palette instead of the browser's default blue. */
+#admin-shell input[type="checkbox"],
+#admin-shell input[type="radio"],
+#admin-shell input[type="date"],
+#admin-shell input[type="range"] {
+  accent-color: var(--gn-palette-1);
+}
+
 .admin-card {
   border: 1px solid var(--admin-line, rgb(23 32 26 / 9%));
   border-radius: 16px;
@@ -289,24 +298,25 @@
   border-color: var(--admin-line, rgb(0 0 0 / 6%));
 }
 
-/* A deliberate "delete" affordance — a filled soft-red pill instead of a
-   plain outlined box, so it reads as its own distinct action rather than a
-   generic bordered button that happens to be red. */
+/* Delete affordance — reads as a quiet, neutral action at rest and only
+   turns red on hover/focus, so it doesn't shout on every admin card. */
 .admin-danger-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   border-radius: 10px;
-  border: 1px solid color-mix(in srgb, #dc2626 22%, transparent);
-  background: color-mix(in srgb, #dc2626 9%, white);
-  color: #b91c1c;
-  font-weight: 700;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  border: 1px solid transparent;
+  background: color-mix(in srgb, var(--gn-palette-1) 7%, transparent);
+  color: var(--gn-palette-5);
+  font-weight: 600;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
-.admin-danger-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, #dc2626 16%, white);
-  border-color: color-mix(in srgb, #dc2626 38%, transparent);
+.admin-danger-btn:hover:not(:disabled),
+.admin-danger-btn:focus-visible:not(:disabled) {
+  background: #fee2e2;
+  color: #b91c1c;
+  outline: none;
 }
 .admin-danger-btn:disabled {
   opacity: 0.5;
@@ -432,18 +442,20 @@
 
 /* Floating WhatsApp button — flips between the wolf mark and the WhatsApp
    glyph on a slow loop (mostly resting on the glyph). */
-@keyframes gn-fab-flip {
-  0%, 62% { transform: rotateY(0deg); }
-  72%, 88% { transform: rotateY(180deg); }
-  96%, 100% { transform: rotateY(0deg); }
+/* Coin spin — continuous rotation with a long rest on the wolf face, a
+   quick full turn, then rest again. */
+@keyframes gn-fab-coin {
+  0%, 46% { transform: rotateY(0deg); }
+  62% { transform: rotateY(540deg); }
+  70%, 100% { transform: rotateY(720deg); }
 }
-.gn-fab-flip {
+.gn-fab-coin {
   transform-style: preserve-3d;
-  animation: gn-fab-flip 5.5s cubic-bezier(0.6, 0, 0.3, 1) infinite;
-  animation-delay: 2s;
+  animation: gn-fab-coin 6s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+  animation-delay: 1.5s;
 }
 @media (prefers-reduced-motion: reduce) {
-  .gn-fab-flip {
+  .gn-fab-coin {
     animation: none;
   }
 }

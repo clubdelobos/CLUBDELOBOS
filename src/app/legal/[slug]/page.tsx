@@ -30,13 +30,13 @@ export default async function LegalPage({ params }: { params: Promise<{ slug: st
     <PublicPageShell currentPath={`/legal/${doc.slug}`} title={doc.title} eyebrow="Club de Lobos · Información legal">
       <main className="px-5 py-10 sm:py-14">
         <div className="mx-auto max-w-[760px]">
-          <nav className="mb-8 flex flex-wrap gap-2" aria-label="Documentos legales">
+          <nav className="no-scrollbar -mx-5 mb-8 flex gap-2 overflow-x-auto px-5" aria-label="Documentos legales">
             {LEGAL_DOCS.map((entry) => (
               <Link
                 key={entry.slug}
                 href={`/legal/${entry.slug}`}
                 aria-current={entry.slug === doc.slug ? "page" : undefined}
-                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
                   entry.slug === doc.slug
                     ? "bg-[var(--gn-palette-1)] text-white"
                     : "bg-[var(--gn-palette-8)] text-[var(--gn-palette-5)] hover:text-[var(--gn-palette-3)]"

@@ -56,11 +56,9 @@ export interface SiteSettingsData {
 
 export async function getSiteSettings(): Promise<SiteSettingsData> {
   const supabase = createPublicClient();
-  const { data } = await supabase
-    .from("site_settings")
-    .select("logo_header_url, logo_footer_url, favicon_url, phone_label, phone_href, email, address, social_facebook_url, social_instagram_url, social_youtube_url, palette_1, palette_2, palette_3, palette_5, palette_7, palette_8, footer_registro, footer_copyright, footer_credit_label, footer_credit_href")
-    .eq("id", 1)
-    .single();
+  // `select("*")` (not an explicit column list) so a not-yet-applied additive
+  // migration — e.g. 0007's social_tiktok_url — can't error the whole query.
+  const { data } = await supabase.from("site_settings").select("*").eq("id", 1).single();
 
   // Falls back to the original static values if the singleton row is ever
   // missing (should not happen — the migration inserts it), so the public
@@ -68,6 +66,7 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
   const socialLinks: SocialLink[] = [];
   if (data?.social_facebook_url) socialLinks.push({ label: "Facebook", href: data.social_facebook_url, network: "facebook" });
   if (data?.social_instagram_url) socialLinks.push({ label: "Instagram", href: data.social_instagram_url, network: "instagram" });
+  if (data?.social_tiktok_url) socialLinks.push({ label: "TikTok", href: data.social_tiktok_url, network: "tiktok" });
   if (data?.social_youtube_url) socialLinks.push({ label: "YouTube", href: data.social_youtube_url, network: "youtube" });
 
   return {

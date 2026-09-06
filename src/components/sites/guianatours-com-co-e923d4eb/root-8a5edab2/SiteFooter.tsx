@@ -8,6 +8,7 @@ import {
   FacebookCircleIcon,
   InstagramBrandIcon,
   PhoneSolidIcon,
+  TiktokBrandIcon,
   YoutubeBrandIcon,
 } from "@/components/sites/guianatours-com-co-e923d4eb/shared/icons";
 import { WhatsAppGlyph } from "@/components/sites/guianatours-com-co-e923d4eb/shared/WhatsAppGlyph";
@@ -19,6 +20,7 @@ const SOCIAL_GLYPH = {
   facebook: FacebookCircleIcon,
   instagram: InstagramBrandIcon,
   youtube: YoutubeBrandIcon,
+  tiktok: TiktokBrandIcon,
 } as const;
 
 /** Column wrapper: 20px padding plus the 1px cream divider (last column has none). */
@@ -153,38 +155,37 @@ export function SiteFooter({
           </FooterColumn>
 
           <FooterColumn divider={false}>
-            <h3 className="mb-[10px] text-center text-[18px] leading-[18px] font-bold text-white">
-              {FOOTER.subscribeHeading}
-            </h3>
-            <p className="mb-4 text-center text-[13px] leading-5 text-white/70">{FOOTER.subscribeBody}</p>
-            <div className="flex flex-col gap-2.5 px-[5px]">
+            <FooterHeading>{FOOTER.subscribeHeading}</FooterHeading>
+            <p className="mb-5 text-center text-[13px] leading-5 text-white/70">{FOOTER.subscribeBody}</p>
+            <div className="flex flex-wrap items-center justify-center gap-2.5">
               <a
                 href={`https://wa.me/${phoneHref.replace(/\D/g, "")}?text=${encodeURIComponent(
                   "Hola, quiero enterarme de las próximas salidas de Club de Lobos.",
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Escríbenos por WhatsApp"
                 onClick={() => track("cta_click", "footer_whatsapp")}
-                className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#25D366] px-4 text-[14px] font-bold text-white transition-transform hover:scale-[1.02]"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-[#25D366]"
               >
                 <WhatsAppGlyph className="h-4 w-4" />
-                Escríbenos por WhatsApp
               </a>
-              {socialLinks
-                .filter((s) => s.network === "instagram")
-                .map((s) => (
+              {socialLinks.map((social) => {
+                const Glyph = SOCIAL_GLYPH[social.network];
+                return (
                   <a
-                    key={s.network}
-                    href={s.href}
+                    key={social.network}
+                    href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={() => track("social_click", "instagram")}
-                    className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[var(--gn-palette-7)] px-4 text-[14px] font-bold text-[var(--gn-palette-1)] transition-opacity hover:opacity-90"
+                    aria-label={social.label}
+                    onClick={() => track("social_click", social.network)}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-[var(--gn-palette-7)] hover:text-[var(--gn-palette-1)]"
                   >
-                    <InstagramBrandIcon className="h-4 w-4" />
-                    Síguenos en Instagram
+                    <Glyph className="h-4 w-4" />
                   </a>
-                ))}
+                );
+              })}
             </div>
           </FooterColumn>
         </div>

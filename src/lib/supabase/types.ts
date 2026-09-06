@@ -39,6 +39,8 @@ export interface Database {
           social_facebook_url: string | null;
           social_instagram_url: string | null;
           social_youtube_url: string | null;
+          // Added in 0007_site_settings_tiktok.sql.
+          social_tiktok_url: string | null;
           palette_1: string;
           palette_2: string;
           palette_3: string;

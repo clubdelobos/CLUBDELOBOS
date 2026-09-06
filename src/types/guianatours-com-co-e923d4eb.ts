@@ -78,5 +78,5 @@ export interface NavLink {
 export interface SocialLink {
   label: string;
   href: string;
-  network: "facebook" | "instagram" | "youtube";
+  network: "facebook" | "instagram" | "youtube" | "tiktok";
 }
