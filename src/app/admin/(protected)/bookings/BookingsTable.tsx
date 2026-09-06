@@ -70,7 +70,7 @@ function StatusMenu({ status, pending, onConfirm, onCancel, onDelete }: {
   }, [open]);
 
   return (
-    <div className="inline-flex items-center gap-1.5">
+    <div className="flex w-[132px] items-center justify-between gap-2">
       <span className="text-sm font-medium text-[var(--gn-palette-3)]">{STATUS_LABEL[status]}</span>
       <button
         ref={buttonRef}
@@ -80,7 +80,7 @@ function StatusMenu({ status, pending, onConfirm, onCancel, onDelete }: {
         aria-label="Cambiar estado de la reserva"
         aria-expanded={open}
         aria-haspopup="menu"
-        className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--gn-palette-5)] transition-colors hover:bg-[var(--gn-palette-8)] disabled:opacity-50"
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[var(--gn-palette-5)] transition-colors hover:bg-[var(--gn-palette-8)] disabled:opacity-50"
       >
         <MoreVertical className="h-4 w-4" />
       </button>
@@ -97,7 +97,7 @@ function StatusMenu({ status, pending, onConfirm, onCancel, onDelete }: {
                   type="button"
                   role="menuitem"
                   onClick={() => { setOpen(false); onConfirm(); }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-50"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-[var(--gn-palette-1)] transition-colors hover:bg-[var(--gn-palette-8)]"
                 >
                   <Check className="h-3.5 w-3.5" />Confirmar
                 </button>
@@ -107,7 +107,7 @@ function StatusMenu({ status, pending, onConfirm, onCancel, onDelete }: {
                   type="button"
                   role="menuitem"
                   onClick={() => { setOpen(false); onCancel(); }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-[var(--gn-palette-5)] transition-colors hover:bg-[var(--gn-palette-8)]"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-[var(--gn-palette-5)] transition-colors hover:bg-[var(--gn-palette-8)] hover:text-[var(--gn-palette-3)]"
                 >
                   <X className="h-3.5 w-3.5" />Cancelar
                 </button>
@@ -116,7 +116,7 @@ function StatusMenu({ status, pending, onConfirm, onCancel, onDelete }: {
                 type="button"
                 role="menuitem"
                 onClick={() => { setOpen(false); onDelete(); }}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-red-600 transition-colors hover:bg-red-50"
+                className="mt-1 flex w-full items-center gap-2 border-t border-black/[0.06] px-3 py-2 pt-2.5 text-left text-xs font-semibold text-[var(--gn-palette-5)] transition-colors hover:bg-red-50 hover:text-red-600"
               >
                 <Trash2 className="h-3.5 w-3.5" />Eliminar
               </button>

@@ -140,7 +140,7 @@ export function VisitsChart({ dailyVisits, weekdays }: { dailyVisits: { date: st
   const { ref, shown } = useReveal();
   const total = dailyVisits.reduce((s, d) => s + d.count, 0);
   return (
-    <div ref={ref} className="admin-card self-start p-5">
+    <div ref={ref} className="admin-card flex flex-col p-5">
       <div className="flex items-baseline justify-between gap-3">
         <p className="text-xs font-bold uppercase tracking-wide text-[var(--gn-palette-5)]">Visitas · 7 días</p>
         <p className="text-sm font-extrabold text-[var(--gn-palette-3)]">
@@ -160,7 +160,7 @@ export function HourlyChart({ hourly }: { hourly: { hour: number; count: number 
   const max = Math.max(1, ...hourly.map((h) => h.count));
   const busiest = hourly.reduce((a, b) => (b.count > a.count ? b : a), { hour: 0, count: 0 });
   return (
-    <div ref={ref} className="admin-card self-start p-5">
+    <div ref={ref} className="admin-card flex flex-col p-5">
       <div className="flex items-baseline justify-between gap-3">
         <p className="text-xs font-bold uppercase tracking-wide text-[var(--gn-palette-5)]">Por hora del día</p>
         {busiest.count > 0 ? (
@@ -194,7 +194,7 @@ export function TourClicksPanel({ tours, weekdays }: { tours: TourSeries[]; week
   const max = Math.max(1, ...tours.map((t) => t.total));
 
   return (
-    <div ref={ref} className="admin-card self-start p-5">
+    <div ref={ref} className="admin-card flex flex-col p-5">
       <p className="text-xs font-bold uppercase tracking-wide text-[var(--gn-palette-5)]">Clics por salida · 7 días</p>
       {tours.length === 0 ? (
         <p className="mt-3 text-sm text-[var(--gn-palette-5)]">Sin clics en salidas todavía.</p>

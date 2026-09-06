@@ -123,9 +123,9 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
                 </div>
               ) : (
                 <>
-                  <ul className="no-scrollbar max-h-[300px] space-y-1 overflow-y-auto px-2 pb-0">
+                  <ul className="no-scrollbar max-h-[300px] space-y-1 overflow-y-auto px-2.5 pb-0">
                     {items.map((item) => (
-                      <li key={item.slug} className="rounded-xl px-2 pb-1 pt-2 transition-colors hover:bg-[var(--gn-palette-8)]">
+                      <li key={item.slug} className="rounded-xl pb-1 pt-2 transition-colors hover:bg-[var(--gn-palette-8)]">
                         <div className="flex items-center gap-2.5">
                           <Link
                             href={`/salidas/${encodeURIComponent(item.slug)}`}

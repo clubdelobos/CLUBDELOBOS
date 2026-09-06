@@ -38,7 +38,7 @@ function StatCard({ label, value, hint }: { label: string; value: string | numbe
 function RankedList({ title, items, emptyLabel }: { title: string; items: { label: string; count: number }[]; emptyLabel: string }) {
   const max = Math.max(1, ...items.map((i) => i.count));
   return (
-    <div className="admin-card self-start p-5">
+    <div className="admin-card flex flex-col p-5">
       <p className="text-xs font-bold uppercase tracking-wide text-[var(--gn-palette-5)]">{title}</p>
       {items.length === 0 ? (
         <p className="mt-3 text-sm text-[var(--gn-palette-5)]">{emptyLabel}</p>
@@ -63,7 +63,7 @@ function RankedList({ title, items, emptyLabel }: { title: string; items: { labe
 
 function SocialClicksCard({ total, byNetwork }: { total: number; byNetwork: { label: string; count: number }[] }) {
   return (
-    <div className="admin-card self-start p-5">
+    <div className="admin-card flex flex-col p-5">
       <p className="text-xs font-bold uppercase tracking-wide text-[var(--gn-palette-5)]">Redes sociales · 7 días</p>
       <div className="mt-3 flex items-baseline gap-2">
         <span className="text-3xl font-extrabold text-[var(--gn-palette-3)]">{total}</span>
@@ -96,7 +96,7 @@ function DeviceSplit({ mobile, desktop }: { mobile: number; desktop: number }) {
   const total = mobile + desktop;
   const mobilePct = total ? Math.round((mobile / total) * 100) : 0;
   return (
-    <div className="admin-card self-start p-5">
+    <div className="admin-card flex flex-col p-5">
       <p className="text-xs font-bold uppercase tracking-wide text-[var(--gn-palette-5)]">Dispositivo · 7 días</p>
       {total === 0 ? (
         <p className="mt-3 text-sm text-[var(--gn-palette-5)]">Sin datos todavía.</p>
@@ -150,18 +150,18 @@ export default async function AdminDashboardPage() {
         <StatCard label="Salidas publicadas" value={metrics.publishedTours} hint="Visibles en la portada" />
       </div>
 
-      <div className="mt-4 grid items-start gap-4 sm:grid-cols-2">
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <VisitsChart dailyVisits={metrics.dailyVisits} weekdays={metrics.weekdays} />
         <HourlyChart hourly={metrics.hourly} />
       </div>
 
-      <div className="mt-4 grid items-start gap-4 lg:grid-cols-3">
+      <div className="mt-4 grid gap-4 lg:grid-cols-3">
         <TourClicksPanel tours={metrics.tourSeries} weekdays={metrics.weekdays} />
         <SocialClicksCard total={metrics.socialClicks7d} byNetwork={metrics.socialByNetwork} />
         <DeviceSplit mobile={metrics.deviceSplit.mobile} desktop={metrics.deviceSplit.desktop} />
       </div>
 
-      <div className="mt-4 grid items-start gap-4 sm:grid-cols-2">
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <RankedList title="Botones más usados · 7 días" items={metrics.topCtas} emptyLabel="Sin clics todavía." />
         <RankedList title="Visitas por país · 7 días" items={metrics.topCountries} emptyLabel="Sin datos de país todavía." />
       </div>

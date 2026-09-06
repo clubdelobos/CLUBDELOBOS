@@ -53,9 +53,9 @@ export function WhatsAppFab({
             className="h-full w-full scale-[1.4] object-contain"
           />
         </span>
-        {/* back — WhatsApp glyph */}
+        {/* back — WhatsApp glyph, a touch inset so the tail doesn't kiss the edge */}
         <span className="absolute inset-0 flex items-center justify-center [backface-visibility:hidden] [transform:rotateY(180deg)]">
-          <WhatsAppGlyph className="h-full w-full text-[var(--gn-palette-7)]" />
+          <WhatsAppGlyph className="h-[86%] w-[86%] text-[var(--gn-palette-7)]" />
         </span>
       </span>
     </a>

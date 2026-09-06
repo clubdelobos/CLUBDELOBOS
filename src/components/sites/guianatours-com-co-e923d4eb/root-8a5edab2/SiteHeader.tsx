@@ -34,7 +34,7 @@ function Logo({ className, logoUrl }: { className?: string; logoUrl: string | nu
         width={640}
         height={640}
         priority
-        className="block h-auto w-[92px] max-[1024px]:w-[90px]"
+        className="block h-auto w-[100px] max-[1024px]:w-[92px]"
       />
     </Link>
   );
@@ -106,7 +106,7 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
         <div
           className={cn(
             "overflow-hidden transition-[height,opacity] duration-300 ease-out",
-            scrolled ? "h-0 opacity-0" : "h-[83.47px] opacity-100",
+            scrolled ? "h-0 opacity-0" : "h-[104px] opacity-100",
           )}
         >
           <div className="mx-auto flex h-full max-w-[1140px] items-center justify-between px-5">
