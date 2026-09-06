@@ -32,8 +32,19 @@ function readLastActive(): number {
   }
 }
 
+/**
+ * Seed value for the timer. A stored timestamp that is already past the idle
+ * limit belongs to a previous session (browser closed, laptop asleep) — a
+ * fresh full load of the admin shell is itself a deliberate action, so start
+ * from "now" instead of logging the user straight back out on arrival.
+ */
+function initialLastActive(): number {
+  const stored = readLastActive();
+  return Date.now() - stored >= IDLE_LIMIT_MS ? Date.now() : stored;
+}
+
 export function IdleLogout() {
-  const [lastActive, setLastActive] = useState<number>(readLastActive);
+  const [lastActive, setLastActive] = useState<number>(initialLastActive);
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const firedRef = useRef(false);
 
@@ -61,16 +72,13 @@ export function IdleLogout() {
     }
   }, []);
 
-  // Seed a shared timestamp on first mount so sibling tabs start in sync
-  // (without stomping a fresher value another tab may have already written).
+  // Landing on the admin shell (login redirect, hard reload, following a link
+  // back in) is a deliberate action — stamp it as activity so a stale
+  // timestamp from an earlier session can't trip an immediate logout, and so
+  // sibling tabs start in sync.
   useEffect(() => {
-    try {
-      if (!window.localStorage.getItem(STORAGE_KEY)) {
-        window.localStorage.setItem(STORAGE_KEY, String(Date.now()));
-      }
-    } catch {
-      /* private mode */
-    }
+    markActive();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Record activity (throttled so we're not writing localStorage on every event).
