@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from "react";
 import Image from "next/image";
-import { Check, Trash2 } from "lucide-react";
-import { ImageUploader } from "@/components/admin/ImageUploader";
+import { Check, ImagePlus, Trash2 } from "lucide-react";
+import { ImageUploader, type UploadedImage } from "@/components/admin/ImageUploader";
+import { Modal } from "@/components/admin/Modal";
 import { deleteGalleryItem, upsertGalleryItem } from "./actions";
 
 export interface GalleryItemRow {
@@ -74,20 +75,23 @@ function ItemCard({ item, onChanged }: { item: GalleryItemRow; onChanged: (next:
   );
 }
 
-export function GalleryManager({ items: initial }: { items: GalleryItemRow[] }) {
-  const [items, setItems] = useState(initial);
+function AddPhotoModal({ onClose }: { onClose: () => void }) {
+  const [image, setImage] = useState<UploadedImage | null>(null);
+  const [title, setTitle] = useState("");
+  const [published, setPublished] = useState(true);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  function addNew(image: { url: string; width: number; height: number }) {
+  function submit() {
+    if (!image) return;
     setError(null);
     startTransition(async () => {
       const result = await upsertGalleryItem({
         imageUrl: image.url,
         imageW: image.width,
         imageH: image.height,
-        title: "",
-        isPublished: true,
+        title: title.trim(),
+        isPublished: published,
       });
       if (result.error) setError(result.error);
       else window.location.reload();
@@ -95,29 +99,77 @@ export function GalleryManager({ items: initial }: { items: GalleryItemRow[] }) 
   }
 
   return (
+    <Modal title="Agregar foto a la galería" onClose={onClose}>
+      <div className="flex flex-col gap-4">
+        <ImageUploader
+          bucket="media"
+          value={image}
+          onChange={setImage}
+          label="Imagen"
+          previewClassName="aspect-[4/5] w-full max-w-[240px] rounded-xl object-cover"
+        />
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-bold text-[var(--gn-palette-3)]">Título (opcional)</span>
+          <input className="admin-input h-10 px-3" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ej. Atardeceres" />
+        </label>
+        <label className="flex items-center gap-2 text-sm font-semibold text-[var(--gn-palette-3)]">
+          <input type="checkbox" checked={published} onChange={(e) => setPublished(e.target.checked)} />
+          Publicar de inmediato
+        </label>
+        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        <div className="flex justify-end gap-2 pt-1">
+          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm font-semibold text-[var(--gn-palette-5)] hover:bg-[var(--gn-palette-8)]">
+            Cancelar
+          </button>
+          <button type="button" onClick={submit} disabled={!image || pending} className="gn-button disabled:cursor-not-allowed disabled:opacity-50">
+            {pending ? "Agregando…" : "Agregar a la galería"}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+export function GalleryManager({ items: initial }: { items: GalleryItemRow[] }) {
+  const [items, setItems] = useState(initial);
+  const [adding, setAdding] = useState(false);
+
+  return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-3xl font-extrabold tracking-tight text-[var(--gn-palette-3)]">Galería</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-[var(--gn-palette-3)] sm:text-3xl">Galería</h1>
           <p className="mt-1 max-w-3xl text-sm leading-6 text-[var(--gn-palette-5)]">Fotografías de rutas y experiencias visibles en la portada.</p>
         </div>
-        <div className="admin-card w-full shrink-0 p-4 sm:w-72">
-          <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--gn-palette-3)]">Agregar foto</h2>
-          <ImageUploader bucket="media" onChange={addNew} previewClassName="aspect-[4/5] w-full rounded-lg object-cover" />
-          {pending ? <p className="mt-2 text-xs text-[var(--gn-palette-5)]">Agregando…</p> : null}
-          {error ? <p className="mt-2 text-xs text-red-600">{error}</p> : null}
-        </div>
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          className="gn-button inline-flex shrink-0 items-center gap-2 self-start"
+        >
+          <ImagePlus className="h-4 w-4" />
+          Agregar foto
+        </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
-        {items.map((item) => (
-          <ItemCard
-            key={item.id}
-            item={item}
-            onChanged={(next) => setItems((prev) => (next ? prev.map((i) => (i.id === item.id ? next : i)) : prev.filter((i) => i.id !== item.id)))}
-          />
-        ))}
-      </div>
+      {items.length === 0 ? (
+        <div className="admin-card flex flex-col items-center gap-3 p-10 text-center">
+          <ImagePlus className="h-8 w-8 text-[var(--gn-palette-5)]" />
+          <p className="text-sm text-[var(--gn-palette-5)]">Aún no hay fotos en la galería.</p>
+          <button type="button" onClick={() => setAdding(true)} className="gn-button">Agregar la primera foto</button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+          {items.map((item) => (
+            <ItemCard
+              key={item.id}
+              item={item}
+              onChanged={(next) => setItems((prev) => (next ? prev.map((i) => (i.id === item.id ? next : i)) : prev.filter((i) => i.id !== item.id)))}
+            />
+          ))}
+        </div>
+      )}
+
+      {adding ? <AddPhotoModal onClose={() => setAdding(false)} /> : null}
     </div>
   );
 }
