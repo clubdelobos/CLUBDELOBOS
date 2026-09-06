@@ -17,7 +17,7 @@ import type { ProductCard as ProductCardData } from "@/types/guianatours-com-co-
  */
 export function ProductCard({ product }: { product: ProductCardData }) {
   return (
-    <li className="gn-product-card group relative flex flex-col overflow-hidden rounded-[4px] bg-white">
+    <div className="gn-product-card group relative flex h-full flex-col overflow-hidden rounded-[4px] bg-white">
       {/* .closest-booking-availability */}
       <div className="absolute left-0 top-0 z-[1] rounded-br-[5px] bg-white px-[14.4px] py-[7.2px] text-[14.4px] leading-[23.04px] font-normal text-[var(--gn-palette-1)]">
         <span>
@@ -70,6 +70,6 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           </TrackedLink>
         </div>
       </div>
-    </li>
+    </div>
   );
 }

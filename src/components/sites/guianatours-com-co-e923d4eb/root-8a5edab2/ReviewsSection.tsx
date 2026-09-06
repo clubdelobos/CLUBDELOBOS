@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { StarIcon } from "@/components/sites/guianatours-com-co-e923d4eb/shared/icons";
+import { Reveal } from "./Reveal";
 import { cn } from "@/lib/utils";
 import type { Review } from "@/types/guianatours-com-co-e923d4eb";
 
@@ -88,7 +89,7 @@ export function ReviewsSection({ reviews, summary }: ReviewsSectionProps) {
 
   return (
     <section className="mt-10 px-5">
-      <div className="mx-auto max-w-[1140px]">
+      <Reveal className="mx-auto max-w-[1140px]">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
           {/* rating header */}
           <div className="flex shrink-0 flex-col items-center lg:w-[200px] lg:items-start">
@@ -120,7 +121,7 @@ export function ReviewsSection({ reviews, summary }: ReviewsSectionProps) {
             </div>
           </div>
         </div>
-      </div>
+      </Reveal>
     </section>
   );
 }
