@@ -341,7 +341,7 @@ export default async function TourPage({ params }: TourPageProps) {
       />
       <WhatsAppFab
         phoneHref={settings.phoneHref}
-        message={`Hola, quiero información sobre la salida "${tour.title}" de Club de Lobos.`}
+        message={`Hola, quiero información sobre la salida "${tour.title}" de Club de Lobos:\n${SITE_URL}/salidas/${encodeURIComponent(slug)}`}
       />
       <CookieNotice />
       <PageViewBeacon />

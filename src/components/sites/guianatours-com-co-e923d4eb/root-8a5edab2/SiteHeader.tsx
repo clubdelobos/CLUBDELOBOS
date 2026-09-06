@@ -25,7 +25,15 @@ const SOCIAL_GLYPH = {
   tiktok: TiktokBrandIcon,
 } as const;
 
-function Logo({ className, logoUrl }: { className?: string; logoUrl: string | null }) {
+function Logo({
+  className,
+  logoUrl,
+  compact,
+}: {
+  className?: string;
+  logoUrl: string | null;
+  compact?: boolean;
+}) {
   return (
     <Link href={HOME_HREF} aria-label="Club de Lobos" className={className}>
       <Image
@@ -34,7 +42,15 @@ function Logo({ className, logoUrl }: { className?: string; logoUrl: string | nu
         width={640}
         height={640}
         priority
-        className="block h-auto w-[100px] max-[1024px]:w-[92px]"
+        // The source PNG carries ~10% transparent padding top and bottom, so the
+        // box is sized larger than the stack next to it to make the *visible*
+        // wolf span the same height. At the top the stack is contact + nav
+        // (~72px -> 90px box); once pinned only the nav remains (~48px box).
+        // Centred by the row's items-center.
+        className={cn(
+          "block w-[86px] transition-[height] duration-300 ease-out max-[1024px]:h-auto min-[1025px]:w-auto",
+          compact ? "min-[1025px]:h-[52px]" : "min-[1025px]:h-[90px]",
+        )}
       />
     </Link>
   );
@@ -101,17 +117,24 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
     >
       {/* ---------- desktop header (>=1025px) ---------- */}
       <div className="hidden min-[1025px]:block">
-        {/* row 1 — logo / contact / social. Collapses out of the way once the
-            header pins so the sticky bar stays compact. */}
         <div
           className={cn(
-            "overflow-hidden transition-[height,opacity] duration-300 ease-out",
-            scrolled ? "h-0 opacity-0" : "h-[104px] opacity-100",
+            "mx-auto flex max-w-[1140px] items-center justify-between gap-8 px-5 transition-[padding] duration-300 ease-out",
+            scrolled ? "py-2" : "py-2.5",
           )}
         >
-          <div className="mx-auto flex h-full max-w-[1140px] items-center justify-between px-5">
-            <Logo className="block" logoUrl={logoUrl} />
-            <div className="flex items-center gap-4 text-white">
+          {/* Logo is vertically centred against the whole right-hand stack, so
+              it lines up with both the contact row and the nav row. */}
+          <Logo className="flex shrink-0 items-center" logoUrl={logoUrl} compact={scrolled} />
+
+          <div className="flex flex-col items-end gap-1">
+            {/* contact row — collapses away once the header pins */}
+            <div
+              className={cn(
+                "flex items-center gap-4 overflow-hidden text-white transition-[max-height,opacity] duration-300 ease-out",
+                scrolled ? "max-h-0 opacity-0" : "max-h-10 opacity-100",
+              )}
+            >
               <a
                 href={waHref}
                 target="_blank"
@@ -143,14 +166,8 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
                 {phoneLabel}
               </a>
             </div>
-          </div>
-        </div>
 
-        {/* row 2 — primary navigation + cart. Grows tall enough to hold the
-            full-size logo once the header pins (row 1 is gone by then). */}
-        <div className={cn("transition-[height] duration-300 ease-out", scrolled ? "h-[96px]" : "h-[50px]")}>
-          <div className="mx-auto flex h-full max-w-[1140px] items-center justify-between px-5">
-            {scrolled ? <Logo className="block" logoUrl={logoUrl} /> : <div aria-hidden="true" />}
+            {/* nav row */}
             <div className="flex items-center">
               <nav aria-label="Menú principal">
                 <ul className="flex items-center">

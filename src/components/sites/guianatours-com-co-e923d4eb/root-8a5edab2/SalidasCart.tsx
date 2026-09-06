@@ -46,6 +46,9 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
     if (info) setBooking(info);
   }
 
+  // Include each salida's page URL so WhatsApp renders a link preview (the
+  // tour's cover photo + title come from that page's Open Graph tags).
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
   const waHref = number
     ? `https://wa.me/${number}?text=${encodeURIComponent(
         [
@@ -53,7 +56,10 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
             ? "Hola, quiero información y disponibilidad de esta salida de Club de Lobos:"
             : "Hola, me interesan estas salidas de Club de Lobos:",
           "",
-          ...items.map((item) => `• ${item.title}${item.price ? ` (${item.price})` : ""}`),
+          ...items.map(
+            (item) =>
+              `• ${item.title}${item.price ? ` (${item.price})` : ""}\n${origin}/salidas/${encodeURIComponent(item.slug)}`,
+          ),
           "",
           "¿Me pueden ayudar?",
         ].join("\n"),
