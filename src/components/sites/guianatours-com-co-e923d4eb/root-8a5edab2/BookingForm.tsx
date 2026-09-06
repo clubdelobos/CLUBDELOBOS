@@ -76,7 +76,7 @@ export function BookingForm({
           <p className="text-base font-extrabold text-[var(--gn-palette-3)]">¡Tu solicitud fue recibida!</p>
           <p className="mt-1.5 text-sm leading-6 text-[var(--gn-palette-5)]">
             Guardamos tu solicitud para <strong className="text-[var(--gn-palette-3)]">{tourTitle}</strong>. El equipo de
-            Club de Lobos te contactará por WhatsApp para confirmar los detalles. 🐺
+            Club de Lobos te contactará por WhatsApp para confirmar los detalles.
           </p>
         </div>
         <button type="button" onClick={onDone} className="gn-button mt-1">

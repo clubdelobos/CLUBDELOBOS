@@ -62,8 +62,6 @@ function RankedList({ title, items, emptyLabel }: { title: string; items: { labe
 }
 
 function SocialClicksCard({ total, byNetwork }: { total: number; byNetwork: { label: string; count: number }[] }) {
-  const top = byNetwork[0];
-  const TopIcon = top ? SOCIAL_ICON[top.label] : null;
   return (
     <div className="admin-card self-start p-5">
       <p className="text-xs font-bold uppercase tracking-wide text-[var(--gn-palette-5)]">Redes sociales · 7 días</p>
@@ -74,30 +72,21 @@ function SocialClicksCard({ total, byNetwork }: { total: number; byNetwork: { la
       {byNetwork.length === 0 ? (
         <p className="mt-2 text-xs text-[var(--gn-palette-5)]">Sin clics todavía.</p>
       ) : (
-        <>
-          {top && TopIcon ? (
-            <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-[var(--gn-palette-3)]">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--gn-palette-1)] text-white">
-                <TopIcon className="h-3 w-3" />
-              </span>
-              {SOCIAL_LABEL[top.label] ?? top.label} lidera
-            </p>
-          ) : null}
-          <ul className="mt-3 flex flex-col gap-1.5">
-            {byNetwork.map((n) => {
-              const Icon = SOCIAL_ICON[n.label];
-              return (
-                <li key={n.label} className="flex items-center justify-between gap-2 text-xs text-[var(--gn-palette-5)]">
-                  <span className="flex items-center gap-1.5">
-                    {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
-                    {SOCIAL_LABEL[n.label] ?? n.label}
-                  </span>
-                  <span className="font-bold text-[var(--gn-palette-1)]">{n.count}</span>
-                </li>
-              );
-            })}
-          </ul>
-        </>
+        <ul className="mt-4 flex flex-wrap gap-2">
+          {byNetwork.map((n) => {
+            const Icon = SOCIAL_ICON[n.label];
+            return (
+              <li
+                key={n.label}
+                title={SOCIAL_LABEL[n.label] ?? n.label}
+                className="flex items-center gap-1.5 rounded-lg bg-[var(--gn-palette-8)] px-2.5 py-1.5 text-sm font-bold text-[var(--gn-palette-1)]"
+              >
+                {Icon ? <Icon className="h-4 w-4" /> : null}
+                {n.count}
+              </li>
+            );
+          })}
+        </ul>
       )}
     </div>
   );
@@ -118,11 +107,11 @@ function DeviceSplit({ mobile, desktop }: { mobile: number; desktop: number }) {
           </div>
           <div className="mt-3 flex flex-col gap-1 text-xs">
             <span className="flex items-center justify-between font-semibold text-[var(--gn-palette-3)]">
-              <span>📱 Móvil</span>
+              <span>Móvil</span>
               <span>{mobile} · {mobilePct}%</span>
             </span>
             <span className="flex items-center justify-between text-[var(--gn-palette-5)]">
-              <span>💻 Escritorio</span>
+              <span>Escritorio</span>
               <span>{desktop} · {100 - mobilePct}%</span>
             </span>
           </div>

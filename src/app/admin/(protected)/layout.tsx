@@ -1,16 +1,14 @@
-import { cookies } from "next/headers";
 import { requireRole } from "@/lib/auth/dal";
 import { AdminShellNav } from "@/components/admin/AdminShellNav";
 import { StaffFlag } from "@/components/admin/StaffFlag";
-import { SITE_PALETTES, type SitePaletteId } from "@/lib/site-palettes";
+import { getSiteSettings } from "@/lib/queries/site-content";
 
 export default async function ProtectedAdminLayout({ children }: { children: React.ReactNode }) {
-  const [session, cookieStore] = await Promise.all([requireRole(["admin", "worker"]), cookies()]);
-  const requestedPalette = cookieStore.get("lobos-site-palette")?.value;
-  const paletteId: SitePaletteId = requestedPalette && requestedPalette in SITE_PALETTES
-    ? requestedPalette as SitePaletteId
-    : "original";
-  const palette = SITE_PALETTES[paletteId].colors;
+  // Palette comes straight from site_settings (the same source the public
+  // site reads), so the panel always matches whatever palette is live —
+  // no dependency on a cookie that can drift.
+  const [session, settings] = await Promise.all([requireRole(["admin", "worker"]), getSiteSettings()]);
+  const palette = settings.palette;
 
   return (
     <div

@@ -123,9 +123,9 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
                 </div>
               ) : (
                 <>
-                  <ul className="no-scrollbar max-h-[300px] space-y-1 overflow-y-auto px-2 pb-1">
+                  <ul className="no-scrollbar max-h-[300px] space-y-1 overflow-y-auto px-2 pb-0">
                     {items.map((item) => (
-                      <li key={item.slug} className="rounded-xl px-2 py-2 transition-colors hover:bg-[var(--gn-palette-8)]">
+                      <li key={item.slug} className="rounded-xl px-2 pb-1 pt-2 transition-colors hover:bg-[var(--gn-palette-8)]">
                         <div className="flex items-center gap-2.5">
                           <Link
                             href={`/salidas/${encodeURIComponent(item.slug)}`}
@@ -155,7 +155,7 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
                           type="button"
                           onClick={() => startBooking(item.slug)}
                           disabled={loadingSlug === item.slug}
-                          className="mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-[var(--gn-palette-1)]/35 px-3 text-[13px] font-bold text-[var(--gn-palette-1)] transition-colors hover:bg-[var(--gn-palette-1)] hover:text-white disabled:opacity-50"
+                          className="mt-4 flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-[var(--gn-palette-1)]/35 px-3 text-[13px] font-bold text-[var(--gn-palette-1)] transition-colors hover:bg-[var(--gn-palette-1)] hover:text-white disabled:opacity-50"
                         >
                           <CalendarCheck2 className="h-4 w-4 shrink-0" />
                           {loadingSlug === item.slug ? "Abriendo…" : "Terminar reserva"}
@@ -163,7 +163,7 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
                       </li>
                     ))}
                   </ul>
-                  <div className="flex flex-col gap-1.5 border-t border-black/[0.06] p-2.5">
+                  <div className="flex flex-col gap-1.5 px-2.5 pb-2.5 pt-1">
                     {waHref ? (
                       <a
                         href={waHref}

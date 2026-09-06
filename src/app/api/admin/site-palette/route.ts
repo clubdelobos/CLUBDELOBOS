@@ -46,6 +46,9 @@ export async function POST(request: Request) {
     revalidatePath("/calendario");
     revalidatePath("/proximas-salidas");
     revalidatePath("/salidas/[slug]", "page");
+    revalidatePath("/legal/[slug]", "page");
+    // The panel reads the same palette now — refresh its layout too.
+    revalidatePath("/admin", "layout");
 
     const response = NextResponse.json({ success: true });
     response.cookies.set("lobos-site-palette", parsed.data.id, {

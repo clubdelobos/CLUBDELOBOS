@@ -45,6 +45,8 @@ function revalidateSettings() {
   revalidatePath("/calendario");
   revalidatePath("/proximas-salidas");
   revalidatePath("/salidas/[slug]", "page");
+  revalidatePath("/legal/[slug]", "page");
+  revalidatePath("/admin", "layout");
 }
 
 export async function applyBrandPackage(raw: z.infer<typeof BrandSchema>): Promise<SettingsState> {

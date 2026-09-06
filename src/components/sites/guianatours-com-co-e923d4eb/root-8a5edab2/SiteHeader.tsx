@@ -9,7 +9,6 @@ import {
   FacebookIcon,
   InstagramIcon,
   MenuIcon,
-  PhoneAltIcon,
   TiktokBrandIcon,
   YoutubeIcon,
 } from "@/components/sites/guianatours-com-co-e923d4eb/shared/icons";
@@ -112,22 +111,15 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
         >
           <div className="mx-auto flex h-full max-w-[1140px] items-center justify-between px-5">
             <Logo className="block" logoUrl={logoUrl} />
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4 text-white">
               <a
                 href={waHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Escríbenos por WhatsApp"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[var(--gn-palette-1)] transition-transform hover:scale-105"
+                className="transition-colors hover:text-[var(--gn-palette-7)]"
               >
-                <WhatsAppGlyph className="h-[15px] w-[15px]" />
-              </a>
-              <a
-                href={phoneHref}
-                aria-label={`Llamar: ${phoneLabel}`}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[var(--gn-palette-1)] transition-transform hover:scale-105"
-              >
-                <PhoneAltIcon className="h-[15px] w-[15px]" />
+                <WhatsAppGlyph className="h-5 w-5" />
               </a>
               {socialLinks.map((social) => {
                 const Glyph = SOCIAL_GLYPH[social.network];
@@ -138,12 +130,18 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
                     aria-label={social.label}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[var(--gn-palette-1)] transition-transform hover:scale-105"
+                    className="transition-colors hover:text-[var(--gn-palette-7)]"
                   >
-                    <Glyph className="h-[15px] w-[15px]" />
+                    <Glyph className="h-5 w-5" />
                   </a>
                 );
               })}
+              <a
+                href={phoneHref}
+                className="pl-1 text-[15px] font-normal leading-tight transition-colors hover:text-[var(--gn-palette-7)]"
+              >
+                {phoneLabel}
+              </a>
             </div>
           </div>
         </div>
