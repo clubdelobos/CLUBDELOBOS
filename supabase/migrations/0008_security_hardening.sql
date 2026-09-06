@@ -5,17 +5,25 @@
 -- constraints and triggers move the invariants into the database, where they
 -- hold regardless of how the row is inserted.
 --
--- Apply in the Supabase SQL editor (or `supabase db push`).
+-- Idempotent: safe to paste into the Supabase SQL editor and run more than once.
 
 -- ============================================================================
 -- 1. Length caps on free-text columns — stop a direct insert from storing
 --    arbitrarily large blobs (storage / cost abuse, dashboard poisoning).
 -- ============================================================================
+alter table public.bookings drop constraint if exists bookings_customer_name_len;
+alter table public.bookings drop constraint if exists bookings_email_len;
+alter table public.bookings drop constraint if exists bookings_phone_len;
+alter table public.bookings drop constraint if exists bookings_notes_len;
+
 alter table public.bookings
   add constraint bookings_customer_name_len check (char_length(customer_name) between 1 and 200),
   add constraint bookings_email_len         check (char_length(email) between 3 and 320),
   add constraint bookings_phone_len         check (char_length(phone) between 5 and 30),
   add constraint bookings_notes_len         check (notes is null or char_length(notes) <= 1000);
+
+alter table public.analytics_events drop constraint if exists analytics_path_len;
+alter table public.analytics_events drop constraint if exists analytics_label_len;
 
 alter table public.analytics_events
   add constraint analytics_path_len  check (char_length(path) between 1 and 300),
@@ -35,10 +43,12 @@ begin
 end;
 $$;
 
+drop trigger if exists bookings_force_created_at on public.bookings;
 create trigger bookings_force_created_at
   before insert on public.bookings
   for each row execute function public.force_created_at_now();
 
+drop trigger if exists analytics_events_force_created_at on public.analytics_events;
 create trigger analytics_events_force_created_at
   before insert on public.analytics_events
   for each row execute function public.force_created_at_now();

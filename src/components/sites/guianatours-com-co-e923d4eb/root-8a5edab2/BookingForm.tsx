@@ -39,6 +39,9 @@ export function BookingForm({
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [date, setDate] = useState(initialDate || availableDates[0] || "");
+  // El Salvador numbers are 8 digits; the +503 prefix is fixed in the UI and
+  // prepended on submit, so the visitor only types the local number.
+  const [phone, setPhone] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -49,7 +52,7 @@ export function BookingForm({
       tourId,
       customerName: String(form.get("customerName") ?? ""),
       email: String(form.get("email") ?? ""),
-      phone: String(form.get("phone") ?? ""),
+      phone: `+503 ${phone}`,
       requestedDate: String(form.get("requestedDate") ?? ""),
       numPeople: Number(form.get("numPeople") ?? 1),
       notes: String(form.get("notes") ?? ""),
@@ -100,7 +103,25 @@ export function BookingForm({
       </label>
       <label className="flex flex-col gap-1 text-sm text-[var(--gn-palette-3)]">
         Teléfono
-        <input name="phone" type="tel" required className={inputCls} />
+        <span className="flex h-10 items-stretch overflow-hidden rounded-lg border border-[#69727d] bg-white transition-shadow focus-within:border-[var(--gn-palette-1)] focus-within:ring-2 focus-within:ring-[var(--gn-palette-1)]/25">
+          <span className="flex select-none items-center border-r border-[#69727d]/40 bg-[var(--gn-palette-8)] px-2.5 text-[15px] font-medium text-[var(--gn-palette-5)]">
+            +503
+          </span>
+          <input
+            name="phone"
+            type="tel"
+            inputMode="numeric"
+            autoComplete="tel-national"
+            required
+            pattern="\d{8}"
+            maxLength={8}
+            title="Ingresa los 8 dígitos de tu número."
+            placeholder="8 dígitos"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 8))}
+            className="min-w-0 flex-1 bg-white px-3 text-[15px] text-[#1f2124] outline-none"
+          />
+        </span>
       </label>
       <div className={compact ? "flex flex-col gap-2.5" : "flex gap-3"}>
         <div className="flex flex-1 flex-col gap-1 text-sm text-[var(--gn-palette-3)]">
