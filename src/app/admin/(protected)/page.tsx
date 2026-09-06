@@ -27,10 +27,10 @@ const SOCIAL_LABEL: Record<string, string> = {
 
 function StatCard({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
   return (
-    <div className="admin-card p-5">
-      <p className="text-xs font-bold uppercase tracking-wide text-[var(--gn-palette-5)]">{label}</p>
-      <p className="mt-2 text-3xl font-extrabold text-[var(--gn-palette-3)]">{value}</p>
-      {hint ? <p className="mt-1 text-xs text-[var(--gn-palette-5)]">{hint}</p> : null}
+    <div className="admin-card p-4 sm:p-5">
+      <p className="text-[11px] font-bold uppercase tracking-wide text-[var(--gn-palette-5)] sm:text-xs">{label}</p>
+      <p className="mt-1.5 text-2xl font-extrabold text-[var(--gn-palette-3)] sm:mt-2 sm:text-3xl">{value}</p>
+      {hint ? <p className="mt-1 text-[11px] leading-4 text-[var(--gn-palette-5)] sm:text-xs">{hint}</p> : null}
     </div>
   );
 }
@@ -143,25 +143,28 @@ export default async function AdminDashboardPage() {
         </p>
       ) : null}
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatCard label="Visitas hoy" value={metrics.visitsToday} />
         <StatCard label="Visitas · 7 días" value={metrics.visits7d} />
         <StatCard label="Reservas pendientes" value={metrics.pendingBookings} hint="Por confirmar o rechazar" />
         <StatCard label="Salidas publicadas" value={metrics.publishedTours} hint="Visibles en la portada" />
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <div className="mt-3 grid gap-3 sm:mt-4 sm:grid-cols-2 sm:gap-4">
         <VisitsChart dailyVisits={metrics.dailyVisits} weekdays={metrics.weekdays} />
         <HourlyChart hourly={metrics.hourly} />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+      <div className="mt-3 sm:mt-4">
         <TourClicksPanel tours={metrics.tourSeries} weekdays={metrics.weekdays} />
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:mt-4 sm:gap-4">
         <SocialClicksCard total={metrics.socialClicks7d} byNetwork={metrics.socialByNetwork} />
         <DeviceSplit mobile={metrics.deviceSplit.mobile} desktop={metrics.deviceSplit.desktop} />
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <div className="mt-3 grid gap-3 sm:mt-4 sm:grid-cols-2 sm:gap-4">
         <RankedList title="Botones más usados · 7 días" items={metrics.topCtas} emptyLabel="Sin clics todavía." />
         <RankedList title="Visitas por país · 7 días" items={metrics.topCountries} emptyLabel="Sin datos de país todavía." />
       </div>

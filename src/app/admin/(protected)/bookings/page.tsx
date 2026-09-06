@@ -40,7 +40,7 @@ export default async function BookingsPage() {
       </p>
 
       {error ? (
-        <p className="mt-4 text-sm text-red-600">No se pudieron cargar las reservas: {error.message}</p>
+        <p className="mt-4 text-sm text-red-600">No se pudieron cargar las reservas. Recarga la página e inténtalo de nuevo.</p>
       ) : null}
 
       <div className="mt-6">

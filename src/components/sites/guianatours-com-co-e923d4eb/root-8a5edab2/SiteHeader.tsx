@@ -77,7 +77,13 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
       if (e.key === "Escape") setDrawerOpen(false);
     };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    // Freeze the page behind the open drawer.
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [drawerOpen]);
 
   useEffect(() => {
@@ -106,6 +112,7 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
   )}`;
 
   return (
+    <>
     <header
       className={cn(
         "inset-x-0 top-0 z-[100] transition-[transform,background-color,box-shadow] duration-300 ease-out",
@@ -218,22 +225,38 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
         </div>
       </div>
 
-      {/* ---------- mobile drawer ---------- */}
+    </header>
+
+      {/* ---------- mobile drawer ----------
+          Rendered as a sibling of <header>, NOT inside it: the header carries a
+          `transform` (the hide-on-scroll translate), which would otherwise make
+          this `fixed` overlay resolve against the ~90px header box instead of
+          the viewport. The panel is always fully opaque with a hard colour
+          fallback and slides in on a transform (compositor-only, and it still
+          lands in the right place even if a transition is dropped). */}
       <div
         className={cn(
-          "fixed inset-0 z-[999] transition-opacity duration-300 min-[1025px]:hidden",
-          drawerOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
+          "fixed inset-0 z-[999] min-[1025px]:hidden",
+          drawerOpen ? "pointer-events-auto" : "pointer-events-none",
         )}
         aria-hidden={!drawerOpen}
       >
         <button
           type="button"
           aria-label="Cerrar menú"
-          tabIndex={-1}
+          tabIndex={drawerOpen ? 0 : -1}
           onClick={() => setDrawerOpen(false)}
-          className="absolute inset-0 h-full w-full cursor-default bg-black/50"
+          className={cn(
+            "absolute inset-0 h-full w-full cursor-default bg-black/60 transition-opacity duration-300 ease-out",
+            drawerOpen ? "opacity-100" : "opacity-0",
+          )}
         />
-        <div className="absolute inset-y-0 right-0 flex w-[300px] max-w-[85vw] flex-col bg-[var(--gn-palette-1)] p-6">
+        <div
+          className={cn(
+            "absolute inset-y-0 right-0 flex w-[300px] max-w-[85vw] flex-col overflow-y-auto bg-[var(--gn-palette-1,#1f2430)] p-6 shadow-[0_0_40px_rgba(0,0,0,0.5)] transition-transform duration-300 ease-out will-change-transform",
+            drawerOpen ? "translate-x-0" : "translate-x-full",
+          )}
+        >
           <button
             type="button"
             aria-label="Cerrar menú"
@@ -263,6 +286,6 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
           </nav>
         </div>
       </div>
-    </header>
+    </>
   );
 }

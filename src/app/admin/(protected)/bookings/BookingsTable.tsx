@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
-import { Calendar, CalendarX2, Check, MoreVertical, Trash2, X } from "lucide-react";
+import { Calendar, CalendarX2, Check, Mail, MoreVertical, Phone, Trash2, Users, X } from "lucide-react";
 import { deleteBooking, updateBookingStatus } from "./actions";
 import type { BookingStatus, ProfileRole } from "@/lib/supabase/types";
 
@@ -26,12 +26,50 @@ const STATUS_LABEL: Record<BookingStatus, string> = {
   cancelled: "Cancelada",
 };
 
-function StatusMenu({ status, pending, onConfirm, onCancel, onDelete }: {
+const STATUS_PILL: Record<BookingStatus, string> = {
+  pending: "bg-[var(--gn-palette-8)] text-[var(--gn-palette-3)]",
+  confirmed: "bg-[var(--gn-palette-1)]/12 text-[var(--gn-palette-1)]",
+  cancelled: "bg-[var(--gn-palette-5)]/15 text-[var(--gn-palette-5)]",
+};
+
+function formatDate(iso: string) {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("es-SV", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+/** Shared status-change + delete logic for the row and the mobile card. */
+function useBookingActions(booking: BookingRow, onChanged: (next: BookingRow | null) => void) {
+  const [pending, startTransition] = useTransition();
+
+  function setStatus(status: BookingStatus) {
+    startTransition(async () => {
+      const result = await updateBookingStatus(booking.id, status);
+      if (!result.error) onChanged({ ...booking, status });
+    });
+  }
+
+  function remove() {
+    if (!window.confirm(`¿Eliminar la reserva de ${booking.customer_name}?`)) return;
+    startTransition(async () => {
+      const result = await deleteBooking(booking.id);
+      if (!result.error) onChanged(null);
+    });
+  }
+
+  return { pending, setStatus, remove };
+}
+
+function StatusMenu({ status, pending, onConfirm, onCancel, onDelete, align = "end" }: {
   status: BookingStatus;
   pending: boolean;
   onConfirm: () => void;
   onCancel: () => void;
   onDelete: () => void;
+  align?: "start" | "end";
 }) {
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
@@ -40,7 +78,12 @@ function StatusMenu({ status, pending, onConfirm, onCancel, onDelete }: {
 
   function openMenu() {
     const rect = buttonRef.current?.getBoundingClientRect();
-    if (rect) setCoords({ top: rect.bottom + 4, left: rect.right - MENU_WIDTH });
+    if (rect) {
+      setCoords({
+        top: rect.bottom + 4,
+        left: align === "end" ? rect.right - MENU_WIDTH : rect.left,
+      });
+    }
     setOpen(true);
   }
 
@@ -51,8 +94,6 @@ function StatusMenu({ status, pending, onConfirm, onCancel, onDelete }: {
       if (buttonRef.current?.contains(target) || menuRef.current?.contains(target)) return;
       setOpen(false);
     }
-    // Position was computed from the trigger's rect at open time — any scroll
-    // or resize invalidates it, so just close rather than track and reposition.
     function onScrollOrResize() { setOpen(false); }
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") setOpen(false);
@@ -70,8 +111,7 @@ function StatusMenu({ status, pending, onConfirm, onCancel, onDelete }: {
   }, [open]);
 
   return (
-    <div className="flex w-[132px] items-center justify-between gap-2">
-      <span className="text-sm font-medium text-[var(--gn-palette-3)]">{STATUS_LABEL[status]}</span>
+    <>
       <button
         ref={buttonRef}
         type="button"
@@ -124,27 +164,12 @@ function StatusMenu({ status, pending, onConfirm, onCancel, onDelete }: {
             document.body,
           )
         : null}
-    </div>
+    </>
   );
 }
 
-function Row({ booking, canEdit, onChanged }: { booking: BookingRow; canEdit: boolean; onChanged: (next: BookingRow | null) => void }) {
-  const [pending, startTransition] = useTransition();
-
-  function setStatus(status: BookingStatus) {
-    startTransition(async () => {
-      const result = await updateBookingStatus(booking.id, status);
-      if (!result.error) onChanged({ ...booking, status });
-    });
-  }
-
-  function remove() {
-    if (!window.confirm(`¿Eliminar la reserva de ${booking.customer_name}?`)) return;
-    startTransition(async () => {
-      const result = await deleteBooking(booking.id);
-      if (!result.error) onChanged(null);
-    });
-  }
+function DesktopRow({ booking, canEdit, onChanged }: { booking: BookingRow; canEdit: boolean; onChanged: (next: BookingRow | null) => void }) {
+  const { pending, setStatus, remove } = useBookingActions(booking, onChanged);
 
   return (
     <tr className="border-b border-black/5 transition-colors last:border-0 hover:bg-[var(--gn-palette-8)]">
@@ -155,19 +180,22 @@ function Row({ booking, canEdit, onChanged }: { booking: BookingRow; canEdit: bo
       <td className="px-4 py-3 text-[var(--gn-palette-5)]">
         <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
           <Calendar className="h-3.5 w-3.5 shrink-0 text-[var(--gn-palette-1)]" />
-          {new Date(`${booking.requested_date}T00:00:00Z`).toLocaleDateString("es-SV", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}
+          {formatDate(booking.requested_date)}
         </span>
       </td>
       <td className="px-4 py-3 text-[var(--gn-palette-5)]">{booking.num_people}</td>
       <td className="px-4 py-3">
         {canEdit ? (
-          <StatusMenu
-            status={booking.status}
-            pending={pending}
-            onConfirm={() => setStatus("confirmed")}
-            onCancel={() => setStatus("cancelled")}
-            onDelete={remove}
-          />
+          <div className="flex w-[132px] items-center justify-between gap-2">
+            <span className="text-sm font-medium text-[var(--gn-palette-3)]">{STATUS_LABEL[booking.status]}</span>
+            <StatusMenu
+              status={booking.status}
+              pending={pending}
+              onConfirm={() => setStatus("confirmed")}
+              onCancel={() => setStatus("cancelled")}
+              onDelete={remove}
+            />
+          </div>
         ) : (
           <span className="text-sm font-medium text-[var(--gn-palette-3)]">{STATUS_LABEL[booking.status]}</span>
         )}
@@ -176,9 +204,61 @@ function Row({ booking, canEdit, onChanged }: { booking: BookingRow; canEdit: bo
   );
 }
 
+function MobileCard({ booking, canEdit, onChanged }: { booking: BookingRow; canEdit: boolean; onChanged: (next: BookingRow | null) => void }) {
+  const { pending, setStatus, remove } = useBookingActions(booking, onChanged);
+
+  return (
+    <div className="admin-card p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate font-bold text-[var(--gn-palette-3)]">{booking.customer_name}</p>
+          <p className="mt-0.5 truncate text-sm font-medium text-[var(--gn-palette-1)]">{booking.tourTitle}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${STATUS_PILL[booking.status]}`}>
+            {STATUS_LABEL[booking.status]}
+          </span>
+          {canEdit ? (
+            <StatusMenu
+              status={booking.status}
+              pending={pending}
+              align="end"
+              onConfirm={() => setStatus("confirmed")}
+              onCancel={() => setStatus("cancelled")}
+              onDelete={remove}
+            />
+          ) : null}
+        </div>
+      </div>
+
+      <dl className="mt-3 grid grid-cols-1 gap-2 text-sm">
+        <div className="flex items-center gap-2 text-[var(--gn-palette-5)]">
+          <Calendar className="h-3.5 w-3.5 shrink-0 text-[var(--gn-palette-1)]" />
+          <span className="font-medium text-[var(--gn-palette-3)]">{formatDate(booking.requested_date)}</span>
+          <span className="text-[var(--gn-palette-5)]">·</span>
+          <Users className="h-3.5 w-3.5 shrink-0 text-[var(--gn-palette-1)]" />
+          <span>{booking.num_people} {booking.num_people === 1 ? "persona" : "personas"}</span>
+        </div>
+        <a href={`mailto:${booking.email}`} className="flex items-center gap-2 text-[var(--gn-palette-5)] hover:text-[var(--gn-palette-1)]">
+          <Mail className="h-3.5 w-3.5 shrink-0 text-[var(--gn-palette-1)]" />
+          <span className="truncate">{booking.email}</span>
+        </a>
+        <a href={`tel:${booking.phone.replace(/\s/g, "")}`} className="flex items-center gap-2 text-[var(--gn-palette-5)] hover:text-[var(--gn-palette-1)]">
+          <Phone className="h-3.5 w-3.5 shrink-0 text-[var(--gn-palette-1)]" />
+          <span>{booking.phone}</span>
+        </a>
+      </dl>
+    </div>
+  );
+}
+
 export function BookingsTable({ bookings: initial, role }: { bookings: BookingRow[]; role: ProfileRole }) {
   const [bookings, setBookings] = useState(initial);
   const canEdit = role === "admin";
+
+  function onChanged(id: string, next: BookingRow | null) {
+    setBookings((prev) => (next ? prev.map((x) => (x.id === id ? next : x)) : prev.filter((x) => x.id !== id)));
+  }
 
   if (bookings.length === 0) {
     return (
@@ -193,32 +273,35 @@ export function BookingsTable({ bookings: initial, role }: { bookings: BookingRo
   }
 
   return (
-    <div className="admin-card overflow-x-auto">
-      <table className="w-full text-left text-sm">
-        <thead className="border-b border-black/5 text-xs font-bold uppercase tracking-wide text-[var(--gn-palette-5)]">
-          <tr>
-            <th className="px-4 py-3">Cliente</th>
-            <th className="px-4 py-3">Correo</th>
-            <th className="px-4 py-3">Teléfono</th>
-            <th className="px-4 py-3">Salida</th>
-            <th className="px-4 py-3">Fecha</th>
-            <th className="px-4 py-3">Personas</th>
-            <th className="px-4 py-3">Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {bookings.map((b) => (
-            <Row
-              key={b.id}
-              booking={b}
-              canEdit={canEdit}
-              onChanged={(next) =>
-                setBookings((prev) => (next ? prev.map((x) => (x.id === b.id ? next : x)) : prev.filter((x) => x.id !== b.id)))
-              }
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      {/* Mobile: a card per booking — no horizontal scroll. */}
+      <div className="flex flex-col gap-3 sm:hidden">
+        {bookings.map((b) => (
+          <MobileCard key={b.id} booking={b} canEdit={canEdit} onChanged={(next) => onChanged(b.id, next)} />
+        ))}
+      </div>
+
+      {/* Desktop: the full table. */}
+      <div className="admin-card hidden overflow-x-auto sm:block">
+        <table className="w-full text-left text-sm">
+          <thead className="border-b border-black/5 text-xs font-bold uppercase tracking-wide text-[var(--gn-palette-5)]">
+            <tr>
+              <th className="px-4 py-3">Cliente</th>
+              <th className="px-4 py-3">Correo</th>
+              <th className="px-4 py-3">Teléfono</th>
+              <th className="px-4 py-3">Salida</th>
+              <th className="px-4 py-3">Fecha</th>
+              <th className="px-4 py-3">Personas</th>
+              <th className="px-4 py-3">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {bookings.map((b) => (
+              <DesktopRow key={b.id} booking={b} canEdit={canEdit} onChanged={(next) => onChanged(b.id, next)} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
