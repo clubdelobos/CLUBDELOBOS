@@ -1,64 +1,47 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { logoutForInactivity } from "@/app/admin/login/actions";
+import { IDLE_LIMIT_MS, IDLE_WARN_MS } from "@/lib/auth/idle";
 
 /**
- * Signs the admin out after 15 minutes with no interaction. Covers the "walked
- * away from an unlocked screen" case — the Supabase JWT keeps its own (shorter,
- * server-side) lifetime on top of this.
+ * The client half of the admin idle timeout. The guarantee lives in Proxy
+ * (`src/lib/supabase/proxy-session.ts`) — this only adds the niceties on top:
  *
- * - Activity in any admin tab resets the timer for all of them (localStorage +
- *   the `storage` event).
- * - A tab that was hidden/suspended (laptop lid closed) is re-checked the
- *   moment it becomes visible again, and on mount, so a stale session can't
- *   survive by the timer simply not having ticked.
- * - One minute before the deadline a prompt appears with a "Seguir conectado"
- *   button.
+ * - a one-minute "Tu sesión está por cerrarse / Seguir conectado" warning,
+ * - an automatic sign-out the moment the deadline passes while the tab is open,
+ *   without waiting for the next request,
+ * - keeping the server-side `lobos-admin-seen` cookie fresh (via a throttled
+ *   ping to `/admin/keepalive`) while the admin is reading/typing on one page
+ *   and not triggering navigations of their own.
+ *
+ * Activity in any admin tab resets the others (localStorage + `storage`), and a
+ * tab that was hidden/suspended is re-checked on `visibilitychange`.
  */
-const IDLE_LIMIT_MS = 15 * 60 * 1000;
-const WARN_BEFORE_MS = 60 * 1000;
 const STORAGE_KEY = "lobos:admin-last-active";
+const KEEPALIVE_THROTTLE_MS = 60 * 1000;
 const ACTIVITY_EVENTS = ["mousedown", "keydown", "scroll", "touchstart"] as const;
 
-function readLastActive(): number {
-  if (typeof window === "undefined") return Date.now();
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    const parsed = raw ? Number(raw) : NaN;
-    return Number.isFinite(parsed) ? parsed : Date.now();
-  } catch {
-    return Date.now();
-  }
-}
-
-/**
- * Seed value for the timer. A stored timestamp that is already past the idle
- * limit belongs to a previous session (browser closed, laptop asleep) — a
- * fresh full load of the admin shell is itself a deliberate action, so start
- * from "now" instead of logging the user straight back out on arrival.
- */
-function initialLastActive(): number {
-  const stored = readLastActive();
-  return Date.now() - stored >= IDLE_LIMIT_MS ? Date.now() : stored;
+function goToIdleLogout() {
+  // A real, full-page navigation (not a Server Action call from an effect, and
+  // not a client-side `router.push`) so the sign-out response's Set-Cookie is
+  // actually applied and every bit of router/client state is dropped.
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+  window.location.assign("/admin/logout?reason=idle");
 }
 
 export function IdleLogout() {
-  const [lastActive, setLastActive] = useState<number>(initialLastActive);
+  // Landing on the admin shell is itself a deliberate action, so start the
+  // clock from now regardless of any stale timestamp a previous session left.
+  const [lastActive, setLastActive] = useState<number>(() => Date.now());
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const firedRef = useRef(false);
+  const keepaliveUntilRef = useRef(0);
 
-  const doLogout = useCallback(() => {
-    if (firedRef.current) return;
-    firedRef.current = true;
-    void logoutForInactivity().catch(() => {});
-    // Backstop in case the Server Action redirect doesn't take. A hard load is
-    // intentional here: after sign-out every bit of client/router state must be
-    // dropped and the proxy re-evaluated from scratch.
-    window.setTimeout(() => {
-      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-      window.location.assign("/admin/login?reason=idle");
-    }, 1500);
+  const pingKeepalive = useCallback(() => {
+    const now = Date.now();
+    if (now < keepaliveUntilRef.current) return;
+    keepaliveUntilRef.current = now + KEEPALIVE_THROTTLE_MS;
+    void fetch("/admin/keepalive", { method: "GET", cache: "no-store", keepalive: true }).catch(() => {});
   }, []);
 
   const markActive = useCallback(() => {
@@ -72,16 +55,18 @@ export function IdleLogout() {
     }
   }, []);
 
-  // Landing on the admin shell (login redirect, hard reload, following a link
-  // back in) is a deliberate action — stamp it as activity so a stale
-  // timestamp from an earlier session can't trip an immediate logout, and so
-  // sibling tabs start in sync.
-  useEffect(() => {
-    markActive();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  const doLogout = useCallback(() => {
+    if (firedRef.current) return;
+    firedRef.current = true;
+    goToIdleLogout();
   }, []);
 
-  // Record activity (throttled so we're not writing localStorage on every event).
+  // `lastActive` already seeds to "now" (arriving on the shell is deliberate);
+  // the mount only needs to refresh the server-side activity cookie.
+  useEffect(() => {
+    pingKeepalive();
+  }, [pingKeepalive]);
+
   useEffect(() => {
     let throttleUntil = 0;
     const onActivity = () => {
@@ -89,6 +74,7 @@ export function IdleLogout() {
       if (now < throttleUntil) return;
       throttleUntil = now + 5000;
       markActive();
+      pingKeepalive();
     };
     for (const evt of ACTIVITY_EVENTS) {
       window.addEventListener(evt, onActivity, { passive: true });
@@ -96,9 +82,9 @@ export function IdleLogout() {
     return () => {
       for (const evt of ACTIVITY_EVENTS) window.removeEventListener(evt, onActivity);
     };
-  }, [markActive]);
+  }, [markActive, pingKeepalive]);
 
-  // Pick up activity from other admin tabs.
+  // Activity from a sibling admin tab.
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key !== STORAGE_KEY || !e.newValue) return;
@@ -112,17 +98,21 @@ export function IdleLogout() {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  // Re-check when the tab becomes visible again (it may have been suspended).
+  // A tab that was backgrounded may have had its timers frozen — re-check the
+  // moment it comes back. (Proxy is the real backstop if the page was frozen
+  // long enough that even this check is stale.)
   useEffect(() => {
     const onVisible = () => {
       if (document.visibilityState !== "visible") return;
-      const fresh = readLastActive();
-      setLastActive(fresh);
-      if (Date.now() - fresh >= IDLE_LIMIT_MS) doLogout();
+      if (Date.now() - lastActive >= IDLE_LIMIT_MS) {
+        doLogout();
+      } else {
+        pingKeepalive();
+      }
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [doLogout]);
+  }, [lastActive, doLogout, pingKeepalive]);
 
   // The clock.
   useEffect(() => {
@@ -130,7 +120,7 @@ export function IdleLogout() {
       const idleFor = Date.now() - lastActive;
       if (idleFor >= IDLE_LIMIT_MS) {
         doLogout();
-      } else if (idleFor >= IDLE_LIMIT_MS - WARN_BEFORE_MS) {
+      } else if (idleFor >= IDLE_LIMIT_MS - IDLE_WARN_MS) {
         setSecondsLeft(Math.max(1, Math.ceil((IDLE_LIMIT_MS - idleFor) / 1000)));
       } else {
         setSecondsLeft(null);
@@ -157,7 +147,10 @@ export function IdleLogout() {
       </div>
       <button
         type="button"
-        onClick={markActive}
+        onClick={() => {
+          markActive();
+          pingKeepalive();
+        }}
         className="shrink-0 rounded-lg bg-[var(--gn-palette-1)] px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-[var(--gn-palette-2)]"
       >
         Seguir conectado
