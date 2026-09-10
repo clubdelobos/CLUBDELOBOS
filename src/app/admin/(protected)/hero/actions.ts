@@ -9,11 +9,11 @@ import { assetUrlSchema, linkTargetSchema } from "@/lib/validation";
 const SlideSchema = z.object({
   id: z.string().uuid().optional(),
   imageUrl: assetUrlSchema,
-  imageW: z.number().int().positive(),
-  imageH: z.number().int().positive(),
-  heading: z.string().min(1),
-  description: z.string().min(1),
-  buttonLabel: z.string().min(1),
+  imageW: z.number().int().positive({ message: "Agrega una imagen para la diapositiva." }),
+  imageH: z.number().int().positive({ message: "Agrega una imagen para la diapositiva." }),
+  heading: z.string().trim().min(1, { message: "El título no puede quedar vacío." }),
+  description: z.string().trim().min(1, { message: "La descripción no puede quedar vacía." }),
+  buttonLabel: z.string().trim().min(1, { message: "El texto del botón no puede quedar vacío." }),
   href: linkTargetSchema,
   isPublished: z.boolean(),
 });

@@ -11,6 +11,7 @@ import {
   House,
   Images,
   LayoutDashboard,
+  Link2,
   LogOut,
   Menu,
   MessageSquareText,
@@ -33,6 +34,7 @@ interface NavItem {
 const ADMIN_NAV: NavItem[] = [
   { href: "/admin", label: "Panel", icon: LayoutDashboard },
   { href: "/admin/settings", label: "Ajustes del sitio", icon: Settings },
+  { href: "/admin/nav", label: "Menú del sitio", icon: Link2 },
   { href: "/admin/hero", label: "Portada", icon: Images },
   { href: "/admin/tours", label: "Aventuras y salidas", icon: CalendarDays },
   { href: "/admin/sections", label: "Secciones", icon: BookOpen },

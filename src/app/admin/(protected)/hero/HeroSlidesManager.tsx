@@ -24,6 +24,11 @@ function SlideEditor({ slide, onDeleted, onSaved }: { slide: HeroSlideRow | null
   const [message, setMessage] = useState<string | null>(null);
 
   function save() {
+    if (!form.image_url || !form.image_w) { setMessage("Agrega una imagen para la diapositiva."); return; }
+    if (!form.heading.trim()) { setMessage("El título no puede quedar vacío."); return; }
+    if (!form.description.trim()) { setMessage("La descripción no puede quedar vacía."); return; }
+    if (!form.button_label.trim()) { setMessage("El texto del botón no puede quedar vacío."); return; }
+    if (!form.href.trim()) { setMessage("Agrega el enlace del botón."); return; }
     setMessage(null);
     startTransition(async () => {
       const result = await upsertHeroSlide({ id: slide?.id, imageUrl: form.image_url, imageW: form.image_w, imageH: form.image_h, heading: form.heading, description: form.description, buttonLabel: form.button_label, href: form.href, isPublished: form.is_published });
