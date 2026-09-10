@@ -72,6 +72,8 @@ export const HERO_SLIDES: HeroSlide[] = [
 export const PRODUCTS: ProductCard[] = [
   {
     id: "tour-farallones-sutatausa",
+    category: "nacional",
+    subcategory: "volcanes",
     title: "Volcán de Santa Ana",
     price: "Consultar",
     currencySymbol: "",
@@ -83,6 +85,8 @@ export const PRODUCTS: ProductCard[] = [
   },
   {
     id: "tour-lagunas-siecha",
+    category: "nacional",
+    subcategory: "rios",
     title: "Reserva del Roble Negro",
     price: "Consultar",
     currencySymbol: "",
@@ -94,6 +98,8 @@ export const PRODUCTS: ProductCard[] = [
   },
   {
     id: "tour-tatacoa",
+    category: "nacional",
+    subcategory: "pueblos",
     title: "Travesía Berlín–Alegría",
     price: "Consultar",
     currencySymbol: "",
@@ -105,6 +111,8 @@ export const PRODUCTS: ProductCard[] = [
   },
   {
     id: "tour-chingaza-kids",
+    category: "nacional",
+    subcategory: "rios",
     title: "Bosque Lya",
     price: "Consultar",
     currencySymbol: "",
@@ -116,6 +124,8 @@ export const PRODUCTS: ProductCard[] = [
   },
   {
     id: "tour-camping-chingaza",
+    category: "nacional",
+    subcategory: "volcanes",
     title: "Camping entre volcanes",
     price: "Consultar",
     currencySymbol: "",
@@ -127,6 +137,8 @@ export const PRODUCTS: ProductCard[] = [
   },
   {
     id: "tour-penas-blancas",
+    category: "nacional",
+    subcategory: "pueblos",
     title: "Próxima aventura de la manada",
     price: "Consultar",
     currencySymbol: "",

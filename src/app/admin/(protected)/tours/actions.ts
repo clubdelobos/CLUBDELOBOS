@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
 import { createServiceRoleClient } from "@/lib/supabase/server";
+import { SUBCATEGORY_IDS, TOUR_CATEGORIES } from "@/lib/tour-categories";
 import { TOUR_ICON_IDS } from "@/lib/tour-details";
 import { assetUrlSchema } from "@/lib/validation";
 
@@ -37,8 +38,13 @@ const TourSchema = z.object({
   images: z.array(TourImageSchema).min(1, "Agrega al menos una imagen.").max(5, "Máximo 5 imágenes por salida."),
   buttonLabel: z.string().min(1),
   isPublished: z.boolean(),
+  category: z.enum(TOUR_CATEGORIES),
+  subcategory: z.enum(SUBCATEGORY_IDS).nullable(),
   details: TourDetailSchema,
-});
+}).refine(
+  (value) => !(value.category === "nacional" && !value.subcategory),
+  { path: ["subcategory"], message: "Elige una subcategoría para la salida nacional." },
+);
 
 export interface ActionState {
   error?: string;
@@ -91,6 +97,8 @@ export async function upsertTour(raw: z.infer<typeof TourSchema>): Promise<Actio
     images: d.images,
     button_label: d.buttonLabel,
     is_published: d.isPublished,
+    category: d.category,
+    subcategory: d.category === "nacional" ? d.subcategory : null,
   };
 
   let tourId = d.id;

@@ -14,7 +14,7 @@ const inputCls = "admin-input h-10 px-3";
 
 interface FormState {
   logoHeader: string | null; logoFooter: string | null; favicon: string | null;
-  phoneLabel: string; phoneHref: string; email: string; address: string;
+  phoneLabel: string; phoneHref: string; email: string; bookingNotifyEmail: string; address: string;
   facebook: string; instagram: string; tiktok: string;
   palette1: string; palette2: string; palette3: string; palette5: string; palette7: string; palette8: string;
   registro: string; copyright: string; creditLabel: string; creditHref: string;
@@ -24,7 +24,8 @@ function toFormState(settings: SiteSettingsData): FormState {
   const social = (network: string) => settings.socialLinks.find((link) => link.network === network)?.href ?? "";
   return {
     logoHeader: settings.logoHeaderUrl, logoFooter: settings.logoFooterUrl, favicon: settings.faviconUrl,
-    phoneLabel: settings.phoneLabel, phoneHref: settings.phoneHref, email: settings.email, address: settings.address ?? "",
+    phoneLabel: settings.phoneLabel, phoneHref: settings.phoneHref, email: settings.email,
+    bookingNotifyEmail: settings.bookingNotifyEmail, address: settings.address ?? "",
     facebook: social("facebook"), instagram: social("instagram"), tiktok: social("tiktok"),
     palette1: settings.palette[1], palette2: settings.palette[2], palette3: settings.palette[3], palette5: settings.palette[5], palette7: settings.palette[7], palette8: settings.palette[8],
     registro: settings.footerRegistro ?? "", copyright: settings.footerCopyright, creditLabel: settings.footerCreditLabel, creditHref: settings.footerCreditHref ?? "",
@@ -117,7 +118,8 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
     startTransition(async () => {
       const result = await updateSiteSettings({
         logoHeaderUrl: state.logoHeader, logoFooterUrl: state.logoFooter, faviconUrl: state.favicon,
-        phoneLabel: state.phoneLabel, phoneHref: state.phoneHref, email: state.email, address: state.address || null,
+        phoneLabel: state.phoneLabel, phoneHref: state.phoneHref, email: state.email,
+        bookingNotifyEmail: state.bookingNotifyEmail, address: state.address || null,
         socialFacebookUrl: state.facebook || null, socialInstagramUrl: state.instagram || null, socialTiktokUrl: state.tiktok || null,
         palette1: state.palette1, palette2: state.palette2, palette3: state.palette3, palette5: state.palette5, palette7: state.palette7, palette8: state.palette8,
         footerRegistro: state.registro || null, footerCopyright: state.copyright, footerCreditLabel: state.creditLabel, footerCreditHref: state.creditHref || null,
@@ -138,6 +140,12 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
           <Field label="Enlace al llamar" hint="Ejemplo: tel:+50379528033"><input className={inputCls} value={state.phoneHref} onChange={(e) => set("phoneHref", e.target.value)} /></Field>
           <Field label="Correo (opcional)"><input type="email" className={inputCls} value={state.email} onChange={(e) => set("email", e.target.value)} placeholder="No publicado" /></Field>
           <Field label="Ubicación (opcional)"><input className={inputCls} value={state.address} onChange={(e) => set("address", e.target.value)} placeholder="El Salvador" /></Field>
+          <Field
+            label="Correo para notificaciones de reservas"
+            hint="Aquí llega un aviso cada vez que un cliente envía una reserva desde el sitio. Puede ser un alias del dominio (p. ej. reservas@tu-dominio). No se publica."
+          >
+            <input type="email" className={inputCls} value={state.bookingNotifyEmail} onChange={(e) => set("bookingNotifyEmail", e.target.value)} placeholder="Sin configurar" />
+          </Field>
         </div>
       </Section>
 

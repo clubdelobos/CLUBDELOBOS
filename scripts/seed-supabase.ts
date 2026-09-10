@@ -133,6 +133,8 @@ async function main() {
         ],
         button_label: p.buttonLabel,
         sort_order: i,
+        category: p.category,
+        subcategory: p.subcategory,
       };
     }),
     { onConflict: "slug" },

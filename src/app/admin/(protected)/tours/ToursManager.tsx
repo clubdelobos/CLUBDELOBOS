@@ -8,8 +8,16 @@ import {
   UsersRound, Waves, X,
 } from "lucide-react";
 import { AddImageTile } from "@/components/admin/AddImageTile";
+import { AdminSelect } from "@/components/admin/AdminSelect";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { Modal } from "@/components/admin/Modal";
+import {
+  NATIONAL_SUBCATEGORIES,
+  TOUR_CATEGORY_LABELS,
+  TOUR_CATEGORIES,
+  type TourCategory,
+  type TourSubcategory,
+} from "@/lib/tour-categories";
 import {
   getDefaultTourDetail,
   TOUR_ICON_OPTIONS,
@@ -30,6 +38,8 @@ export interface TourRow {
   images: TourImage[];
   button_label: string;
   is_published: boolean;
+  category: TourCategory;
+  subcategory: TourSubcategory | null;
   details: TourDetailCopy;
 }
 
@@ -38,7 +48,8 @@ const MAX_DATES = 10;
 const inputCls = "admin-input h-10 px-3";
 const EMPTY: Omit<TourRow, "id"> = {
   slug: "", title: "", price: "Consultar", currency_symbol: "$", departure_dates: [],
-  images: [], button_label: "Ver salida", is_published: true, details: getDefaultTourDetail(""),
+  images: [], button_label: "Ver salida", is_published: true,
+  category: "nacional", subcategory: "volcanes", details: getDefaultTourDetail(""),
 };
 
 function formatDeparture(iso: string) {
@@ -129,6 +140,8 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
         images,
         buttonLabel: form.button_label,
         isPublished: form.is_published,
+        category: form.category,
+        subcategory: form.category === "nacional" ? form.subcategory : null,
         details: form.details,
       });
       if (result.error) setMessage(result.error);
@@ -243,6 +256,36 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
         </div>
         <Field label="Texto del botón"><input className={inputCls} value={form.button_label} onChange={(e) => setForm((current) => ({ ...current, button_label: e.target.value }))} /></Field>
         <div className="flex items-end"><label className="flex h-10 items-center gap-2 text-xs font-semibold text-[var(--gn-palette-3)]"><input type="checkbox" checked={form.is_published} onChange={(e) => setForm((current) => ({ ...current, is_published: e.target.checked }))} />Publicado</label></div>
+
+        <Field label="Categoría">
+          <AdminSelect
+            ariaLabel="Categoría de la salida"
+            value={form.category}
+            options={TOUR_CATEGORIES.map((id) => ({ value: id, label: TOUR_CATEGORY_LABELS[id] }))}
+            onValueChange={(category) =>
+              setForm((current) => ({
+                ...current,
+                category,
+                subcategory:
+                  category === "nacional"
+                    ? (current.subcategory ?? NATIONAL_SUBCATEGORIES[0].id)
+                    : null,
+              }))
+            }
+          />
+        </Field>
+        {form.category === "nacional" ? (
+          <Field label="Subcategoría">
+            <AdminSelect
+              ariaLabel="Subcategoría de la salida"
+              value={form.subcategory ?? NATIONAL_SUBCATEGORIES[0].id}
+              options={NATIONAL_SUBCATEGORIES.map((s) => ({ value: s.id, label: s.label }))}
+              onValueChange={(subcategory) => setForm((current) => ({ ...current, subcategory }))}
+            />
+          </Field>
+        ) : (
+          <div className="flex items-end"><p className="text-[11px] leading-4 text-[var(--gn-palette-5)]">Las salidas internacionales no llevan subcategoría.</p></div>
+        )}
 
         <Field label={`Fechas de salida (${form.departure_dates.length}/${MAX_DATES})`} className="sm:col-span-2">
           {form.departure_dates.length > 0 ? (
@@ -387,7 +430,14 @@ function TourCard({ tour, index, total, onEdit, onMove }: {
           {!tour.is_published ? <span className="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-0.5 text-[10px] font-bold text-white">Oculta</span> : null}
         </span>
         <span className="flex flex-col gap-1 p-3">
-          <strong className="truncate text-sm text-[var(--gn-palette-3)]">{tour.title || "Sin título"}</strong>
+          <span className="flex items-center gap-1.5">
+            <strong className="truncate text-sm text-[var(--gn-palette-3)]">{tour.title || "Sin título"}</strong>
+          </span>
+          <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--gn-palette-5)]">
+            {tour.category === "nacional"
+              ? NATIONAL_SUBCATEGORIES.find((s) => s.id === tour.subcategory)?.label ?? "Nacional"
+              : "Internacional"}
+          </span>
           <span className="flex items-center justify-between gap-2 text-xs text-[var(--gn-palette-5)]">
             <span className="truncate">{next ? formatDeparture(next) : "Sin fecha"}{tour.departure_dates.length > 1 ? ` (+${tour.departure_dates.length - 1})` : ""}</span>
             <span className="shrink-0 font-bold text-[var(--gn-palette-1)]">{tour.currency_symbol} {tour.price}</span>

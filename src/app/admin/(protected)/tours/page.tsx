@@ -4,11 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { ToursManager } from "./ToursManager";
 
 export default async function ToursPage() {
+  // `select("*")` so the admin list still loads before 0010 (category/
+  // subcategory) is applied — the editor then just shows the defaults.
   const toursPromise = createClient().then((supabase) => supabase
     .from("tours")
-    .select(
-      "id, slug, title, price, currency_symbol, departure_dates, images, button_label, is_published",
-    )
+    .select("*")
     .order("sort_order"));
   const [, { data }, storedDetails] = await Promise.all([
     requireRole(["admin"]),
@@ -23,6 +23,13 @@ export default async function ToursPage() {
   })), storedDetails);
 
   return (
-    <ToursManager tours={tours.map((tour) => ({ ...tour, details: details[tour.id] }))} />
+    <ToursManager
+      tours={tours.map((tour) => ({
+        ...tour,
+        category: tour.category ?? "nacional",
+        subcategory: tour.subcategory ?? null,
+        details: details[tour.id],
+      }))}
+    />
   );
 }

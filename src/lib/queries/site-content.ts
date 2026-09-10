@@ -52,6 +52,9 @@ export interface SiteSettingsData {
   footerCopyright: string;
   footerCreditLabel: string;
   footerCreditHref: string | null;
+  /** Internal — recipient of the "nueva reserva" email. Admin-only; never
+   *  rendered on the public site. '' when unset. */
+  bookingNotifyEmail: string;
 }
 
 export async function getSiteSettings(): Promise<SiteSettingsData> {
@@ -90,6 +93,7 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
     footerCopyright: data?.footer_copyright ?? "© 2026 Club de Lobos.",
     footerCreditLabel: data?.footer_credit_label ?? "",
     footerCreditHref: data?.footer_credit_href ?? null,
+    bookingNotifyEmail: data?.booking_notify_email ?? "",
   };
 }
 
@@ -126,9 +130,12 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
 
 export async function getTours(): Promise<ProductCard[]> {
   const supabase = createPublicClient();
+  // `select("*")` (not an explicit column list) so a not-yet-applied additive
+  // migration — 0010's category/subcategory — can't error the whole query and
+  // blank the homepage grid. Missing columns just fall back below.
   const { data } = await supabase
     .from("tours")
-    .select("id, slug, title, price, currency_symbol, departure_dates, images, button_label")
+    .select("*")
     .order("sort_order");
 
   return (data ?? []).map((t) => {
@@ -143,6 +150,8 @@ export async function getTours(): Promise<ProductCard[]> {
       hoverImage: t.images[1]?.url ?? t.images[0]?.url ?? "",
       href: `/salidas/${encodeURIComponent(t.slug)}`,
       buttonLabel: t.button_label,
+      category: t.category ?? "nacional",
+      subcategory: t.subcategory ?? null,
     };
   });
 }

@@ -1,8 +1,9 @@
-import { ProductCard } from "./ProductCard";
-import { Reveal } from "./Reveal";
+import { AdventureBrowser } from "./AdventureBrowser";
 import type { ProductCard as ProductCardData } from "@/types/guianatours-com-co-e923d4eb";
 
-/** Section a3125aa — cream band with the six upcoming-departure product cards. */
+/** Section a3125aa — cream band with the upcoming-departure product cards,
+ *  filtered by category (Nacionales / Internacionales) and, for Nacionales,
+ *  by subcategory. */
 export function ProximosDestinos({ tours }: { tours: ProductCardData[] }) {
   return (
     <section id="proximas-aventuras" className="relative bg-[var(--gn-palette-8)] px-5 pb-10 pt-[10px]">
@@ -14,13 +15,7 @@ export function ProximosDestinos({ tours }: { tours: ProductCardData[] }) {
               Próximas aventuras
             </h2>
           </div>
-          <ul className="mb-[17px] grid list-none grid-cols-1 gap-10 p-0 min-[576px]:grid-cols-2 min-[1025px]:grid-cols-3">
-            {tours.map((product, index) => (
-              <Reveal key={product.id} as="li" zoom delay={(index % 3) * 90}>
-                <ProductCard product={product} />
-              </Reveal>
-            ))}
-          </ul>
+          <AdventureBrowser tours={tours} />
         </div>
       </div>
     </section>

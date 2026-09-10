@@ -1,7 +1,10 @@
 "use server";
 
 import { headers } from "next/headers";
+import { after } from "next/server";
 import { z } from "zod";
+import { buildBookingNotificationEmail } from "@/lib/email/booking-notification";
+import { sendEmail } from "@/lib/email/send";
 import { clientIpFrom } from "@/lib/net/client-ip";
 import { createClient } from "@/lib/supabase/server";
 
@@ -85,7 +88,7 @@ export async function createBooking(raw: unknown): Promise<BookingState> {
   // The public form only ever renders a <select> of the tour's configured
   // dates, but that's a client-side constraint — re-check it here so a
   // hand-crafted request can't book an arbitrary date the admin never set.
-  const { data: tour } = await supabase.from("tours").select("departure_dates").eq("id", d.tourId).maybeSingle();
+  const { data: tour } = await supabase.from("tours").select("title, departure_dates").eq("id", d.tourId).maybeSingle();
   if (!tour || !tour.departure_dates.includes(d.requestedDate)) {
     return { error: "Esa fecha ya no está disponible para esta salida." };
   }
@@ -122,5 +125,40 @@ export async function createBooking(raw: unknown): Promise<BookingState> {
     console.error("createBooking insert failed:", error.message);
     return { error: "No se pudo enviar la reserva. Intenta de nuevo." };
   }
+
+  // Best-effort admin notification. Never blocks or fails the booking: the
+  // request is already saved and visible in /admin/bookings. `after` runs the
+  // send once the visitor's response is on its way; a missing RESEND_API_KEY /
+  // EMAIL_FROM / notify address just skips it.
+  // `select("*")` so this still works before 0011 (booking_notify_email) is
+  // applied — the column is just absent and the email is skipped.
+  const { data: settings } = await supabase
+    .from("site_settings")
+    .select("*")
+    .eq("id", 1)
+    .maybeSingle();
+  const notifyTo = settings?.booking_notify_email?.trim();
+  if (notifyTo) {
+    after(async () => {
+      const result = await sendEmail(
+        buildBookingNotificationEmail(
+          {
+            customerName: d.customerName,
+            email: d.email,
+            phone: d.phone,
+            tourTitle: tour.title,
+            requestedDate: d.requestedDate,
+            numPeople: d.numPeople,
+            notes: d.notes,
+          },
+          notifyTo,
+        ),
+      );
+      if (!result.ok && result.error !== "email-not-configured") {
+        console.error("booking notification email failed:", result.error);
+      }
+    });
+  }
+
   return { success: true };
 }

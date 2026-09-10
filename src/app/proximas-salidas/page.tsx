@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ProductCard } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/ProductCard";
+import { AdventureBrowser } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/AdventureBrowser";
 import { PublicPageShell } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/PublicPageShell";
 import { getTours } from "@/lib/queries/site-content";
 
@@ -22,9 +22,7 @@ export default async function UpcomingToursPage() {
             ¡Ven con la manada! Conoce nuevos destinos de El Salvador y abre cada salida para consultar la ruta, fecha, dificultad y demás información.
           </p>
           {tours.length ? (
-            <ul className="grid list-none grid-cols-1 gap-10 p-0 min-[576px]:grid-cols-2 min-[1025px]:grid-cols-3">
-              {tours.map((tour) => <ProductCard key={tour.id} product={tour} />)}
-            </ul>
+            <AdventureBrowser tours={tours} />
           ) : (
             <p className="rounded-xl bg-white p-8 text-center text-[var(--gn-palette-5)]">Pronto publicaremos nuevas salidas.</p>
           )}

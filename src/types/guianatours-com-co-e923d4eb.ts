@@ -3,6 +3,8 @@
  * site-key: guianatours-com-co-e923d4eb
  */
 
+import type { TourCategory, TourSubcategory } from "@/lib/tour-categories";
+
 export interface HeroSlide {
   /** Stable identifier — a DB row id once sourced from Supabase. Used as the React list key. */
   id: string;
@@ -37,6 +39,10 @@ export interface ProductCard {
   href: string;
   /** Add-to-cart label. */
   buttonLabel: string;
+  /** Nacional / internacional — drives the public "Próximas aventuras" filter. */
+  category: TourCategory;
+  /** Only set for nacional salidas; null otherwise. */
+  subcategory: TourSubcategory | null;
 }
 
 export interface GalleryItem {

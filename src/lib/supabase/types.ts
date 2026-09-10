@@ -11,6 +11,8 @@
  * to `never` instead of erroring, which is easy to miss.
  */
 
+import type { TourCategory, TourSubcategory } from "@/lib/tour-categories";
+
 export type BookingStatus = "pending" | "confirmed" | "cancelled";
 export type ProfileRole = "admin" | "worker";
 export type ContentBlockKey = "guias" | "camping" | "fotografias";
@@ -41,6 +43,9 @@ export interface Database {
           social_youtube_url: string | null;
           // Added in 0007_site_settings_tiktok.sql.
           social_tiktok_url: string | null;
+          // Added in 0011_booking_notify_email.sql — recipient of the
+          // "nueva reserva" notification email. '' when unset.
+          booking_notify_email: string;
           palette_1: string;
           palette_2: string;
           palette_3: string;
@@ -94,6 +99,9 @@ export interface Database {
           sort_order: number;
           is_published: boolean;
           created_at: string;
+          // Added in 0010_tour_categories.sql.
+          category: TourCategory;
+          subcategory: TourSubcategory | null;
         };
         Insert: Omit<Database["public"]["Tables"]["tours"]["Row"], "id" | "created_at"> & { id?: string };
         Update: Partial<Omit<Database["public"]["Tables"]["tours"]["Row"], "id" | "created_at">>;
