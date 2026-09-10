@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { ChevronDown, ChevronUp, GripVertical, Plus, Trash2 } from "lucide-react";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { Modal } from "@/components/admin/Modal";
 import { deleteNavLink, reorderNavLinks, upsertNavLink } from "./actions";
 
@@ -32,6 +33,7 @@ function LinkEditor({ link, onDeleted }: { link: NavLinkRow | null; onDeleted?: 
   );
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   function save() {
     if (!form.label.trim()) { setMessage("El nombre del enlace no puede quedar vacío."); return; }
@@ -49,17 +51,32 @@ function LinkEditor({ link, onDeleted }: { link: NavLinkRow | null; onDeleted?: 
     });
   }
 
-  function remove() {
-    if (!link || !window.confirm(`¿Eliminar el enlace "${link.label}"?`)) return;
+  function confirmRemove() {
+    if (!link) return;
     startTransition(async () => {
       const result = await deleteNavLink(link.id);
-      if (result.error) setMessage(result.error);
+      if (result.error) { setMessage(result.error); setConfirmDelete(false); }
       else { onDeleted?.(); window.location.reload(); }
     });
   }
 
   return (
     <div className="flex flex-col gap-4">
+      {link ? (
+        <ConfirmDialog
+          open={confirmDelete}
+          title="Eliminar enlace"
+          confirmLabel="Sí, eliminar"
+          pending={pending}
+          onConfirm={confirmRemove}
+          onCancel={() => setConfirmDelete(false)}
+          message={
+            <>
+              ¿Quieres quitar <strong className="text-[var(--gn-palette-3)]">{link.label}</strong> del menú? Esta acción no se puede deshacer.
+            </>
+          }
+        />
+      ) : null}
       <Field label="Nombre visible">
         <input className={inputCls} value={form.label} onChange={(e) => setForm((c) => ({ ...c, label: e.target.value }))} placeholder="Inicio" />
       </Field>
@@ -73,7 +90,7 @@ function LinkEditor({ link, onDeleted }: { link: NavLinkRow | null; onDeleted?: 
       {message ? <p className="text-xs font-semibold text-red-600">{message}</p> : null}
       <div className="flex items-center justify-between gap-2 border-t border-black/5 pt-4">
         {link ? (
-          <button type="button" onClick={remove} disabled={pending} className="admin-danger-btn px-3 py-2 text-xs">
+          <button type="button" onClick={() => setConfirmDelete(true)} disabled={pending} className="admin-danger-btn px-3 py-2 text-xs">
             <Trash2 className="h-4 w-4" />Eliminar
           </button>
         ) : <span />}

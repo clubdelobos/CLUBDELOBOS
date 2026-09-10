@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Image from "next/image";
 import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { Modal } from "@/components/admin/Modal";
 import { deleteHeroSlide, reorderHeroSlides, upsertHeroSlide } from "./actions";
@@ -22,6 +23,7 @@ function SlideEditor({ slide, onDeleted, onSaved }: { slide: HeroSlideRow | null
   const [form, setForm] = useState(slide ?? EMPTY);
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   function save() {
     if (!form.image_url || !form.image_w) { setMessage("Agrega una imagen para la diapositiva."); return; }
@@ -38,13 +40,26 @@ function SlideEditor({ slide, onDeleted, onSaved }: { slide: HeroSlideRow | null
     });
   }
 
-  function remove() {
-    if (!slide || !window.confirm("¿Eliminar esta diapositiva?")) return;
-    startTransition(async () => { const result = await deleteHeroSlide(slide.id); if (result.error) setMessage(result.error); else onDeleted?.(); });
+  function confirmRemove() {
+    if (!slide) return;
+    startTransition(async () => {
+      const result = await deleteHeroSlide(slide.id);
+      if (result.error) { setMessage(result.error); setConfirmDelete(false); }
+      else onDeleted?.();
+    });
   }
 
   return (
     <div className="flex flex-col gap-4">
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Eliminar diapositiva"
+        message="¿Eliminar esta diapositiva de la portada? Esta acción no se puede deshacer."
+        confirmLabel="Sí, eliminar"
+        pending={pending}
+        onConfirm={confirmRemove}
+        onCancel={() => setConfirmDelete(false)}
+      />
       <ImageUploader bucket="media" label="Imagen" value={form.image_w ? { url: form.image_url, width: form.image_w, height: form.image_h } : null} onChange={(image) => setForm((current) => ({ ...current, image_url: image.url, image_w: image.width, image_h: image.height }))} previewClassName="aspect-[16/9] w-full rounded-xl object-cover" />
       <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         <Field label="Título" className="sm:col-span-2"><input className={inputCls} value={form.heading} onChange={(e) => setForm((current) => ({ ...current, heading: e.target.value }))} /></Field>
@@ -55,7 +70,7 @@ function SlideEditor({ slide, onDeleted, onSaved }: { slide: HeroSlideRow | null
       </div>
       {message ? <p className={`text-xs font-semibold ${message.includes("publicados") ? "text-emerald-700" : "text-red-600"}`}>{message}</p> : null}
       <div className="flex items-center justify-between gap-2 border-t border-black/5 pt-4">
-        {slide ? <button type="button" onClick={remove} disabled={pending} className="admin-danger-btn px-3 py-2 text-xs"><Trash2 className="h-4 w-4" />Eliminar</button> : <span />}
+        {slide ? <button type="button" onClick={() => setConfirmDelete(true)} disabled={pending} className="admin-danger-btn px-3 py-2 text-xs"><Trash2 className="h-4 w-4" />Eliminar</button> : <span />}
         <button type="button" onClick={save} disabled={pending} className="gn-button disabled:opacity-50"><span className="inline-flex items-center">{pending ? "Guardando…" : slide ? "Guardar" : "Agregar diapositiva"}</span></button>
       </div>
     </div>

@@ -683,7 +683,8 @@
 @media (max-width: 640px) {
   .tm-cat-chip {
     min-width: 0;
-    padding: 10px 14px;
+    height: 40px;
+    padding: 0 14px;
   }
   .tm-cat-chip__label {
     font-size: 14px;
@@ -692,27 +693,40 @@
   .tm-cat-row .tm-cat-chip {
     flex: 1 1 calc(50% - 0.5rem);
   }
-  /* Subcategorías: pastillas de ancho automático, centradas, que se acomodan
-     en una o dos filas — se leen claramente como botones. */
+  /* Subcategorías: pastillas de ancho automático, en una o dos filas. */
   .tm-sub-row .tm-cat-chip {
     flex: 0 1 auto;
+    transition: min-width 0.28s ease, height 0.28s ease, padding 0.28s ease,
+      border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease;
   }
 }
 
-/* Pantallas táctiles: la animación no se lee en un botón angosto, así que el
-   botón queda solo con su texto (el motor tampoco se monta — ver
-   SubcategoryButton.tsx). */
-@media (hover: none) {
-  .tm-cat-chip__canvas {
-    display: none;
-  }
-  .tm-cat-chip.is-hot .tm-cat-chip__label {
-    opacity: 1;
-  }
-  .tm-cat-chip:hover,
-  .tm-cat-chip.is-hot {
+/* Móvil táctil: al tocar una subcategoría, esa pastilla crece a lo ancho de la
+   fila un momento para que la animación se vea bien; las otras dos bajan a la
+   siguiente línea. Al terminar (o al elegir otra) vuelve a su tamaño. */
+@media (hover: none) and (max-width: 640px) {
+  .tm-cat-chip:hover {
     transform: none;
     box-shadow: none;
+  }
+  .tm-sub-row .tm-cat-chip.is-hot,
+  .tm-sub-row .tm-cat-chip.is-active.is-hot {
+    min-width: 100%;
+    height: 128px;
+    padding: 0;
+    transform: none;
+    /* Fondo claro mientras se ve la animación (aunque esté seleccionada). */
+    background-color: #ffffff;
+    border-color: var(--gn-palette-1);
+    box-shadow: 0 10px 26px color-mix(in srgb, var(--gn-palette-1) 18%, transparent);
+  }
+  .tm-sub-row .tm-cat-chip.is-hot .tm-cat-chip__canvas {
+    top: 50%;
+    width: 100%;
+    opacity: 1;
+  }
+  .tm-sub-row .tm-cat-chip.is-hot .tm-cat-chip__label {
+    opacity: 0;
   }
 }
 

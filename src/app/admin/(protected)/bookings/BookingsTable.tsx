@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { Calendar, CalendarX2, Check, Mail, MoreVertical, Phone, Trash2, Users, X } from "lucide-react";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { deleteBooking, updateBookingStatus } from "./actions";
 import type { BookingStatus, ProfileRole } from "@/lib/supabase/types";
 
@@ -44,6 +45,8 @@ function formatDate(iso: string) {
 /** Shared status-change + delete logic for the row and the mobile card. */
 function useBookingActions(booking: BookingRow, onChanged: (next: BookingRow | null) => void) {
   const [pending, startTransition] = useTransition();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   function setStatus(status: BookingStatus) {
     startTransition(async () => {
@@ -52,15 +55,32 @@ function useBookingActions(booking: BookingRow, onChanged: (next: BookingRow | n
     });
   }
 
-  function remove() {
-    if (!window.confirm(`¿Eliminar la reserva de ${booking.customer_name}?`)) return;
+  function requestRemove() {
+    setConfirmError(null);
+    setConfirmOpen(true);
+  }
+
+  function confirmRemove() {
     startTransition(async () => {
       const result = await deleteBooking(booking.id);
-      if (!result.error) onChanged(null);
+      if (result.error) {
+        setConfirmError(result.error);
+        return;
+      }
+      setConfirmOpen(false);
+      onChanged(null);
     });
   }
 
-  return { pending, setStatus, remove };
+  return {
+    pending,
+    setStatus,
+    remove: requestRemove,
+    confirmOpen,
+    confirmError,
+    confirmRemove,
+    cancelRemove: () => setConfirmOpen(false),
+  };
 }
 
 function StatusMenu({ status, pending, onConfirm, onCancel, onDelete, align = "end" }: {
@@ -168,11 +188,45 @@ function StatusMenu({ status, pending, onConfirm, onCancel, onDelete, align = "e
   );
 }
 
+function DeleteBookingDialog({
+  name,
+  pending,
+  error,
+  open,
+  onConfirm,
+  onCancel,
+}: {
+  name: string;
+  pending: boolean;
+  error: string | null;
+  open: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <ConfirmDialog
+      open={open}
+      title="Eliminar reserva"
+      confirmLabel="Sí, eliminar"
+      pending={pending}
+      error={error}
+      onConfirm={onConfirm}
+      onCancel={onCancel}
+      message={
+        <>
+          ¿Quieres eliminar la reserva de <strong className="text-[var(--gn-palette-3)]">{name}</strong>? Esta acción no se puede deshacer.
+        </>
+      }
+    />
+  );
+}
+
 function DesktopRow({ booking, canEdit, onChanged }: { booking: BookingRow; canEdit: boolean; onChanged: (next: BookingRow | null) => void }) {
-  const { pending, setStatus, remove } = useBookingActions(booking, onChanged);
+  const { pending, setStatus, remove, confirmOpen, confirmError, confirmRemove, cancelRemove } = useBookingActions(booking, onChanged);
 
   return (
     <tr className="border-b border-black/5 transition-colors last:border-0 hover:bg-[var(--gn-palette-8)]">
+      <DeleteBookingDialog name={booking.customer_name} pending={pending} error={confirmError} open={confirmOpen} onConfirm={confirmRemove} onCancel={cancelRemove} />
       <td className="whitespace-nowrap px-4 py-3 font-semibold text-[var(--gn-palette-3)]">{booking.customer_name}</td>
       <td className="whitespace-nowrap px-4 py-3 text-[var(--gn-palette-5)]">{booking.email}</td>
       <td className="whitespace-nowrap px-4 py-3 text-[var(--gn-palette-5)]">{booking.phone}</td>
@@ -205,10 +259,11 @@ function DesktopRow({ booking, canEdit, onChanged }: { booking: BookingRow; canE
 }
 
 function MobileCard({ booking, canEdit, onChanged }: { booking: BookingRow; canEdit: boolean; onChanged: (next: BookingRow | null) => void }) {
-  const { pending, setStatus, remove } = useBookingActions(booking, onChanged);
+  const { pending, setStatus, remove, confirmOpen, confirmError, confirmRemove, cancelRemove } = useBookingActions(booking, onChanged);
 
   return (
     <div className="admin-card p-4">
+      <DeleteBookingDialog name={booking.customer_name} pending={pending} error={confirmError} open={confirmOpen} onConfirm={confirmRemove} onCancel={cancelRemove} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate font-bold text-[var(--gn-palette-3)]">{booking.customer_name}</p>

@@ -11,9 +11,9 @@ import { TourMotion, type TourMotionAnimation } from "./tour-motion.js";
  * `.tm-cat-chip`, texto plano). En escritorio, al pasar el puntero / enfocar
  * aparece un <canvas> encima donde la ilustración (cascada / pueblo / volcán)
  * se transforma en la palabra a color; al salir vuelve al texto plano.
- * En pantallas táctiles el motor no se monta y el botón es solo texto
- * (la animación no se lee bien en un botón angosto) — ver `@media (hover:none)`
- * en globals.css.
+ * En pantallas táctiles, al tocarlo el botón CRECE un momento a lo ancho de la
+ * fila para que la animación se vea bien, y luego vuelve a su tamaño de
+ * pastilla (ver `@media (hover:none) and (max-width:640px)` en globals.css).
  *
  * Motor: `tour-motion.js` (vendido). Se le pasa la tipografía del sitio
  * (Montserrat) para que el rótulo animado sea igual al de los demás botones,
@@ -36,13 +36,10 @@ export function SubcategoryButton({
   const animationRef = useRef<TourMotionAnimation | null>(null);
   const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hot, setHot] = useState(false);
+  const isTouch =
+    typeof window !== "undefined" && !!window.matchMedia?.("(hover: none)").matches;
 
   useEffect(() => {
-    // Touch devices: no hover, and the animation isn't legible in a narrow
-    // pill — skip the engine entirely and leave a plain text button.
-    if (typeof window !== "undefined" && window.matchMedia?.("(hover: none)").matches) {
-      return;
-    }
     let disposed = false;
     const begin = () => {
       if (disposed || !canvasRef.current || !TourMotion) return;
@@ -71,10 +68,15 @@ export function SubcategoryButton({
     };
   }, [subcategory, label]);
 
+  // On touch only one subcategory grows at a time: `hot` collapses as soon as
+  // another gets selected (`active` flips false). On desktop the hover state
+  // drives it. The pending `hot` timeout still clears the ref-state afterwards.
+  const showHot = hot && (active || !isTouch);
+
   useEffect(() => {
-    if (hot) animationRef.current?.play();
+    if (showHot) animationRef.current?.play();
     else animationRef.current?.stop();
-  }, [hot]);
+  }, [showHot]);
 
   const enter = () => {
     if (touchTimer.current) {
@@ -100,12 +102,13 @@ export function SubcategoryButton({
       onBlur={leave}
       onClick={() => {
         onSelect();
-        // Sin puntero (móvil): reproduce una vez y vuelve al texto plano.
+        // Sin puntero (móvil): el botón crece, reproduce la animación una vez y
+        // vuelve a su tamaño de pastilla.
         setHot(true);
         if (touchTimer.current) clearTimeout(touchTimer.current);
-        touchTimer.current = setTimeout(() => setHot(false), 2600);
+        touchTimer.current = setTimeout(() => setHot(false), 3400);
       }}
-      className={`tm-cat-chip${active ? " is-active" : ""}${hot ? " is-hot" : ""}`}
+      className={`tm-cat-chip${active ? " is-active" : ""}${showHot ? " is-hot" : ""}`}
     >
       <span ref={labelRef} className="tm-cat-chip__label">{label}</span>
       <canvas ref={canvasRef} className="tm-cat-chip__canvas" aria-hidden="true" />
