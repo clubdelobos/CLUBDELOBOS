@@ -15,6 +15,9 @@ export interface BookingFormProps {
   availableDates: string[];
   initialDate?: string;
   initialPeople?: number;
+  /** Called once, as soon as the booking is saved (before the visitor dismisses
+   *  the success screen). Used by the cart to drop the salida from the list. */
+  onSuccess?: () => void;
   /** Called after the visitor dismisses the success screen. */
   onDone?: () => void;
   /** Tighter spacing + smaller inputs for the cart dropdown. */
@@ -32,6 +35,7 @@ export function BookingForm({
   availableDates,
   initialDate = "",
   initialPeople = 1,
+  onSuccess,
   onDone,
   compact = false,
 }: BookingFormProps) {
@@ -64,6 +68,7 @@ export function BookingForm({
       return;
     }
     setDone(true);
+    onSuccess?.();
   }
 
   if (done) {

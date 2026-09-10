@@ -21,16 +21,36 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
   const { items, remove, clear } = useSalidasCart();
   const [open, setOpen] = useState(false);
   const [booking, setBooking] = useState<TourBookingInfo | null>(null);
+  const [bookingSlug, setBookingSlug] = useState<string | null>(null);
   const [loadingSlug, setLoadingSlug] = useState<string | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const number = phoneHref.replace(/\D/g, "");
+
+  async function startBooking(slug: string) {
+    setLoadingSlug(slug);
+    const info = await getTourBookingInfo(slug).catch(() => null);
+    setLoadingSlug(null);
+    if (info) {
+      setBooking(info);
+      setBookingSlug(slug);
+    }
+  }
+
+  function closeBooking() {
+    setBooking(null);
+    setBookingSlug(null);
+  }
 
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
       if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
     };
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && (booking ? setBooking(null) : setOpen(false));
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (booking) closeBooking();
+      else setOpen(false);
+    };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
@@ -38,13 +58,6 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
       document.removeEventListener("keydown", onKey);
     };
   }, [open, booking]);
-
-  async function startBooking(slug: string) {
-    setLoadingSlug(slug);
-    const info = await getTourBookingInfo(slug).catch(() => null);
-    setLoadingSlug(null);
-    if (info) setBooking(info);
-  }
 
   // Include each salida's page URL so WhatsApp renders a link preview (the
   // tour's cover photo + title come from that page's Open Graph tags).
@@ -89,7 +102,7 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
             <div className="p-4">
               <button
                 type="button"
-                onClick={() => setBooking(null)}
+                onClick={closeBooking}
                 className="mb-2 -ml-1 inline-flex items-center gap-1 text-xs font-semibold text-[var(--gn-palette-5)] transition-colors hover:text-[var(--gn-palette-3)]"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
@@ -101,7 +114,10 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
                 tourId={booking.tourId}
                 tourTitle={booking.title}
                 availableDates={booking.availableDates}
-                onDone={() => setBooking(null)}
+                onSuccess={() => {
+                  if (bookingSlug) remove(bookingSlug);
+                }}
+                onDone={closeBooking}
               />
             </div>
           ) : (

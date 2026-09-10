@@ -1,13 +1,25 @@
 import { requireRole } from "@/lib/auth/dal";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { CreateUserForm } from "./CreateUserForm";
+import { UsersTable, type StaffRow } from "./UsersTable";
 
 export default async function UsersPage() {
-  const profilesPromise = createClient().then((supabase) => supabase
-    .from("profiles")
-    .select("id, full_name, role, created_at")
-    .order("created_at", { ascending: false }));
-  const [, { data: profiles }] = await Promise.all([requireRole(["admin"]), profilesPromise]);
+  await requireRole(["admin"]);
+
+  const supabase = await createClient();
+  const admin = createServiceRoleClient();
+  const [{ data: profiles }, authList] = await Promise.all([
+    supabase.from("profiles").select("id, full_name, role, created_at").order("created_at", { ascending: false }),
+    admin.auth.admin.listUsers({ page: 1, perPage: 200 }),
+  ]);
+
+  const emailById = new Map((authList.data?.users ?? []).map((u) => [u.id, u.email ?? ""]));
+  const rows: StaffRow[] = (profiles ?? []).map((p) => ({
+    id: p.id,
+    fullName: p.full_name,
+    email: emailById.get(p.id) ?? "",
+    role: p.role,
+  }));
 
   return (
     <div>
@@ -18,26 +30,7 @@ export default async function UsersPage() {
       </p>
 
       <div className="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
-        <div className="admin-card overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-gray-200 text-[var(--gn-palette-5)]">
-              <tr>
-                <th className="px-4 py-3">Nombre</th>
-                <th className="px-4 py-3">Rol</th>
-              </tr>
-            </thead>
-            <tbody>
-              {profiles?.map((p) => (
-                <tr key={p.id} className="border-b border-gray-100 last:border-0">
-                  <td className="px-4 py-3 font-medium text-[var(--gn-palette-3)]">{p.full_name ?? "—"}</td>
-                  <td className="px-4 py-3 text-[var(--gn-palette-5)]">
-                    {p.role === "admin" ? "Administrador" : "Trabajador"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <UsersTable rows={rows} />
         <CreateUserForm />
       </div>
     </div>
