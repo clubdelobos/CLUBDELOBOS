@@ -139,6 +139,22 @@ export async function createBooking(raw: unknown): Promise<BookingState> {
     .maybeSingle();
   const notifyTo = settings?.booking_notify_email?.trim();
   if (notifyTo) {
+    // Brand the e-mail with the site's selected logo + palette.
+    const siteBase = (process.env.NEXT_PUBLIC_SITE_URL ?? "").replace(/\/$/, "");
+    const toAbsolute = (value?: string | null): string | null => {
+      if (!value) return null;
+      if (/^https?:\/\//i.test(value)) return value;
+      return siteBase ? `${siteBase}${value.startsWith("/") ? "" : "/"}${value}` : null;
+    };
+    const branding = {
+      logoLightUrl: toAbsolute(settings?.logo_header_url) ?? toAbsolute("/brand/lobos/logo-white-640.png"),
+      logoDarkUrl: toAbsolute("/brand/lobos/logo-black-640.png"),
+      palette1: settings?.palette_1,
+      palette3: settings?.palette_3,
+      palette5: settings?.palette_5,
+      palette8: settings?.palette_8,
+    };
+
     after(async () => {
       const result = await sendEmail(
         buildBookingNotificationEmail(
@@ -152,6 +168,7 @@ export async function createBooking(raw: unknown): Promise<BookingState> {
             notes: d.notes,
           },
           notifyTo,
+          branding,
         ),
       );
       if (!result.ok && result.error !== "email-not-configured") {
