@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import Image from "next/image";
 import {
-  Activity, AlertTriangle, Camera, ChevronDown, ChevronUp, CircleDollarSign, Clock3, Compass,
+  Activity, Camera, ChevronDown, ChevronUp, CircleDollarSign, Clock3, Compass,
   Gauge, Mountain, Plus, Route, TentTree, Thermometer, Trash2, TrendingUp, Trees,
   UsersRound, Waves, X,
 } from "lucide-react";
@@ -94,10 +94,10 @@ function DeleteTourDialog({
 
   return (
     <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="delete-tour-title">
-      <button type="button" aria-label="Cerrar confirmación" disabled={pending} onClick={onCancel} className="absolute inset-0 h-full w-full cursor-default bg-black/55 backdrop-blur-[2px]" />
-      <div className="relative w-full max-w-md rounded-2xl border border-black/10 bg-white p-6 shadow-2xl">
+      <button type="button" aria-label="Cerrar confirmación" disabled={pending} onClick={onCancel} className="absolute inset-0 h-full w-full cursor-default bg-[var(--gn-palette-3)]/45 backdrop-blur-[2px]" />
+      <div className="admin-modal-surface relative w-full max-w-md rounded-2xl border p-6 shadow-2xl">
         <div className="flex items-start gap-4">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600"><AlertTriangle className="h-5 w-5" /></span>
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--gn-palette-8)] text-[#a3402f]"><Trash2 className="h-5 w-5" /></span>
           <div className="min-w-0">
             <h2 id="delete-tour-title" className="text-lg font-extrabold text-[var(--gn-palette-3)]">Eliminar salida</h2>
             <p className="mt-2 text-sm leading-6 text-[var(--gn-palette-5)]">
@@ -105,10 +105,10 @@ function DeleteTourDialog({
             </p>
           </div>
         </div>
-        {error ? <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-xs font-semibold leading-5 text-red-700">{error}</p> : null}
+        {error ? <p role="alert" className="mt-4 rounded-xl border border-black/10 bg-[var(--gn-palette-8)] p-3 text-xs font-semibold leading-5 text-[#a3402f]">{error}</p> : null}
         <div className="mt-6 flex justify-end gap-2">
           <button type="button" onClick={onCancel} disabled={pending} className="h-10 rounded-lg border border-[#d9ded9] px-4 text-sm font-bold text-[var(--gn-palette-3)] transition-colors hover:bg-[var(--gn-palette-8)] disabled:opacity-50">Cancelar</button>
-          <button type="button" onClick={onConfirm} disabled={pending} className="h-10 rounded-lg bg-red-600 px-4 text-sm font-bold text-white transition-colors hover:bg-red-700 disabled:opacity-50">{pending ? "Eliminando…" : "Sí, eliminar"}</button>
+          <button type="button" onClick={onConfirm} disabled={pending} className="h-10 rounded-lg bg-[#a3402f] px-4 text-sm font-bold text-white transition-colors hover:bg-[#8a3527] disabled:opacity-50">{pending ? "Eliminando…" : "Sí, eliminar"}</button>
         </div>
       </div>
     </div>

@@ -22,6 +22,7 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
   const [open, setOpen] = useState(false);
   const [booking, setBooking] = useState<TourBookingInfo | null>(null);
   const [bookingSlug, setBookingSlug] = useState<string | null>(null);
+  const [bookingDone, setBookingDone] = useState(false);
   const [loadingSlug, setLoadingSlug] = useState<string | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const number = phoneHref.replace(/\D/g, "");
@@ -33,12 +34,14 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
     if (info) {
       setBooking(info);
       setBookingSlug(slug);
+      setBookingDone(false);
     }
   }
 
   function closeBooking() {
     setBooking(null);
     setBookingSlug(null);
+    setBookingDone(false);
   }
 
   useEffect(() => {
@@ -97,24 +100,29 @@ export function SalidasCart({ className, phoneHref }: { className?: string; phon
       </button>
 
       {open ? (
-        <div className="absolute right-0 top-[calc(100%+12px)] z-50 w-[320px] max-w-[86vw] origin-top-right overflow-hidden rounded-2xl border border-black/[0.06] bg-white text-left shadow-[0_26px_64px_-14px_rgba(0,0,0,0.4)] duration-150 animate-in fade-in zoom-in-95 slide-in-from-top-1">
+        <div className="absolute right-0 top-[calc(100%+12px)] z-50 w-[368px] max-w-[92vw] origin-top-right overflow-hidden rounded-2xl border border-black/[0.06] bg-white text-left shadow-[0_26px_64px_-14px_rgba(0,0,0,0.4)] duration-150 animate-in fade-in zoom-in-95 slide-in-from-top-1">
           {booking ? (
-            <div className="p-4">
-              <button
-                type="button"
-                onClick={closeBooking}
-                className="mb-2 -ml-1 inline-flex items-center gap-1 text-xs font-semibold text-[var(--gn-palette-5)] transition-colors hover:text-[var(--gn-palette-3)]"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Volver a la lista
-              </button>
-              <p className="mb-3 text-sm font-extrabold text-[var(--gn-palette-3)]">{booking.title}</p>
+            <div className="p-5">
+              {!bookingDone ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={closeBooking}
+                    className="mb-2 -ml-1 inline-flex items-center gap-1 text-xs font-semibold text-[var(--gn-palette-5)] transition-colors hover:text-[var(--gn-palette-3)]"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                    Volver a la lista
+                  </button>
+                  <p className="mb-3 text-sm font-extrabold text-[var(--gn-palette-3)]">{booking.title}</p>
+                </>
+              ) : null}
               <BookingForm
                 compact
                 tourId={booking.tourId}
                 tourTitle={booking.title}
                 availableDates={booking.availableDates}
                 onSuccess={() => {
+                  setBookingDone(true);
                   if (bookingSlug) remove(bookingSlug);
                 }}
                 onDone={closeBooking}

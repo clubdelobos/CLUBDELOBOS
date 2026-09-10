@@ -73,16 +73,16 @@ export function BookingForm({
 
   if (done) {
     return (
-      <div className="flex flex-col items-center gap-3 py-2 text-center">
+      <div className="flex flex-col items-center gap-4 px-2 py-5 text-center">
         <span className="relative flex h-16 w-16 items-center justify-center rounded-full bg-[var(--gn-palette-8)] duration-500 animate-in zoom-in-50">
           <Image src="/brand/lobos/logo-black-640.png" alt="Club de Lobos" width={64} height={64} className="h-10 w-10 object-contain" />
           <span className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-emerald-500 text-white">
             <Check className="h-3.5 w-3.5" strokeWidth={3} />
           </span>
         </span>
-        <div>
+        <div className="space-y-2">
           <p className="text-base font-extrabold text-[var(--gn-palette-3)]">¡Tu solicitud fue recibida!</p>
-          <p className="mt-1.5 text-sm leading-6 text-[var(--gn-palette-5)]">
+          <p className="text-sm leading-6 text-[var(--gn-palette-5)]">
             Guardamos tu solicitud para <strong className="text-[var(--gn-palette-3)]">{tourTitle}</strong>. El equipo de
             Club de Lobos te contactará por WhatsApp para confirmar los detalles.
           </p>

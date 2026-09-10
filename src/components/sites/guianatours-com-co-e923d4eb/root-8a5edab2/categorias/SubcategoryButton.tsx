@@ -8,9 +8,12 @@ import { TourMotion, type TourMotionAnimation } from "./tour-motion.js";
  * Botón de subcategoría (Ríos / Pueblos vivos / Volcanes).
  *
  * En reposo es un botón normal (mismo estilo que Nacionales·Internacionales:
- * `.tm-cat-chip`, texto plano). Al pasar el puntero / enfocar / tocar aparece
- * un <canvas> encima donde la ilustración (cascada / pueblo / volcán) se
- * transforma en la palabra a color. Al salir vuelve al texto plano.
+ * `.tm-cat-chip`, texto plano). En escritorio, al pasar el puntero / enfocar
+ * aparece un <canvas> encima donde la ilustración (cascada / pueblo / volcán)
+ * se transforma en la palabra a color; al salir vuelve al texto plano.
+ * En pantallas táctiles el motor no se monta y el botón es solo texto
+ * (la animación no se lee bien en un botón angosto) — ver `@media (hover:none)`
+ * en globals.css.
  *
  * Motor: `tour-motion.js` (vendido). Se le pasa la tipografía del sitio
  * (Montserrat) para que el rótulo animado sea igual al de los demás botones,
@@ -35,6 +38,11 @@ export function SubcategoryButton({
   const [hot, setHot] = useState(false);
 
   useEffect(() => {
+    // Touch devices: no hover, and the animation isn't legible in a narrow
+    // pill — skip the engine entirely and leave a plain text button.
+    if (typeof window !== "undefined" && window.matchMedia?.("(hover: none)").matches) {
+      return;
+    }
     let disposed = false;
     const begin = () => {
       if (disposed || !canvasRef.current || !TourMotion) return;

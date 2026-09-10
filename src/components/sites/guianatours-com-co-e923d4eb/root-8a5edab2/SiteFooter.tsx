@@ -121,12 +121,12 @@ export function SiteFooter({
             <nav aria-label="Mapa del sitio">
               <ul className="flex flex-col">
                 {navLinks.map((link) => (
-                  <li key={link.id}>
+                  <li key={link.id} className="flex py-[2px] text-center">
                     <Link
                       href={link.href}
                       aria-current={link.active ? "page" : undefined}
                       className={cn(
-                        "flex py-[2px] text-[14px] leading-5 font-normal transition-colors hover:text-[var(--gn-palette-7)]",
+                        "w-full text-center text-[14px] leading-5 font-normal transition-colors hover:text-[var(--gn-palette-7)]",
                         link.active ? "text-[var(--gn-palette-7)]" : "text-white",
                       )}
                     >

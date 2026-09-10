@@ -683,15 +683,36 @@
 @media (max-width: 640px) {
   .tm-cat-chip {
     min-width: 0;
-    padding: 11px 14px;
+    padding: 10px 14px;
+  }
+  .tm-cat-chip__label {
+    font-size: 14px;
   }
   /* Nacionales / Internacionales: dos por fila. */
   .tm-cat-row .tm-cat-chip {
     flex: 1 1 calc(50% - 0.5rem);
   }
-  /* Subcategorías: una por fila, buen objetivo táctil. */
+  /* Subcategorías: pastillas de ancho automático, centradas, que se acomodan
+     en una o dos filas — se leen claramente como botones. */
   .tm-sub-row .tm-cat-chip {
-    flex: 1 1 100%;
+    flex: 0 1 auto;
+  }
+}
+
+/* Pantallas táctiles: la animación no se lee en un botón angosto, así que el
+   botón queda solo con su texto (el motor tampoco se monta — ver
+   SubcategoryButton.tsx). */
+@media (hover: none) {
+  .tm-cat-chip__canvas {
+    display: none;
+  }
+  .tm-cat-chip.is-hot .tm-cat-chip__label {
+    opacity: 1;
+  }
+  .tm-cat-chip:hover,
+  .tm-cat-chip.is-hot {
+    transform: none;
+    box-shadow: none;
   }
 }
 
