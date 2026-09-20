@@ -2,10 +2,13 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
-import { Calendar, CalendarX2, Check, Mail, MoreVertical, Phone, Trash2, Users, X } from "lucide-react";
+import { Banknote, Calendar, CalendarX2, Check, Landmark, Mail, MoreVertical, Phone, StickyNote, Trash2, Users, X } from "lucide-react";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { WhatsAppGlyph } from "@/components/sites/guianatours-com-co-e923d4eb/shared/WhatsAppGlyph";
+import { PAYMENT_METHOD_LABEL } from "@/lib/payment-methods";
+import { buildWhatsAppMessage, buildWhatsAppUrl, type WhatsAppBankAccount } from "@/lib/whatsapp";
 import { deleteBooking, updateBookingStatus } from "./actions";
-import type { BookingStatus, ProfileRole } from "@/lib/supabase/types";
+import type { BookingStatus, PaymentMethod, ProfileRole } from "@/lib/supabase/types";
 
 const MENU_WIDTH = 160;
 
@@ -18,6 +21,9 @@ export interface BookingRow {
   num_people: number;
   status: BookingStatus;
   created_at: string;
+  notes: string | null;
+  /** null on bookings created before migration 0012. */
+  payment_method: PaymentMethod | null;
   tourTitle: string;
 }
 
@@ -40,6 +46,53 @@ function formatDate(iso: string) {
     year: "numeric",
     timeZone: "UTC",
   });
+}
+
+function PaymentBadge({ method }: { method: PaymentMethod | null }) {
+  if (!method) return <span className="text-[var(--gn-palette-5)]">—</span>;
+  const Icon = method === "transferencia" ? Landmark : Banknote;
+  return (
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap font-medium text-[var(--gn-palette-3)]">
+      <Icon className="h-3.5 w-3.5 shrink-0 text-[var(--gn-palette-1)]" />
+      {PAYMENT_METHOD_LABEL[method]}
+    </span>
+  );
+}
+
+/**
+ * Opens WhatsApp on the customer's number with the message already written
+ * (greeting by time of day, salida, date, payment method and — for a bank
+ * transfer — the accounts from Ajustes). The message is built at click time so
+ * the greeting matches the moment it is sent. WhatsApp can't be pushed
+ * automatically without Meta's paid Business API, so the team just hits Send.
+ */
+function WhatsAppButton({ booking, accounts, compact = false }: { booking: BookingRow; accounts: WhatsAppBankAccount[]; compact?: boolean }) {
+  function open() {
+    const message = buildWhatsAppMessage(
+      {
+        customerName: booking.customer_name,
+        tourTitle: booking.tourTitle,
+        requestedDate: booking.requested_date,
+        numPeople: booking.num_people,
+        paymentMethod: booking.payment_method,
+      },
+      accounts,
+    );
+    const url = buildWhatsAppUrl(booking.phone, message);
+    if (url) window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={open}
+      title="Abrir WhatsApp con el mensaje listo"
+      className={`inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#25d366] font-bold text-white transition-colors hover:bg-[#1ebe5b] ${compact ? "px-2.5 py-1.5 text-xs" : "px-3 py-2 text-xs"}`}
+    >
+      <WhatsAppGlyph className="h-4 w-4" />
+      WhatsApp
+    </button>
+  );
 }
 
 /** Shared status-change + delete logic for the row and the mobile card. */
@@ -221,13 +274,21 @@ function DeleteBookingDialog({
   );
 }
 
-function DesktopRow({ booking, canEdit, onChanged }: { booking: BookingRow; canEdit: boolean; onChanged: (next: BookingRow | null) => void }) {
+function DesktopRow({ booking, canEdit, accounts, onChanged }: { booking: BookingRow; canEdit: boolean; accounts: WhatsAppBankAccount[]; onChanged: (next: BookingRow | null) => void }) {
   const { pending, setStatus, remove, confirmOpen, confirmError, confirmRemove, cancelRemove } = useBookingActions(booking, onChanged);
 
   return (
     <tr className="border-b border-black/5 transition-colors last:border-0 hover:bg-[var(--gn-palette-8)]">
       <DeleteBookingDialog name={booking.customer_name} pending={pending} error={confirmError} open={confirmOpen} onConfirm={confirmRemove} onCancel={cancelRemove} />
-      <td className="whitespace-nowrap px-4 py-3 font-semibold text-[var(--gn-palette-3)]">{booking.customer_name}</td>
+      <td className="px-4 py-3 font-semibold text-[var(--gn-palette-3)]">
+        <span className="whitespace-nowrap">{booking.customer_name}</span>
+        {booking.notes ? (
+          <span className="mt-0.5 flex max-w-[220px] items-start gap-1 text-xs font-normal leading-4 text-[var(--gn-palette-5)]" title={booking.notes}>
+            <StickyNote className="mt-px h-3 w-3 shrink-0" />
+            <span className="line-clamp-2">{booking.notes}</span>
+          </span>
+        ) : null}
+      </td>
       <td className="whitespace-nowrap px-4 py-3 text-[var(--gn-palette-5)]">{booking.email}</td>
       <td className="whitespace-nowrap px-4 py-3 text-[var(--gn-palette-5)]">{booking.phone}</td>
       <td className="px-4 py-3 font-medium text-[var(--gn-palette-3)]">{booking.tourTitle}</td>
@@ -238,6 +299,7 @@ function DesktopRow({ booking, canEdit, onChanged }: { booking: BookingRow; canE
         </span>
       </td>
       <td className="px-4 py-3 text-[var(--gn-palette-5)]">{booking.num_people}</td>
+      <td className="px-4 py-3"><PaymentBadge method={booking.payment_method} /></td>
       <td className="px-4 py-3">
         {canEdit ? (
           <div className="flex w-[132px] items-center justify-between gap-2">
@@ -254,11 +316,12 @@ function DesktopRow({ booking, canEdit, onChanged }: { booking: BookingRow; canE
           <span className="text-sm font-medium text-[var(--gn-palette-3)]">{STATUS_LABEL[booking.status]}</span>
         )}
       </td>
+      <td className="px-4 py-3"><WhatsAppButton booking={booking} accounts={accounts} /></td>
     </tr>
   );
 }
 
-function MobileCard({ booking, canEdit, onChanged }: { booking: BookingRow; canEdit: boolean; onChanged: (next: BookingRow | null) => void }) {
+function MobileCard({ booking, canEdit, accounts, onChanged }: { booking: BookingRow; canEdit: boolean; accounts: WhatsAppBankAccount[]; onChanged: (next: BookingRow | null) => void }) {
   const { pending, setStatus, remove, confirmOpen, confirmError, confirmRemove, cancelRemove } = useBookingActions(booking, onChanged);
 
   return (
@@ -302,12 +365,25 @@ function MobileCard({ booking, canEdit, onChanged }: { booking: BookingRow; canE
           <Phone className="h-3.5 w-3.5 shrink-0 text-[var(--gn-palette-1)]" />
           <span>{booking.phone}</span>
         </a>
+        <div className="flex items-center gap-2 text-[var(--gn-palette-5)]">
+          <span className="text-xs font-bold uppercase tracking-wide">Pago</span>
+          <PaymentBadge method={booking.payment_method} />
+        </div>
+        {booking.notes ? (
+          <p className="flex items-start gap-2 text-[var(--gn-palette-5)]">
+            <StickyNote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--gn-palette-1)]" />
+            <span className="min-w-0 break-words">{booking.notes}</span>
+          </p>
+        ) : null}
       </dl>
+      <div className="mt-3 border-t border-black/5 pt-3">
+        <WhatsAppButton booking={booking} accounts={accounts} compact />
+      </div>
     </div>
   );
 }
 
-export function BookingsTable({ bookings: initial, role }: { bookings: BookingRow[]; role: ProfileRole }) {
+export function BookingsTable({ bookings: initial, role, bankAccounts }: { bookings: BookingRow[]; role: ProfileRole; bankAccounts: WhatsAppBankAccount[] }) {
   const [bookings, setBookings] = useState(initial);
   const canEdit = role === "admin";
 
@@ -332,7 +408,7 @@ export function BookingsTable({ bookings: initial, role }: { bookings: BookingRo
       {/* Mobile: a card per booking — no horizontal scroll. */}
       <div className="flex flex-col gap-3 sm:hidden">
         {bookings.map((b) => (
-          <MobileCard key={b.id} booking={b} canEdit={canEdit} onChanged={(next) => onChanged(b.id, next)} />
+          <MobileCard key={b.id} booking={b} canEdit={canEdit} accounts={bankAccounts} onChanged={(next) => onChanged(b.id, next)} />
         ))}
       </div>
 
@@ -347,12 +423,14 @@ export function BookingsTable({ bookings: initial, role }: { bookings: BookingRo
               <th className="px-4 py-3">Salida</th>
               <th className="px-4 py-3">Fecha</th>
               <th className="px-4 py-3">Personas</th>
+              <th className="px-4 py-3">Pago</th>
               <th className="px-4 py-3">Estado</th>
+              <th className="px-4 py-3">Contacto</th>
             </tr>
           </thead>
           <tbody>
             {bookings.map((b) => (
-              <DesktopRow key={b.id} booking={b} canEdit={canEdit} onChanged={(next) => onChanged(b.id, next)} />
+              <DesktopRow key={b.id} booking={b} canEdit={canEdit} accounts={bankAccounts} onChanged={(next) => onChanged(b.id, next)} />
             ))}
           </tbody>
         </table>

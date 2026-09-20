@@ -1,3 +1,4 @@
+import { fetchGoogleReviews, writeReviewUrl } from "@/lib/google-reviews";
 import { createPublicClient } from "@/lib/supabase/public";
 import type {
   GalleryItem,
@@ -55,6 +56,8 @@ export interface SiteSettingsData {
   /** Internal — recipient of the "nueva reserva" email. Admin-only; never
    *  rendered on the public site. '' when unset. */
   bookingNotifyEmail: string;
+  /** Google Maps Place ID of the business (reviews + "write a review" link). Public, not a secret. '' when unset. */
+  googlePlaceId: string;
 }
 
 export async function getSiteSettings(): Promise<SiteSettingsData> {
@@ -94,6 +97,7 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
     footerCreditLabel: data?.footer_credit_label ?? "",
     footerCreditHref: data?.footer_credit_href ?? null,
     bookingNotifyEmail: data?.booking_notify_email ?? "",
+    googlePlaceId: data?.google_place_id ?? "",
   };
 }
 
@@ -303,14 +307,42 @@ export async function getGalleryItems(): Promise<GalleryItem[]> {
 export interface ReviewsData {
   reviews: Review[];
   summary: { rating: string; countLabel: string; stars: number };
+  /** Set when a Google Place ID is configured: powers the "Deja tu comentario"
+   *  button and the "ver todas" link. */
+  google: { writeReviewUrl: string; mapsUrl: string | null } | null;
+  /** True when `reviews` came from Google Maps (vs. the admin's manual ones). */
+  fromGoogle: boolean;
 }
 
 export async function getReviews(): Promise<ReviewsData> {
   const supabase = createPublicClient();
-  const { data } = await supabase
-    .from("reviews")
-    .select("id, author, review_date, rating, body_text")
-    .order("sort_order");
+  // `*` so this still works before 0012 adds `google_place_id`.
+  const [{ data }, { data: settings }] = await Promise.all([
+    supabase.from("reviews").select("id, author, review_date, rating, body_text").order("sort_order"),
+    supabase.from("site_settings").select("*").eq("id", 1).maybeSingle(),
+  ]);
+
+  const placeId = settings?.google_place_id?.trim() ?? "";
+  const google = placeId ? await fetchGoogleReviews(placeId) : null;
+  const googleLinks = placeId ? { writeReviewUrl: writeReviewUrl(placeId), mapsUrl: google?.mapsUrl ?? null } : null;
+
+  // Real Google reviews win when they load; the manual list is the fallback
+  // (no key, no Place ID, API down, or a place with no written reviews yet).
+  if (google && google.reviews.length > 0) {
+    const rating = google.rating ?? 5;
+    return {
+      reviews: google.reviews,
+      summary: {
+        rating: rating.toFixed(1).replace(".", ","),
+        countLabel: google.totalCount
+          ? `${google.totalCount} ${google.totalCount === 1 ? "reseña" : "reseñas"} en Google`
+          : "Reseñas de Google",
+        stars: Math.round(rating),
+      },
+      google: googleLinks,
+      fromGoogle: true,
+    };
+  }
 
   const reviews: Review[] = (data ?? []).map((r) => ({
     id: r.id,
@@ -324,7 +356,12 @@ export async function getReviews(): Promise<ReviewsData> {
   // The rating summary ("EXCELENTE", "A base de 2976 reseñas") has no admin
   // screen yet in this phase — see scripts/seed-supabase.ts — so it stays a
   // fixed constant here rather than a half-wired DB read.
-  return { reviews, summary: { rating: "LA MANADA", countLabel: "Aventuras que dejan huella", stars: 5 } };
+  return {
+    reviews,
+    summary: { rating: "LA MANADA", countLabel: "Aventuras que dejan huella", stars: 5 },
+    google: googleLinks,
+    fromGoogle: false,
+  };
 }
 
 function relativeYearsAgo(isoDate: string): string {

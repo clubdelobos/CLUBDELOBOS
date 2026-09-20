@@ -4,6 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import { Check } from "lucide-react";
 import { createBooking } from "@/app/actions/bookings";
+import { PAYMENT_METHODS, PAYMENT_METHOD_LABEL } from "@/lib/payment-methods";
+import type { PaymentMethod } from "@/lib/supabase/types";
 import { DateSelect } from "./DateSelect";
 
 const inputCls =
@@ -46,9 +48,16 @@ export function BookingForm({
   // El Salvador numbers are 8 digits; the +503 prefix is fixed in the UI and
   // prepended on submit, so the visitor only types the local number.
   const [phone, setPhone] = useState("");
+  // No default on purpose: the visitor has to pick one, so the team always
+  // knows what to send them (bank accounts vs. cash coordination).
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!paymentMethod) {
+      setError("Elige cómo vas a pagar: efectivo o transferencia bancaria.");
+      return;
+    }
     setPending(true);
     setError(null);
     const form = new FormData(e.currentTarget);
@@ -59,6 +68,7 @@ export function BookingForm({
       phone: `+503 ${phone}`,
       requestedDate: String(form.get("requestedDate") ?? ""),
       numPeople: Number(form.get("numPeople") ?? 1),
+      paymentMethod,
       notes: String(form.get("notes") ?? ""),
       website: String(form.get("website") ?? ""),
     });
@@ -138,6 +148,39 @@ export function BookingForm({
           <input name="numPeople" type="number" min={1} max={50} defaultValue={initialPeople} required className={`${inputCls} ${compact ? "w-24" : ""}`} />
         </label>
       </div>
+      <fieldset className="flex flex-col gap-1.5 text-sm text-[var(--gn-palette-3)]">
+        <legend className="mb-1">Método de pago</legend>
+        <div className="grid grid-cols-2 gap-2">
+          {PAYMENT_METHODS.map((method) => {
+            const selected = paymentMethod === method;
+            return (
+              <label
+                key={method}
+                className={`flex min-h-10 cursor-pointer items-center justify-center rounded-lg border px-2 py-2 text-center text-[13px] font-semibold leading-tight transition-colors focus-within:ring-2 focus-within:ring-[var(--gn-palette-1)]/25 ${
+                  selected
+                    ? "border-[var(--gn-palette-1)] bg-[var(--gn-palette-1)] text-white"
+                    : "border-[#69727d] bg-white text-[var(--gn-palette-3)] hover:border-[var(--gn-palette-1)]"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="paymentMethod"
+                  value={method}
+                  checked={selected}
+                  onChange={() => setPaymentMethod(method)}
+                  className="sr-only"
+                />
+                {PAYMENT_METHOD_LABEL[method]}
+              </label>
+            );
+          })}
+        </div>
+        {paymentMethod === "transferencia" ? (
+          <span className="text-[11px] leading-4 text-[var(--gn-palette-5)]">
+            Te enviaremos por WhatsApp los datos de la cuenta para la transferencia.
+          </span>
+        ) : null}
+      </fieldset>
       {!compact ? (
         <label className="flex flex-col gap-1 text-sm text-[var(--gn-palette-3)]">
           Notas (opcional)

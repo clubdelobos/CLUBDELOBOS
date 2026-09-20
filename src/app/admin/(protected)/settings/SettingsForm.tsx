@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { BrandPackageUploader } from "@/components/admin/BrandPackageUploader";
+import { GooglePlacePicker } from "./GooglePlacePicker";
+import { BankAccountsManager, type BankAccountRow } from "./BankAccountsManager";
 import type { SiteSettingsData } from "@/lib/queries/site-content";
 import { findSitePaletteId, SITE_PALETTES, type SitePaletteId } from "@/lib/site-palettes";
 import { updateSiteSettings } from "./actions";
@@ -14,7 +16,7 @@ const inputCls = "admin-input h-10 px-3";
 
 interface FormState {
   logoHeader: string | null; logoFooter: string | null; favicon: string | null;
-  phoneLabel: string; phoneHref: string; email: string; bookingNotifyEmail: string; address: string;
+  phoneLabel: string; phoneHref: string; email: string; bookingNotifyEmail: string; googlePlaceId: string; address: string;
   facebook: string; instagram: string; tiktok: string;
   palette1: string; palette2: string; palette3: string; palette5: string; palette7: string; palette8: string;
   registro: string; copyright: string; creditLabel: string; creditHref: string;
@@ -25,7 +27,7 @@ function toFormState(settings: SiteSettingsData): FormState {
   return {
     logoHeader: settings.logoHeaderUrl, logoFooter: settings.logoFooterUrl, favicon: settings.faviconUrl,
     phoneLabel: settings.phoneLabel, phoneHref: settings.phoneHref, email: settings.email,
-    bookingNotifyEmail: settings.bookingNotifyEmail, address: settings.address ?? "",
+    bookingNotifyEmail: settings.bookingNotifyEmail, googlePlaceId: settings.googlePlaceId, address: settings.address ?? "",
     facebook: social("facebook"), instagram: social("instagram"), tiktok: social("tiktok"),
     palette1: settings.palette[1], palette2: settings.palette[2], palette3: settings.palette[3], palette5: settings.palette[5], palette7: settings.palette[7], palette8: settings.palette[8],
     registro: settings.footerRegistro ?? "", copyright: settings.footerCopyright, creditLabel: settings.footerCreditLabel, creditHref: settings.footerCreditHref ?? "",
@@ -44,7 +46,7 @@ function previewPalette(colors: Record<1 | 2 | 3 | 5 | 7 | 8, string>) {
   }
 }
 
-export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
+export function SettingsForm({ initial, bankAccounts }: { initial: SiteSettingsData; bankAccounts: BankAccountRow[] }) {
   const [state, setState] = useState<FormState>(() => toFormState(initial));
   const [pending, startTransition] = useTransition();
   const [palettePending, setPalettePending] = useState<SitePaletteId | null>(null);
@@ -119,7 +121,7 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
       const result = await updateSiteSettings({
         logoHeaderUrl: state.logoHeader, logoFooterUrl: state.logoFooter, faviconUrl: state.favicon,
         phoneLabel: state.phoneLabel, phoneHref: state.phoneHref, email: state.email,
-        bookingNotifyEmail: state.bookingNotifyEmail, address: state.address || null,
+        bookingNotifyEmail: state.bookingNotifyEmail, googlePlaceId: state.googlePlaceId, address: state.address || null,
         socialFacebookUrl: state.facebook || null, socialInstagramUrl: state.instagram || null, socialTiktokUrl: state.tiktok || null,
         palette1: state.palette1, palette2: state.palette2, palette3: state.palette3, palette5: state.palette5, palette7: state.palette7, palette8: state.palette8,
         footerRegistro: state.registro || null, footerCopyright: state.copyright, footerCreditLabel: state.creditLabel, footerCreditHref: state.creditHref || null,
@@ -147,6 +149,19 @@ export function SettingsForm({ initial }: { initial: SiteSettingsData }) {
             <input type="email" className={inputCls} value={state.bookingNotifyEmail} onChange={(e) => set("bookingNotifyEmail", e.target.value)} placeholder="Sin configurar" />
           </Field>
         </div>
+      </Section>
+
+      <Section
+        title="Cuentas bancarias"
+        description="Se incluyen automáticamente en el mensaje de WhatsApp (Reservas) cuando el cliente eligió pagar por transferencia. Solo las ve el personal; no se publican en el sitio."
+        className="lg:col-span-2"
+      >
+        <BankAccountsManager initial={bankAccounts} />
+      </Section>
+
+      <Section title="Reseñas de Google" description="Conecta el perfil de Google Maps para mostrar en Testimonios las reseñas reales y el botón “Deja tu comentario”." className="lg:col-span-2">
+        <GooglePlacePicker value={state.googlePlaceId} onChange={(id) => set("googlePlaceId", id)} />
+        <p className="mt-3 text-[11px] leading-4 text-[var(--gn-palette-5)]">Recuerda pulsar “Guardar ajustes” al final de la página.</p>
       </Section>
 
       <Section title="Redes sociales" description="Deja en blanco las redes que no estén verificadas. Solo se muestran en el sitio las que tengan enlace.">

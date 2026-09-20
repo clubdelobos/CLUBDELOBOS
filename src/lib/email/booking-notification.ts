@@ -1,5 +1,7 @@
 import "server-only";
 import type { OutgoingEmail } from "@/lib/email/send";
+import { PAYMENT_METHOD_LABEL } from "@/lib/payment-methods";
+import type { PaymentMethod } from "@/lib/supabase/types";
 
 export interface BookingNotificationInput {
   customerName: string;
@@ -9,6 +11,7 @@ export interface BookingNotificationInput {
   /** ISO date, "YYYY-MM-DD". */
   requestedDate: string;
   numPeople: number;
+  paymentMethod?: PaymentMethod | null;
   notes?: string | null;
 }
 
@@ -97,6 +100,7 @@ export function buildBookingNotificationEmail(
     ["Correo", input.email],
     ["Teléfono", input.phone],
   ];
+  if (input.paymentMethod) rows.push(["Método de pago", PAYMENT_METHOD_LABEL[input.paymentMethod]]);
   if (notes) rows.push(["Notas", notes]);
 
   const text = [

@@ -76,7 +76,7 @@ export default async function Home() {
         <ProximosDestinos tours={tours} />
         <GuiasExpertos block={blocks.guias} />
         <CampingSection block={blocks.camping} />
-        <ReviewsSection reviews={reviewsData.reviews} summary={reviewsData.summary} />
+        <ReviewsSection reviews={reviewsData.reviews} summary={reviewsData.summary} google={reviewsData.google} fromGoogle={reviewsData.fromGoogle} />
         <FotografiasSemana block={blocks.fotografias} gallery={gallery} />
       </main>
       <SiteFooter

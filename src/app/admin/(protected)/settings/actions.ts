@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
-import { createServiceRoleClient } from "@/lib/supabase/server";
+import { searchPlaces, type PlaceCandidate } from "@/lib/google-reviews";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { optionalAssetUrlSchema, optionalHttpUrlSchema } from "@/lib/validation";
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
@@ -16,6 +17,7 @@ const SettingsSchema = z.object({
   phoneHref: z.string().min(1),
   email: z.union([z.literal(""), z.string().email()]),
   bookingNotifyEmail: z.union([z.literal(""), z.string().email()]),
+  googlePlaceId: z.string().trim().max(200).regex(/^[A-Za-z0-9_-]*$/, { message: "El Place ID solo lleva letras, números, guiones y guion bajo." }),
   address: z.string().nullable(),
   socialFacebookUrl: optionalHttpUrlSchema.nullable(),
   socialInstagramUrl: optionalHttpUrlSchema.nullable(),
@@ -79,6 +81,7 @@ export async function updateSiteSettings(raw: z.infer<typeof SettingsSchema>): P
     phone_href: d.phoneHref,
     email: d.email,
     booking_notify_email: d.bookingNotifyEmail,
+    google_place_id: d.googlePlaceId,
     address: d.address,
     social_facebook_url: d.socialFacebookUrl || null,
     social_instagram_url: d.socialInstagramUrl || null,
@@ -97,4 +100,62 @@ export async function updateSiteSettings(raw: z.infer<typeof SettingsSchema>): P
   if (error) return { error: error.message };
   revalidateSettings();
   return { success: true };
+}
+
+const BankAccountsSchema = z
+  .array(
+    z.object({
+      id: z.string().uuid(),
+      bank: z.string().trim().min(1, { message: "Cada cuenta necesita el nombre del banco." }).max(100),
+      accountType: z.string().trim().max(60),
+      accountNumber: z.string().trim().min(1, { message: "Cada cuenta necesita su número." }).max(60),
+      holder: z.string().trim().max(120),
+    }),
+  )
+  .max(10, { message: "Máximo 10 cuentas." });
+
+/**
+ * Replaces the bank-account list shown in the WhatsApp message. Runs on the
+ * admin's own session (not the service role) so RLS — admin-only writes on
+ * `payment_accounts` — is the enforcement, not just this check. Upsert first,
+ * then delete what's no longer listed, so a failure midway never loses data.
+ */
+export async function saveBankAccounts(raw: z.input<typeof BankAccountsSchema>): Promise<SettingsState> {
+  await requireRole(["admin"]);
+  const parsed = BankAccountsSchema.safeParse(raw);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Cuentas inválidas." };
+  const accounts = parsed.data;
+  const supabase = await createClient();
+
+  if (accounts.length > 0) {
+    const { error } = await supabase.from("payment_accounts").upsert(
+      accounts.map((a, index) => ({
+        id: a.id,
+        bank: a.bank,
+        account_type: a.accountType,
+        account_number: a.accountNumber,
+        holder: a.holder,
+        sort_order: index,
+      })),
+    );
+    if (error) return { error: error.message };
+  }
+
+  const remove = supabase.from("payment_accounts").delete();
+  const { error: deleteError } = accounts.length > 0
+    ? await remove.not("id", "in", `(${accounts.map((a) => a.id).join(",")})`)
+    : await remove.not("id", "is", null);
+  if (deleteError) return { error: deleteError.message };
+
+  revalidatePath("/admin/bookings");
+  return { success: true };
+}
+
+/** Admin-only lookup that powers the "Buscar mi negocio" picker in Ajustes. */
+export async function findGooglePlaces(query: string): Promise<{ places?: PlaceCandidate[]; error?: string }> {
+  await requireRole(["admin"]);
+  const q = typeof query === "string" ? query.trim() : "";
+  if (q.length < 3 || q.length > 120) return { error: "Escribe al menos 3 letras del nombre del negocio." };
+  const result = await searchPlaces(q);
+  return "error" in result ? { error: result.error } : { places: result.places };
 }

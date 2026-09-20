@@ -14,6 +14,7 @@
 import type { TourCategory, TourSubcategory } from "@/lib/tour-categories";
 
 export type BookingStatus = "pending" | "confirmed" | "cancelled";
+export type PaymentMethod = "efectivo" | "transferencia";
 export type ProfileRole = "admin" | "worker";
 export type ContentBlockKey = "guias" | "camping" | "fotografias";
 export type AnalyticsEventType = "page_view" | "tour_click" | "cta_click" | "social_click";
@@ -46,6 +47,9 @@ export interface Database {
           // Added in 0011_booking_notify_email.sql — recipient of the
           // "nueva reserva" notification email. '' when unset.
           booking_notify_email: string;
+          // Added in 0012_payments_and_google.sql — Google Maps Place ID used
+          // to pull the real reviews and build the "write a review" link.
+          google_place_id: string;
           palette_1: string;
           palette_2: string;
           palette_3: string;
@@ -155,10 +159,13 @@ export interface Database {
           status: BookingStatus;
           notes: string | null;
           created_at: string;
+          // Added in 0012_payments_and_google.sql — null on older bookings.
+          payment_method: PaymentMethod | null;
         };
-        Insert: Omit<Database["public"]["Tables"]["bookings"]["Row"], "id" | "created_at" | "status"> & {
+        Insert: Omit<Database["public"]["Tables"]["bookings"]["Row"], "id" | "created_at" | "status" | "payment_method"> & {
           id?: string;
           status?: BookingStatus;
+          payment_method?: PaymentMethod | null;
         };
         Update: Partial<Omit<Database["public"]["Tables"]["bookings"]["Row"], "id" | "created_at">>;
         Relationships: [
@@ -170,6 +177,29 @@ export interface Database {
             referencedColumns: ["id"];
           },
         ];
+      };
+      // 0012 — bank accounts included in the WhatsApp message. Staff read,
+      // admin write (RLS); never exposed to the public site.
+      payment_accounts: {
+        Row: {
+          id: string;
+          bank: string;
+          account_type: string;
+          account_number: string;
+          holder: string;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          bank: string;
+          account_type?: string;
+          account_number: string;
+          holder?: string;
+          sort_order?: number;
+        };
+        Update: Partial<Omit<Database["public"]["Tables"]["payment_accounts"]["Row"], "id" | "created_at">>;
+        Relationships: [];
       };
       analytics_events: {
         Row: {

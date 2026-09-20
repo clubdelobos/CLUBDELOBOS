@@ -67,9 +67,13 @@ function ReviewCard({ review }: { review: Review }) {
 export interface ReviewsSectionProps {
   reviews: Review[];
   summary: { rating: string; countLabel: string; stars: number };
+  /** Google Maps links, when a Place ID is configured. */
+  google?: { writeReviewUrl: string; mapsUrl: string | null } | null;
+  /** The reviews shown are the real ones fetched from Google Maps. */
+  fromGoogle?: boolean;
 }
 
-export function ReviewsSection({ reviews, summary }: ReviewsSectionProps) {
+export function ReviewsSection({ reviews, summary, google = null, fromGoogle = false }: ReviewsSectionProps) {
   const [page, setPage] = useState(0);
   const pages = Math.ceil(reviews.length / 4);
 
@@ -81,11 +85,13 @@ export function ReviewsSection({ reviews, summary }: ReviewsSectionProps) {
     return () => clearInterval(id);
   }, [pages]);
 
-  if (reviews.length === 0) return null;
+  // With a Google profile connected the section stays (there is still a
+  // "Deja tu comentario" button) even before the first review exists.
+  if (reviews.length === 0 && !google) return null;
 
   // Derived, not stored: same reasoning as HeroSlider's safeIndex — wrap a
   // stale page back in bounds at render time instead of a setState-in-effect.
-  const safePage = page % pages;
+  const safePage = pages > 0 ? page % pages : 0;
 
   return (
     <section className="mt-10 px-5">
@@ -100,6 +106,25 @@ export function ReviewsSection({ reviews, summary }: ReviewsSectionProps) {
             <span className="text-[13px] leading-[20px] text-[var(--gn-palette-5)]">
               {summary.countLabel}
             </span>
+            {google ? (
+              <div className="mt-3 flex flex-col items-center gap-2 lg:items-start">
+                {/* Google doesn't allow posting reviews from another site, so this
+                    opens Google's own review screen for the business. */}
+                <a href={google.writeReviewUrl} target="_blank" rel="noopener noreferrer" className="gn-button">
+                  <span className="inline-flex items-center">Deja tu comentario</span>
+                </a>
+                {fromGoogle && google.mapsUrl ? (
+                  <a
+                    href={google.mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[12px] leading-[18px] text-[var(--gn-palette-1)] underline"
+                  >
+                    Ver todas en Google Maps
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           {/* slider viewport */}

@@ -9,13 +9,19 @@ import { BookingsTable, type BookingRow } from "./BookingsTable";
  * action buttons when role !== "admin".
  */
 export default async function BookingsPage() {
-  const bookingsPromise = createClient().then((supabase) => supabase
-    .from("bookings")
-    .select("id, customer_name, email, phone, requested_date, num_people, status, created_at, tours(title)")
-    .order("created_at", { ascending: false }));
-  const [session, { data, error }] = await Promise.all([
+  const dataPromise = createClient().then(async (supabase) => {
+    // `*` (not a column list) so the page keeps loading before 0012's
+    // payment_method column exists. The bank accounts feed the WhatsApp
+    // message; a missing table (pre-0012) just yields an empty list.
+    const [bookings, accounts] = await Promise.all([
+      supabase.from("bookings").select("*, tours(title)").order("created_at", { ascending: false }),
+      supabase.from("payment_accounts").select("bank, account_type, account_number, holder").order("sort_order").order("created_at"),
+    ]);
+    return { bookings, accounts };
+  });
+  const [session, { bookings: { data, error }, accounts }] = await Promise.all([
     requireRole(["admin", "worker"]),
-    bookingsPromise,
+    dataPromise,
   ]);
 
   const bookings: BookingRow[] = (data ?? []).map((b) => ({
@@ -27,6 +33,8 @@ export default async function BookingsPage() {
     num_people: b.num_people,
     status: b.status,
     created_at: b.created_at,
+    notes: b.notes ?? null,
+    payment_method: b.payment_method ?? null,
     tourTitle: (b.tours as unknown as { title: string } | null)?.title ?? "—",
   }));
 
@@ -36,7 +44,7 @@ export default async function BookingsPage() {
       <p className="mt-1 text-sm text-[var(--gn-palette-5)]">
         {session.role === "worker"
           ? "Puedes ver las reservas y los datos de los clientes. Solo un administrador puede confirmarlas o cancelarlas."
-          : "Todas las reservas recibidas desde el sitio público."}
+          : "Todas las reservas recibidas desde el sitio público. Usa el botón WhatsApp para escribirle al cliente con el mensaje ya listo."}
       </p>
 
       {error ? (
@@ -44,7 +52,7 @@ export default async function BookingsPage() {
       ) : null}
 
       <div className="mt-6">
-        <BookingsTable bookings={bookings} role={session.role} />
+        <BookingsTable bookings={bookings} role={session.role} bankAccounts={accounts.data ?? []} />
       </div>
     </div>
   );

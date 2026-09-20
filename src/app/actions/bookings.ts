@@ -6,6 +6,7 @@ import { z } from "zod";
 import { buildBookingNotificationEmail } from "@/lib/email/booking-notification";
 import { sendEmail } from "@/lib/email/send";
 import { clientIpFrom } from "@/lib/net/client-ip";
+import { PAYMENT_METHODS } from "@/lib/payment-methods";
 import { createClient } from "@/lib/supabase/server";
 
 const BookingSchema = z.object({
@@ -16,6 +17,7 @@ const BookingSchema = z.object({
   requestedDate: z.string().min(1, { message: "Elige una fecha." }),
   numPeople: z.number().int().min(1).max(50),
   notes: z.string().max(1000).optional(),
+  paymentMethod: z.enum(PAYMENT_METHODS, { message: "Elige cómo vas a pagar." }),
   /** Honeypot — real visitors never see or fill this field. */
   website: z.string().max(0, { message: "" }).optional(),
 });
@@ -115,6 +117,7 @@ export async function createBooking(raw: unknown): Promise<BookingState> {
     requested_date: d.requestedDate,
     num_people: d.numPeople,
     notes: d.notes || null,
+    payment_method: d.paymentMethod,
     // Explicit, not left to the column DEFAULT: the anon INSERT policy's
     // `WITH CHECK (status = 'pending')` only matches against the value
     // actually sent in the PostgREST payload, not the column's default.
@@ -165,6 +168,7 @@ export async function createBooking(raw: unknown): Promise<BookingState> {
             tourTitle: tour.title,
             requestedDate: d.requestedDate,
             numPeople: d.numPeople,
+            paymentMethod: d.paymentMethod,
             notes: d.notes,
           },
           notifyTo,

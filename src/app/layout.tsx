@@ -20,6 +20,11 @@ export const metadata: Metadata = {
   description: DESCRIPTION,
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
+  // Google Search Console "HTML tag" ownership check. Set the token (only the
+  // `content` value, not the whole tag) in GOOGLE_SITE_VERIFICATION; unset = no tag.
+  ...(process.env.GOOGLE_SITE_VERIFICATION?.trim()
+    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION.trim() } }
+    : {}),
   icons: {
     icon: [
       { url: `${BRAND}/favicon-32.png`, sizes: "32x32", type: "image/png" },
