@@ -38,7 +38,7 @@ import {
   getTourBySlug,
 } from "@/lib/queries/site-content";
 import { getStoredTourDetailRecord, resolveTourDetailCopy } from "@/lib/queries/tour-details";
-import type { TourIconId } from "@/lib/tour-details";
+import { TOUR_INFO_SECTIONS, type TourIconId, type TourInfoSectionKey } from "@/lib/tour-details";
 import { buildBreadcrumbJsonLd, buildTourEventJsonLd, jsonLdString } from "@/lib/seo/schema";
 import { SITE_URL } from "@/lib/site-config";
 
@@ -126,51 +126,15 @@ function TourGallery({ images, title }: { images: GalleryImage[]; title: string 
   );
 }
 
-const INFORMATION_SECTIONS = [
-  {
-    title: "Antes de salir",
-    icon: Info,
-    body: "Te enviaremos el punto de encuentro, horario definitivo y recomendaciones cuando confirmemos tu solicitud.",
-  },
-  {
-    title: "Qué haremos",
-    icon: Route,
-    body: "Compartiremos la ruta con la manada, respetando el ritmo del grupo, el entorno y las indicaciones de seguridad.",
-  },
-  {
-    title: "Qué incluye",
-    icon: Check,
-    body: "Coordinación previa, acompañamiento del grupo y orientación general durante la experiencia. Los servicios específicos se detallan al confirmar.",
-  },
-  {
-    title: "Qué llevar",
-    icon: Backpack,
-    body: "Ropa cómoda, calzado adecuado, agua, protección solar y los artículos particulares que indiquemos para el destino.",
-  },
-  {
-    title: "Qué no llevar",
-    icon: Ban,
-    body: "Evita objetos innecesarios, envases desechables y cualquier elemento que pueda afectar el entorno o dificultar la caminata.",
-  },
-] as const;
+const SECTION_ICONS: Record<TourInfoSectionKey, typeof Info> = {
+  before: Info,
+  plan: Route,
+  includes: Check,
+  bring: Backpack,
+  avoid: Ban,
+};
 
-const ITINERARY_STEPS = [
-  {
-    icon: MapPin,
-    title: "Punto de encuentro",
-    body: "Lugar y hora por confirmar con las personas inscritas.",
-  },
-  {
-    icon: Compass,
-    title: "Experiencia",
-    body: "Recorrido, pausas y actividades de acuerdo con el destino y las condiciones del día.",
-  },
-  {
-    icon: Flag,
-    title: "Regreso",
-    body: "El horario estimado se compartirá junto con el itinerario definitivo.",
-  },
-] as const;
+const ITINERARY_ICONS = [MapPin, Compass, Flag] as const;
 
 export default async function TourPage({ params }: TourPageProps) {
   const { slug } = await params;
@@ -273,11 +237,11 @@ export default async function TourPage({ params }: TourPageProps) {
               <Reveal as="section" className="mt-10 rounded-2xl bg-[var(--gn-palette-8)] p-5 ring-1 ring-black/[0.04] sm:p-7">
                 <h2 className="text-xl font-extrabold text-[var(--gn-palette-3)]">Itinerario general</h2>
                 <ol className="mt-6 space-y-6">
-                  {ITINERARY_STEPS.map((step, index) => {
-                    const Icon = step.icon;
+                  {detail.itinerary.map((step, index) => {
+                    const Icon = ITINERARY_ICONS[index] ?? Compass;
                     return (
                       <li key={step.title} className="relative flex gap-4 pl-1">
-                        {index < ITINERARY_STEPS.length - 1 ? (
+                        {index < detail.itinerary.length - 1 ? (
                           <span aria-hidden className="absolute left-[19px] top-11 h-[calc(100%-4px)] w-px bg-[var(--gn-palette-7)]" />
                         ) : null}
                         <span className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--gn-palette-1)] text-white">
@@ -294,8 +258,8 @@ export default async function TourPage({ params }: TourPageProps) {
               </Reveal>
 
               <section className="mt-8 space-y-2.5">
-                {INFORMATION_SECTIONS.map((section, index) => {
-                  const Icon = section.icon;
+                {TOUR_INFO_SECTIONS.map((section, index) => {
+                  const Icon = SECTION_ICONS[section.key];
                   return (
                     <Reveal key={section.title} delay={index * 45}>
                       <details className="group overflow-hidden rounded-xl border border-black/10 bg-white transition-colors open:border-[var(--gn-palette-1)]/30 open:bg-[var(--gn-palette-8)]">
@@ -306,7 +270,7 @@ export default async function TourPage({ params }: TourPageProps) {
                           <span className="flex-1">{section.title}</span>
                           <span className="text-xl font-normal text-[var(--gn-palette-1)] transition-transform duration-200 group-open:rotate-45">+</span>
                         </summary>
-                        <p className="px-4 pb-4 pl-15 text-sm leading-6 text-[var(--gn-palette-5)]">{section.body}</p>
+                        <p className="px-4 pb-4 pl-15 text-sm leading-6 text-[var(--gn-palette-5)]">{detail.sections[section.key]}</p>
                       </details>
                     </Reveal>
                   );

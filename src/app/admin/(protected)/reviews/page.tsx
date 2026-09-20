@@ -19,6 +19,7 @@ export default async function ReviewsPage() {
 
   const rows = reviews.data ?? [];
   const placeId = settings.data?.google_place_id?.trim() ?? "";
+  const listingUrl = settings.data?.google_maps_url?.trim() ?? "";
   // The reviews are loaded by hand from Google Maps, so surface when the last
   // one was added to make the periodic "check Maps for new ones" easy to keep.
   const lastLoadedAt = rows.reduce<string | null>((latest, r) => (latest && latest > r.created_at ? latest : r.created_at), null);
@@ -26,7 +27,7 @@ export default async function ReviewsPage() {
   return (
     <ReviewsManager
       reviews={rows.map((r) => ({ id: r.id, author: r.author, review_date: r.review_date, rating: r.rating, body_text: r.body_text, is_published: r.is_published }))}
-      mapsUrl={placeId ? mapsPlaceUrl(placeId) : null}
+      mapsUrl={listingUrl || (placeId ? mapsPlaceUrl(placeId) : null)}
       lastLoadedAt={lastLoadedAt}
     />
   );

@@ -59,6 +59,8 @@ export interface SiteSettingsData {
   bookingNotifyEmail: string;
   /** Google Maps Place ID of the business (reviews + "write a review" link). Public, not a secret. '' when unset. */
   googlePlaceId: string;
+  /** Share link of the Google Maps listing; the review buttons open it. Public. '' when unset. */
+  googleMapsUrl: string;
 }
 
 export async function getSiteSettings(): Promise<SiteSettingsData> {
@@ -99,6 +101,7 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
     footerCreditHref: data?.footer_credit_href ?? null,
     bookingNotifyEmail: data?.booking_notify_email ?? "",
     googlePlaceId: data?.google_place_id ?? "",
+    googleMapsUrl: data?.google_maps_url ?? "",
   };
 }
 
@@ -322,9 +325,15 @@ export async function getReviews(): Promise<ReviewsData> {
   ]);
 
   const placeId = settings?.google_place_id?.trim() ?? "";
+  const listingUrl = settings?.google_maps_url?.trim() ?? "";
   const google = placeId ? await fetchGoogleReviews(placeId) : null;
-  const googleLinks = placeId
-    ? { writeReviewUrl: writeReviewUrl(placeId), mapsUrl: google?.mapsUrl ?? mapsPlaceUrl(placeId) }
+  // The pasted listing link wins for "ver todas"; the Place ID opens Google's
+  // own review dialog for "Deja tu comentario" (the link is its fallback).
+  const googleLinks = placeId || listingUrl
+    ? {
+        writeReviewUrl: placeId ? writeReviewUrl(placeId) : listingUrl,
+        mapsUrl: listingUrl || (google?.mapsUrl ?? mapsPlaceUrl(placeId)),
+      }
     : null;
 
   // Real Google reviews win when they load; the manual list is the fallback

@@ -32,10 +32,54 @@ export interface TourFact {
   enabled: boolean;
 }
 
+/** Punto de encuentro / Experiencia / Regreso: three fixed steps, each with an editable title and text. */
+export const TOUR_ITINERARY_STEP_COUNT = 3;
+
+export interface TourItineraryStep {
+  title: string;
+  body: string;
+}
+
+/** The collapsible "Antes de salir", "Qué haremos"… blocks. Titles are fixed; the text is per tour. */
+export const TOUR_INFO_SECTIONS = [
+  { key: "before", title: "Antes de salir" },
+  { key: "plan", title: "Qué haremos" },
+  { key: "includes", title: "Qué incluye" },
+  { key: "bring", title: "Qué llevar" },
+  { key: "avoid", title: "Qué no llevar" },
+] as const;
+
+export type TourInfoSectionKey = (typeof TOUR_INFO_SECTIONS)[number]["key"];
+
 export interface TourDetailCopy {
   lead: string;
   paragraphs: string[];
   facts: TourFact[];
+  itinerary: TourItineraryStep[];
+  sections: Record<TourInfoSectionKey, string>;
+}
+
+/** Generic copy shown for tours saved before these fields existed. */
+const DEFAULT_ITINERARY: TourItineraryStep[] = [
+  { title: "Punto de encuentro", body: "Lugar y hora por confirmar con las personas inscritas." },
+  { title: "Experiencia", body: "Recorrido, pausas y actividades de acuerdo con el destino y las condiciones del día." },
+  { title: "Regreso", body: "El horario estimado se compartirá junto con el itinerario definitivo." },
+];
+
+const DEFAULT_SECTIONS: Record<TourInfoSectionKey, string> = {
+  before: "Te enviaremos el punto de encuentro, horario definitivo y recomendaciones cuando confirmemos tu solicitud.",
+  plan: "Compartiremos la ruta con la manada, respetando el ritmo del grupo, el entorno y las indicaciones de seguridad.",
+  includes: "Coordinación previa, acompañamiento del grupo y orientación general durante la experiencia. Los servicios específicos se detallan al confirmar.",
+  bring: "Ropa cómoda, calzado adecuado, agua, protección solar y los artículos particulares que indiquemos para el destino.",
+  avoid: "Evita objetos innecesarios, envases desechables y cualquier elemento que pueda afectar el entorno o dificultar la caminata.",
+};
+
+/** A new salida starts with these blank so the admin has to write them (they are required on save). */
+export function emptyItineraryAndSections(): Pick<TourDetailCopy, "itinerary" | "sections"> {
+  return {
+    itinerary: DEFAULT_ITINERARY.map(() => ({ title: "", body: "" })),
+    sections: { before: "", plan: "", includes: "", bring: "", avoid: "" },
+  };
 }
 
 interface DetailVariables {
@@ -166,6 +210,8 @@ export function getDefaultTourDetail(slug: string, variables: DetailVariables = 
       { key: "people", label: "Aventureros", value: "Cupo limitado", icon: "people", enabled: true },
       { key: "price", label: "Precio", value: variables.price ?? "Consultar", icon: "price", enabled: true },
     ],
+    itinerary: DEFAULT_ITINERARY,
+    sections: DEFAULT_SECTIONS,
   };
 }
 
@@ -193,7 +239,30 @@ export function normalizeTourDetail(value: unknown, fallback: TourDetailCopy): T
       })
     : [];
 
+  const storedItinerary = Array.isArray(candidate.itinerary) ? candidate.itinerary : [];
+  const itinerary = fallback.itinerary.map((fallbackStep, index) => {
+    const step = storedItinerary[index];
+    if (!step || typeof step !== "object" || Array.isArray(step)) return fallbackStep;
+    const item = step as Record<string, unknown>;
+    return {
+      title: typeof item.title === "string" && item.title ? item.title : fallbackStep.title,
+      body: typeof item.body === "string" && item.body ? item.body : fallbackStep.body,
+    };
+  });
+
+  const storedSections = candidate.sections && typeof candidate.sections === "object" && !Array.isArray(candidate.sections)
+    ? candidate.sections as Record<string, unknown>
+    : {};
+  const sections = Object.fromEntries(
+    TOUR_INFO_SECTIONS.map(({ key }) => {
+      const body = storedSections[key];
+      return [key, typeof body === "string" && body ? body : fallback.sections[key]];
+    }),
+  ) as Record<TourInfoSectionKey, string>;
+
   return {
+    itinerary,
+    sections,
     lead: typeof candidate.lead === "string" && candidate.lead ? candidate.lead : fallback.lead,
     paragraphs: Array.isArray(candidate.paragraphs)
       ? candidate.paragraphs.filter((paragraph): paragraph is string => typeof paragraph === "string" && Boolean(paragraph))

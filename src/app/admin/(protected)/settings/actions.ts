@@ -3,11 +3,26 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
-import { checkGoogleConnection, type GoogleConnectionResult } from "@/lib/google-reviews";
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { optionalAssetUrlSchema, optionalHttpUrlSchema } from "@/lib/validation";
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
+
+// The link is rendered as an href on the public site, so only Google Maps hosts
+// over https are accepted (no javascript: or third-party redirects).
+const MAPS_HOST = /^(([a-z0-9-]+.)*google.[a-z.]{2,}|maps.app.goo.gl|goo.gl|g.page)$/i;
+const googleMapsUrlSchema = z.string().trim().max(500).refine(
+  (value) => {
+    if (value === "") return true;
+    try {
+      const url = new URL(value);
+      return url.protocol === "https:" && MAPS_HOST.test(url.hostname);
+    } catch {
+      return false;
+    }
+  },
+  { message: "El enlace debe ser de Google Maps (https://maps.app.goo.gl/… o https://www.google.com/maps/…)." },
+);
 
 const SettingsSchema = z.object({
   logoHeaderUrl: optionalAssetUrlSchema,
@@ -18,6 +33,7 @@ const SettingsSchema = z.object({
   email: z.union([z.literal(""), z.string().email()]),
   bookingNotifyEmail: z.union([z.literal(""), z.string().email()]),
   googlePlaceId: z.string().trim().max(200).regex(/^[A-Za-z0-9_-]*$/, { message: "El Place ID solo lleva letras, números, guiones y guion bajo." }),
+  googleMapsUrl: googleMapsUrlSchema,
   address: z.string().nullable(),
   socialFacebookUrl: optionalHttpUrlSchema.nullable(),
   socialInstagramUrl: optionalHttpUrlSchema.nullable(),
@@ -82,6 +98,7 @@ export async function updateSiteSettings(raw: z.infer<typeof SettingsSchema>): P
     email: d.email,
     booking_notify_email: d.bookingNotifyEmail,
     google_place_id: d.googlePlaceId,
+    google_maps_url: d.googleMapsUrl,
     address: d.address,
     social_facebook_url: d.socialFacebookUrl || null,
     social_instagram_url: d.socialInstagramUrl || null,
@@ -149,12 +166,4 @@ export async function saveBankAccounts(raw: z.input<typeof BankAccountsSchema>):
 
   revalidatePath("/admin/bookings");
   return { success: true };
-}
-
-/** Admin-only "Probar conexión" for the Google reviews setup (key in Vercel + Place ID). */
-export async function testGoogleConnection(): Promise<GoogleConnectionResult> {
-  await requireRole(["admin"]);
-  const supabase = await createClient();
-  const { data } = await supabase.from("site_settings").select("*").eq("id", 1).maybeSingle();
-  return checkGoogleConnection(data?.google_place_id?.trim() ?? "");
 }

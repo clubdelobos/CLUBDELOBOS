@@ -588,6 +588,31 @@
   }
 }
 
+/* Phone reviews: two identical rows form a seamless loop. Each card is one
+   viewport-container wide, so only one review is presented at a time. */
+@keyframes gn-reviews-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.gn-reviews-marquee-viewport {
+  container-type: inline-size;
+}
+.gn-reviews-marquee-card {
+  width: 100cqw;
+}
+.gn-reviews-marquee-track {
+  animation: gn-reviews-marquee var(--gn-reviews-marquee-duration, 72s) linear infinite;
+}
+.gn-reviews-marquee-viewport:hover .gn-reviews-marquee-track,
+.gn-reviews-marquee-viewport:focus-within .gn-reviews-marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gn-reviews-marquee-track {
+    animation: none;
+  }
+}
+
 /* ------------------------------------------------------------------
    Filtro de categorías bajo "Próximas aventuras".
    .tm-cat-chip es el botón compartido por Nacionales / Internacionales y las

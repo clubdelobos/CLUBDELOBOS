@@ -27,7 +27,7 @@ export default async function SettingsPage() {
         Marca, contacto, cuentas bancarias, redes sociales, colores y textos generales.
       </p>
       <div className="mt-6">
-        <SettingsForm initial={settings} bankAccounts={bankAccounts} googleKeyConfigured={Boolean(process.env.GOOGLE_PLACES_API_KEY?.trim())} />
+        <SettingsForm initial={settings} bankAccounts={bankAccounts} />
       </div>
     </div>
   );

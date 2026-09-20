@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { BrandPackageUploader } from "@/components/admin/BrandPackageUploader";
-import { GoogleConnectionStatus } from "./GoogleConnectionStatus";
 import { BankAccountsManager, type BankAccountRow } from "./BankAccountsManager";
 import type { SiteSettingsData } from "@/lib/queries/site-content";
 import { findSitePaletteId, SITE_PALETTES, type SitePaletteId } from "@/lib/site-palettes";
@@ -16,7 +15,7 @@ const inputCls = "admin-input h-10 px-3";
 
 interface FormState {
   logoHeader: string | null; logoFooter: string | null; favicon: string | null;
-  phoneLabel: string; phoneHref: string; email: string; bookingNotifyEmail: string; googlePlaceId: string; address: string;
+  phoneLabel: string; phoneHref: string; email: string; bookingNotifyEmail: string; googlePlaceId: string; googleMapsUrl: string; address: string;
   facebook: string; instagram: string; tiktok: string;
   palette1: string; palette2: string; palette3: string; palette5: string; palette7: string; palette8: string;
   registro: string; copyright: string; creditLabel: string; creditHref: string;
@@ -27,7 +26,7 @@ function toFormState(settings: SiteSettingsData): FormState {
   return {
     logoHeader: settings.logoHeaderUrl, logoFooter: settings.logoFooterUrl, favicon: settings.faviconUrl,
     phoneLabel: settings.phoneLabel, phoneHref: settings.phoneHref, email: settings.email,
-    bookingNotifyEmail: settings.bookingNotifyEmail, googlePlaceId: settings.googlePlaceId, address: settings.address ?? "",
+    bookingNotifyEmail: settings.bookingNotifyEmail, googlePlaceId: settings.googlePlaceId, googleMapsUrl: settings.googleMapsUrl, address: settings.address ?? "",
     facebook: social("facebook"), instagram: social("instagram"), tiktok: social("tiktok"),
     palette1: settings.palette[1], palette2: settings.palette[2], palette3: settings.palette[3], palette5: settings.palette[5], palette7: settings.palette[7], palette8: settings.palette[8],
     registro: settings.footerRegistro ?? "", copyright: settings.footerCopyright, creditLabel: settings.footerCreditLabel, creditHref: settings.footerCreditHref ?? "",
@@ -46,7 +45,7 @@ function previewPalette(colors: Record<1 | 2 | 3 | 5 | 7 | 8, string>) {
   }
 }
 
-export function SettingsForm({ initial, bankAccounts, googleKeyConfigured }: { initial: SiteSettingsData; bankAccounts: BankAccountRow[]; googleKeyConfigured: boolean }) {
+export function SettingsForm({ initial, bankAccounts }: { initial: SiteSettingsData; bankAccounts: BankAccountRow[] }) {
   const [state, setState] = useState<FormState>(() => toFormState(initial));
   const [pending, startTransition] = useTransition();
   const [palettePending, setPalettePending] = useState<SitePaletteId | null>(null);
@@ -121,7 +120,7 @@ export function SettingsForm({ initial, bankAccounts, googleKeyConfigured }: { i
       const result = await updateSiteSettings({
         logoHeaderUrl: state.logoHeader, logoFooterUrl: state.logoFooter, faviconUrl: state.favicon,
         phoneLabel: state.phoneLabel, phoneHref: state.phoneHref, email: state.email,
-        bookingNotifyEmail: state.bookingNotifyEmail, googlePlaceId: state.googlePlaceId, address: state.address || null,
+        bookingNotifyEmail: state.bookingNotifyEmail, googlePlaceId: state.googlePlaceId, googleMapsUrl: state.googleMapsUrl, address: state.address || null,
         socialFacebookUrl: state.facebook || null, socialInstagramUrl: state.instagram || null, socialTiktokUrl: state.tiktok || null,
         palette1: state.palette1, palette2: state.palette2, palette3: state.palette3, palette5: state.palette5, palette7: state.palette7, palette8: state.palette8,
         footerRegistro: state.registro || null, footerCopyright: state.copyright, footerCreditLabel: state.creditLabel, footerCreditHref: state.creditHref || null,
@@ -206,33 +205,6 @@ export function SettingsForm({ initial, bankAccounts, googleKeyConfigured }: { i
           <Field label="Crédito (opcional)"><input className={inputCls} value={state.creditLabel} onChange={(e) => set("creditLabel", e.target.value)} /></Field>
           <Field label="Enlace del crédito"><input className={inputCls} value={state.creditHref} onChange={(e) => set("creditHref", e.target.value)} /></Field>
         </div>
-      </Section>
-
-      <Section title="Reseñas de Google" description="Conecta la ficha de Google Maps: activa el botón “Deja tu comentario” en Testimonios y el enlace a todas las reseñas.">
-        <div className="flex flex-col gap-3">
-          <Field
-            label="Place ID de Google Maps"
-            hint="Identifica la ficha de Club de Lobos Tours (empieza con “ChIJ…”). Con esto el sitio muestra el botón “Deja tu comentario” y el enlace a todas las reseñas en Google Maps."
-          >
-            <input className={inputCls} value={state.googlePlaceId} onChange={(e) => set("googlePlaceId", e.target.value.trim())} placeholder="Sin configurar" spellCheck={false} />
-          </Field>
-          <p className="rounded-xl border border-black/10 p-3 text-xs leading-5 text-[var(--gn-palette-5)]">
-            Testimonios muestra las reseñas de Google que están cargadas en la sección <strong>Reseñas</strong>, con la calificación y el botón “Deja tu comentario”.
-          </p>
-          <details className="text-xs">
-            <summary className="cursor-pointer font-semibold text-[var(--gn-palette-3)]">Conexión automática con la API de Google (opcional)</summary>
-            <div className="mt-2">
-              <GoogleConnectionStatus keyConfigured={googleKeyConfigured} placeId={initial.googlePlaceId} />
-            </div>
-          </details>
-          {state.googlePlaceId ? (
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold">
-              <a className="text-[var(--gn-palette-1)] underline" href={`https://search.google.com/local/writereview?placeid=${encodeURIComponent(state.googlePlaceId)}`} target="_blank" rel="noopener noreferrer">Probar “Escribir una reseña”</a>
-              <a className="text-[var(--gn-palette-1)] underline" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("Club de Lobos Tours")}&query_place_id=${encodeURIComponent(state.googlePlaceId)}`} target="_blank" rel="noopener noreferrer">Ver la ficha en Maps</a>
-            </div>
-          ) : null}
-        </div>
-        <p className="mt-3 text-[11px] leading-4 text-[var(--gn-palette-5)]">Recuerda pulsar “Guardar ajustes” al final de la página.</p>
       </Section>
 
       <div className="sticky bottom-4 z-20 flex items-center justify-between gap-4 rounded-2xl border border-[#dfe4df] bg-white/95 p-3 shadow-xl backdrop-blur lg:col-span-2">

@@ -50,6 +50,9 @@ export interface Database {
           // Added in 0012_payments_and_google.sql — Google Maps Place ID used
           // to pull the real reviews and build the "write a review" link.
           google_place_id: string;
+          // Added in 0014_google_maps_url.sql — the listing's share link; the
+          // "ver todas las reseñas" button opens it as is. '' when unset.
+          google_maps_url: string;
           palette_1: string;
           palette_2: string;
           palette_3: string;

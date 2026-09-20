@@ -3,8 +3,8 @@
 import { useState, useTransition } from "react";
 import Image from "next/image";
 import {
-  Activity, Camera, ChevronDown, ChevronUp, CircleDollarSign, Clock3, Compass,
-  Gauge, Mountain, Plus, Route, TentTree, Thermometer, Trash2, TrendingUp, Trees,
+  Activity, Camera, ChevronDown, ChevronUp, CircleDollarSign, Clock3, Compass, Flag,
+  Gauge, MapPin, Mountain, Plus, Route, TentTree, Thermometer, Trash2, TrendingUp, Trees,
   UsersRound, Waves, X,
 } from "lucide-react";
 import { AddImageTile } from "@/components/admin/AddImageTile";
@@ -20,8 +20,10 @@ import {
   type TourSubcategory,
 } from "@/lib/tour-categories";
 import {
+  emptyItineraryAndSections,
   getDefaultTourDetail,
   TOUR_ICON_OPTIONS,
+  TOUR_INFO_SECTIONS,
   type TourDetailCopy,
   type TourIconId,
 } from "@/lib/tour-details";
@@ -50,8 +52,13 @@ const inputCls = "admin-input h-10 px-3";
 const EMPTY: Omit<TourRow, "id"> = {
   slug: "", title: "", price: "Consultar", currency_symbol: "$", departure_dates: [],
   images: [], button_label: "Ver salida", is_published: true,
-  category: "nacional", subcategory: "volcanes", details: getDefaultTourDetail(""),
+  category: "nacional", subcategory: "volcanes",
+  // Itinerary and info sections start blank: they are required, written per salida.
+  details: { ...getDefaultTourDetail(""), ...emptyItineraryAndSections() },
 };
+
+const ITINERARY_LABELS = ["Punto de encuentro", "Experiencia", "Regreso"] as const;
+const ITINERARY_ICONS = [MapPin, Compass, Flag] as const;
 
 function formatDeparture(iso: string) {
   return new Date(`${iso}T00:00:00Z`).toLocaleDateString("es-SV", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
@@ -86,6 +93,12 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
     const images = form.images.filter((image) => image.url);
     if (images.length === 0) { setMessage("Agrega al menos una imagen."); return; }
     if (form.departure_dates.length === 0) { setMessage("Agrega al menos una fecha de salida."); return; }
+    if (form.details.itinerary.some((step) => !step.title.trim() || !step.body.trim())) {
+      setMessage("Completa el título y el texto de los 3 pasos del itinerario.");
+      return;
+    }
+    const missingSection = TOUR_INFO_SECTIONS.find(({ key }) => !form.details.sections[key].trim());
+    if (missingSection) { setMessage(`Completa la sección “${missingSection.title}”.`); return; }
     setMessage(null);
     startTransition(async () => {
       const result = await upsertTour({
@@ -168,6 +181,23 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
         ...current.details,
         facts: current.details.facts.map((fact, factIndex) => factIndex === index ? { ...fact, ...patch } : fact),
       },
+    }));
+  }
+
+  function updateItinerary(index: number, patch: Partial<TourDetailCopy["itinerary"][number]>) {
+    setForm((current) => ({
+      ...current,
+      details: {
+        ...current.details,
+        itinerary: current.details.itinerary.map((step, stepIndex) => stepIndex === index ? { ...step, ...patch } : step),
+      },
+    }));
+  }
+
+  function updateSection(key: keyof TourDetailCopy["sections"], body: string) {
+    setForm((current) => ({
+      ...current,
+      details: { ...current.details, sections: { ...current.details.sections, [key]: body } },
     }));
   }
 
@@ -273,6 +303,49 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
           ) : null}
         </Field>
 
+        <section className="grid gap-4 rounded-xl border border-[var(--admin-line)] bg-[var(--admin-surface-sunken)] p-4 sm:col-span-2 sm:p-5" aria-labelledby="tour-sheet-title">
+          <div>
+            <p id="tour-sheet-title" className="text-base font-extrabold text-[var(--gn-palette-3)]">Ficha de la salida</p>
+            <p className="mt-1 text-[11px] leading-4 text-[var(--gn-palette-5)]">Completa el itinerario y los cinco bloques que aparecerán en la página de esta salida.</p>
+          </div>
+
+          <div>
+            <p className="text-sm font-extrabold text-[var(--gn-palette-3)]">Itinerario general <span className="text-[11px] font-semibold text-red-600">Obligatorio</span></p>
+            <p className="mt-1 text-[11px] leading-4 text-[var(--gn-palette-5)]">Los 3 pasos que se ven en la página de la salida, en este orden.</p>
+          </div>
+          <div className="grid gap-3">
+            {form.details.itinerary.map((step, index) => {
+              const Icon = ITINERARY_ICONS[index] ?? Compass;
+              return (
+                <div key={index} className="flex flex-col gap-2 rounded-xl border border-[var(--admin-line)] bg-white p-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--gn-palette-1)] text-white"><Icon className="h-4 w-4" /></span>
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--gn-palette-5)]">Paso {index + 1}</span>
+                  </div>
+                  <Field label="Título">
+                    <input className="admin-input h-9 px-2.5 text-xs font-semibold text-[var(--gn-palette-3)]" maxLength={80} placeholder={ITINERARY_LABELS[index]} value={step.title} onChange={(e) => updateItinerary(index, { title: e.target.value })} />
+                  </Field>
+                  <Field label="Texto">
+                    <textarea className="admin-input min-h-20 px-3 py-2 text-xs" maxLength={500} value={step.body} onChange={(e) => updateItinerary(index, { body: e.target.value })} />
+                  </Field>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-2">
+            <p className="text-sm font-extrabold text-[var(--gn-palette-3)]">Secciones informativas <span className="text-[11px] font-semibold text-red-600">Obligatorio</span></p>
+            <p className="mt-1 text-[11px] leading-4 text-[var(--gn-palette-5)]">Los bloques desplegables de la página: escribe el texto de cada uno.</p>
+          </div>
+          <div className="grid gap-3">
+            {TOUR_INFO_SECTIONS.map(({ key, title }) => (
+              <Field key={key} label={title}>
+                <textarea className="admin-input min-h-24 px-3 py-2" maxLength={1000} value={form.details.sections[key]} onChange={(e) => updateSection(key, e.target.value)} />
+              </Field>
+            ))}
+          </div>
+        </section>
+
         <details className="rounded-xl border border-[var(--admin-line)] bg-[var(--admin-surface-sunken)] sm:col-span-2">
           <summary className="cursor-pointer px-4 py-3.5 text-sm font-extrabold text-[var(--gn-palette-3)]">Información completa e íconos de la salida</summary>
           <div className="grid gap-5 border-t border-[var(--admin-line)] p-4 sm:p-5">
@@ -349,6 +422,7 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
             </div>
           </div>
         </details>
+
       </div>
 
       {message ? <p className={`text-xs font-semibold ${message.includes("publicados") ? "text-emerald-700" : "text-red-600"}`}>{message}</p> : null}

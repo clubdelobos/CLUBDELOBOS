@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { SUBCATEGORY_IDS, TOUR_CATEGORIES } from "@/lib/tour-categories";
-import { TOUR_ICON_IDS } from "@/lib/tour-details";
+import { TOUR_ICON_IDS, TOUR_INFO_SECTIONS, TOUR_ITINERARY_STEP_COUNT, type TourInfoSectionKey } from "@/lib/tour-details";
 import { assetUrlSchema } from "@/lib/validation";
 
 const TourFactSchema = z.object({
@@ -16,10 +16,23 @@ const TourFactSchema = z.object({
   enabled: z.boolean().optional().default(true),
 });
 
+const ItineraryStepSchema = z.object({
+  title: z.string().trim().min(1, "Completa el título de cada paso del itinerario.").max(80),
+  body: z.string().trim().min(1, "Completa el texto de cada paso del itinerario.").max(500),
+});
+
+function requiredSection(title: string) {
+  return z.string().trim().min(1, `Completa la sección “${title}”.`).max(1000);
+}
+
 const TourDetailSchema = z.object({
   lead: z.string().min(1).max(600),
   paragraphs: z.array(z.string().min(1).max(1200)).min(1).max(4),
   facts: z.array(TourFactSchema).min(1).max(24),
+  itinerary: z.array(ItineraryStepSchema).length(TOUR_ITINERARY_STEP_COUNT, "El itinerario necesita los 3 pasos."),
+  sections: z.object(
+    Object.fromEntries(TOUR_INFO_SECTIONS.map(({ key, title }) => [key, requiredSection(title)])) as Record<TourInfoSectionKey, ReturnType<typeof requiredSection>>,
+  ),
 });
 
 const TourImageSchema = z.object({

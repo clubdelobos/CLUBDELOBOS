@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { StarIcon } from "@/components/sites/guianatours-com-co-e923d4eb/shared/icons";
 import { Reveal } from "./Reveal";
 import { cn } from "@/lib/utils";
@@ -25,7 +25,7 @@ function ReviewCard({ review }: { review: Review }) {
   const isLong = review.text.length > CLAMP_AT;
 
   return (
-    <article className="flex w-full flex-col rounded-lg bg-white p-4 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
+    <article className="flex h-full w-full flex-col rounded-lg bg-white p-4 shadow-[0_1px_4px_rgba(0,0,0,0.08)]">
       <header className="mb-2 flex items-start gap-2">
         <span
           aria-hidden="true"
@@ -56,6 +56,33 @@ function ReviewCard({ review }: { review: Review }) {
         </button>
       ) : null}
     </article>
+  );
+}
+
+function MobileReviewsMarquee({ reviews }: { reviews: Review[] }) {
+  if (reviews.length === 0) return null;
+
+  return (
+    <div
+      className="gn-reviews-marquee-viewport overflow-hidden sm:hidden"
+      style={{ "--gn-reviews-marquee-duration": `${Math.max(reviews.length * 9, 27)}s` } as CSSProperties}
+    >
+      <div className="gn-reviews-marquee-track flex w-max items-stretch">
+        {[false, true].map((duplicate) => (
+          <div
+            key={duplicate ? "duplicate" : "original"}
+            className="flex shrink-0 items-stretch"
+            aria-hidden={duplicate || undefined}
+          >
+            {reviews.map((review) => (
+              <div key={`${duplicate ? "duplicate" : "original"}-${review.id}`} className="gn-reviews-marquee-card flex shrink-0 px-px">
+                <ReviewCard review={review} />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -125,8 +152,13 @@ export function ReviewsSection({ reviews, summary, google = null }: ReviewsSecti
             ) : null}
           </div>
 
-          {/* slider viewport */}
-          <div className="min-w-0 flex-1 overflow-hidden">
+          {/* One full review at a time on phones, moving as a slow marquee. */}
+          <div className="min-w-0 flex-1 sm:hidden">
+            <MobileReviewsMarquee reviews={reviews} />
+          </div>
+
+          {/* Keep the existing paged layout from tablet upward. */}
+          <div className="hidden min-w-0 flex-1 overflow-hidden sm:block">
             <div
               className="flex transition-transform duration-500 ease-out"
               style={{ transform: `translateX(-${safePage * 100}%)` }}
