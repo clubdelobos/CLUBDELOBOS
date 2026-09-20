@@ -154,14 +154,8 @@ export function SettingsForm({ initial, bankAccounts }: { initial: SiteSettingsD
       <Section
         title="Cuentas bancarias"
         description="Se incluyen automáticamente en el mensaje de WhatsApp (Reservas) cuando el cliente eligió pagar por transferencia. Solo las ve el personal; no se publican en el sitio."
-        className="lg:col-span-2"
       >
         <BankAccountsManager initial={bankAccounts} />
-      </Section>
-
-      <Section title="Reseñas de Google" description="Conecta el perfil de Google Maps para mostrar en Testimonios las reseñas reales y el botón “Deja tu comentario”." className="lg:col-span-2">
-        <GooglePlacePicker value={state.googlePlaceId} onChange={(id) => set("googlePlaceId", id)} />
-        <p className="mt-3 text-[11px] leading-4 text-[var(--gn-palette-5)]">Recuerda pulsar “Guardar ajustes” al final de la página.</p>
       </Section>
 
       <Section title="Redes sociales" description="Deja en blanco las redes que no estén verificadas. Solo se muestran en el sitio las que tengan enlace.">
@@ -212,6 +206,11 @@ export function SettingsForm({ initial, bankAccounts }: { initial: SiteSettingsD
           <Field label="Crédito (opcional)"><input className={inputCls} value={state.creditLabel} onChange={(e) => set("creditLabel", e.target.value)} /></Field>
           <Field label="Enlace del crédito"><input className={inputCls} value={state.creditHref} onChange={(e) => set("creditHref", e.target.value)} /></Field>
         </div>
+      </Section>
+
+      <Section title="Reseñas de Google" description="Conecta el perfil de Google Maps para mostrar en Testimonios las reseñas reales y el botón “Deja tu comentario”.">
+        <GooglePlacePicker value={state.googlePlaceId} onChange={(id) => set("googlePlaceId", id)} />
+        <p className="mt-3 text-[11px] leading-4 text-[var(--gn-palette-5)]">Recuerda pulsar “Guardar ajustes” al final de la página.</p>
       </Section>
 
       <div className="sticky bottom-4 z-20 flex items-center justify-between gap-4 rounded-2xl border border-[#dfe4df] bg-white/95 p-3 shadow-xl backdrop-blur lg:col-span-2">

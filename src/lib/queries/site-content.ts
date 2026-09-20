@@ -1,5 +1,6 @@
 import { fetchGoogleReviews, writeReviewUrl } from "@/lib/google-reviews";
 import { createPublicClient } from "@/lib/supabase/public";
+import { findSitePaletteId, type SitePaletteId } from "@/lib/site-palettes";
 import type {
   GalleryItem,
   HeroSlide,
@@ -368,4 +369,33 @@ function relativeYearsAgo(isoDate: string): string {
   const years = Math.max(0, new Date().getFullYear() - new Date(isoDate).getFullYear());
   if (years === 0) return "hace unos meses";
   return years === 1 ? "hace 1 año" : `hace ${years} años`;
+}
+
+/**
+ * Which per-theme icon set (public/brand/lobos/themes/<id>/) matches the palette
+ * selected in Ajustes. The favicon Google shows in search results comes from
+ * here, so it follows the theme. Custom colours that match no preset fall back
+ * to "original". Never throws: a failed read must not break every page's <head>.
+ */
+export async function getIconTheme(): Promise<SitePaletteId> {
+  try {
+    const { data } = await createPublicClient()
+      .from("site_settings")
+      .select("palette_1, palette_2, palette_3, palette_5, palette_7, palette_8")
+      .eq("id", 1)
+      .maybeSingle();
+    if (!data) return "original";
+    return (
+      findSitePaletteId({
+        1: data.palette_1,
+        2: data.palette_2,
+        3: data.palette_3,
+        5: data.palette_5,
+        7: data.palette_7,
+        8: data.palette_8,
+      }) ?? "original"
+    );
+  } catch {
+    return "original";
+  }
 }

@@ -64,7 +64,7 @@ export function BankAccountsManager({ initial }: { initial: BankAccountRow[] }) 
               <Trash2 className="h-3.5 w-3.5" />Quitar
             </button>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2">
             <input className={inputCls} placeholder="Banco (p. ej. Banco Agrícola)" value={account.bank} maxLength={100} onChange={(e) => update(account.id, { bank: e.target.value })} />
             <input className={inputCls} placeholder="Tipo (p. ej. Cuenta de ahorros)" value={account.account_type} maxLength={60} onChange={(e) => update(account.id, { account_type: e.target.value })} />
             <input className={inputCls} placeholder="Número de cuenta" inputMode="numeric" value={account.account_number} maxLength={60} onChange={(e) => update(account.id, { account_number: e.target.value })} />
