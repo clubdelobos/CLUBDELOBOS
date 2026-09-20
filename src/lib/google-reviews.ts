@@ -46,9 +46,14 @@ export function writeReviewUrl(placeId: string): string {
   return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(placeId)}`;
 }
 
-/** Opens the business listing (all reviews) in Google Maps. */
+/**
+ * Opens the business listing (all reviews) in Google Maps: the official Maps
+ * URL format, which opens the Maps app on phones that have it and the browser
+ * otherwise. `query` is required alongside `query_place_id` (the old
+ * `/maps/place/?q=place_id:` form shows "no results" on mobile).
+ */
 export function mapsPlaceUrl(placeId: string): string {
-  return `https://www.google.com/maps/place/?q=place_id:${encodeURIComponent(placeId)}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("Club de Lobos Tours")}&query_place_id=${encodeURIComponent(placeId)}`;
 }
 
 /** Pure mapping, exported so it can be checked without hitting the network. */

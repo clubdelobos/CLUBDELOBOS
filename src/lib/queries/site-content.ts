@@ -347,15 +347,31 @@ export async function getReviews(): Promise<ReviewsData> {
   const reviews: Review[] = (data ?? []).map((r) => ({
     id: r.id,
     author: r.author,
-    relativeDate: relativeYearsAgo(r.review_date),
+    relativeDate: relativeAgo(r.review_date),
     isoDate: r.review_date,
     rating: r.rating,
     text: r.body_text,
   }));
 
-  // The rating summary ("EXCELENTE", "A base de 2976 reseñas") has no admin
-  // screen yet in this phase — see scripts/seed-supabase.ts — so it stays a
-  // fixed constant here rather than a half-wired DB read.
+  // With a Google listing linked, the hand-loaded reviews are copies of the
+  // ones on that listing, so the header reads like the API-driven one: average
+  // and count of what is loaded here (the real total lives only on Google).
+  if (googleLinks && reviews.length > 0) {
+    const average = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+    return {
+      reviews,
+      summary: {
+        rating: average.toFixed(1).replace(".", ","),
+        countLabel: `${reviews.length} ${reviews.length === 1 ? "reseña" : "reseñas"} en Google`,
+        stars: Math.round(average),
+      },
+      google: googleLinks,
+    };
+  }
+
+  // Without a Google listing the header stays brand copy: there is no admin
+  // screen for it (see scripts/seed-supabase.ts), so it is a fixed constant
+  // rather than a half-wired DB read.
   return {
     reviews,
     summary: { rating: "LA MANADA", countLabel: "Aventuras que dejan huella", stars: 5 },
@@ -363,9 +379,14 @@ export async function getReviews(): Promise<ReviewsData> {
   };
 }
 
-function relativeYearsAgo(isoDate: string): string {
-  const years = Math.max(0, new Date().getFullYear() - new Date(isoDate).getFullYear());
-  if (years === 0) return "hace unos meses";
+/** Google-style age ("hace 4 meses"); recomputed on every render so it keeps aging. */
+function relativeAgo(isoDate: string): string {
+  const then = new Date(isoDate);
+  const now = new Date();
+  const months = Math.max(0, (now.getFullYear() - then.getFullYear()) * 12 + now.getMonth() - then.getMonth());
+  if (months < 1) return "hace unas semanas";
+  if (months < 12) return months === 1 ? "hace 1 mes" : `hace ${months} meses`;
+  const years = Math.floor(months / 12);
   return years === 1 ? "hace 1 año" : `hace ${years} años`;
 }
 

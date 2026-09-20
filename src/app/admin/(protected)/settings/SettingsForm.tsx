@@ -216,11 +216,19 @@ export function SettingsForm({ initial, bankAccounts, googleKeyConfigured }: { i
           >
             <input className={inputCls} value={state.googlePlaceId} onChange={(e) => set("googlePlaceId", e.target.value.trim())} placeholder="Sin configurar" spellCheck={false} />
           </Field>
-          <GoogleConnectionStatus keyConfigured={googleKeyConfigured} placeId={initial.googlePlaceId} />
+          <p className="rounded-xl border border-black/10 p-3 text-xs leading-5 text-[var(--gn-palette-5)]">
+            Testimonios muestra las reseñas de Google que están cargadas en la sección <strong>Reseñas</strong>, con la calificación y el botón “Deja tu comentario”.
+          </p>
+          <details className="text-xs">
+            <summary className="cursor-pointer font-semibold text-[var(--gn-palette-3)]">Conexión automática con la API de Google (opcional)</summary>
+            <div className="mt-2">
+              <GoogleConnectionStatus keyConfigured={googleKeyConfigured} placeId={initial.googlePlaceId} />
+            </div>
+          </details>
           {state.googlePlaceId ? (
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold">
               <a className="text-[var(--gn-palette-1)] underline" href={`https://search.google.com/local/writereview?placeid=${encodeURIComponent(state.googlePlaceId)}`} target="_blank" rel="noopener noreferrer">Probar “Escribir una reseña”</a>
-              <a className="text-[var(--gn-palette-1)] underline" href={`https://www.google.com/maps/place/?q=place_id:${encodeURIComponent(state.googlePlaceId)}`} target="_blank" rel="noopener noreferrer">Ver la ficha en Maps</a>
+              <a className="text-[var(--gn-palette-1)] underline" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("Club de Lobos Tours")}&query_place_id=${encodeURIComponent(state.googlePlaceId)}`} target="_blank" rel="noopener noreferrer">Ver la ficha en Maps</a>
             </div>
           ) : null}
         </div>
