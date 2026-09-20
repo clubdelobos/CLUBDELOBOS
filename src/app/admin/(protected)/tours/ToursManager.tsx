@@ -317,12 +317,12 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--gn-palette-1)] text-white"><Icon className="h-3.5 w-3.5" /></span>
                     <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--gn-palette-5)]">Paso {index + 1}</span>
                   </div>
-                  <div className="grid gap-2 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+                  <div className="grid gap-2">
                     <Field label="Título">
-                      <input className="admin-input h-9 px-2.5 text-xs font-semibold text-[var(--gn-palette-3)]" maxLength={80} placeholder={ITINERARY_LABELS[index]} value={step.title} onChange={(e) => updateItinerary(index, { title: e.target.value })} />
+                      <input className="admin-input h-9 px-2.5 text-left text-xs font-semibold text-[var(--gn-palette-3)]" maxLength={80} placeholder={ITINERARY_LABELS[index]} value={step.title} onChange={(e) => updateItinerary(index, { title: e.target.value })} />
                     </Field>
                     <Field label="Texto">
-                      <textarea className="admin-input min-h-16 px-2.5 py-2 text-xs" maxLength={500} value={step.body} onChange={(e) => updateItinerary(index, { body: e.target.value })} />
+                      <textarea className="admin-input min-h-16 px-2.5 py-2 text-left text-xs" maxLength={500} value={step.body} onChange={(e) => updateItinerary(index, { body: e.target.value })} />
                     </Field>
                   </div>
                 </div>
