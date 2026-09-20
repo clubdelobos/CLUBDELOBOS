@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
-import { searchPlaces, type PlaceCandidate } from "@/lib/google-reviews";
+import { checkGoogleConnection, type GoogleConnectionResult } from "@/lib/google-reviews";
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { optionalAssetUrlSchema, optionalHttpUrlSchema } from "@/lib/validation";
 
@@ -151,11 +151,10 @@ export async function saveBankAccounts(raw: z.input<typeof BankAccountsSchema>):
   return { success: true };
 }
 
-/** Admin-only lookup that powers the "Buscar mi negocio" picker in Ajustes. */
-export async function findGooglePlaces(query: string): Promise<{ places?: PlaceCandidate[]; error?: string }> {
+/** Admin-only "Probar conexión" for the Google reviews setup (key in Vercel + Place ID). */
+export async function testGoogleConnection(): Promise<GoogleConnectionResult> {
   await requireRole(["admin"]);
-  const q = typeof query === "string" ? query.trim() : "";
-  if (q.length < 3 || q.length > 120) return { error: "Escribe al menos 3 letras del nombre del negocio." };
-  const result = await searchPlaces(q);
-  return "error" in result ? { error: result.error } : { places: result.places };
+  const supabase = await createClient();
+  const { data } = await supabase.from("site_settings").select("*").eq("id", 1).maybeSingle();
+  return checkGoogleConnection(data?.google_place_id?.trim() ?? "");
 }

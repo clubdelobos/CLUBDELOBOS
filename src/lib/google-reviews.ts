@@ -46,6 +46,11 @@ export function writeReviewUrl(placeId: string): string {
   return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(placeId)}`;
 }
 
+/** Opens the business listing (all reviews) in Google Maps. */
+export function mapsPlaceUrl(placeId: string): string {
+  return `https://www.google.com/maps/place/?q=place_id:${encodeURIComponent(placeId)}`;
+}
+
 /** Pure mapping, exported so it can be checked without hitting the network. */
 export function mapPlacesResponse(data: PlacesResponse): GoogleReviewsResult {
   const reviews: Review[] = (data.reviews ?? []).flatMap((r, index) => {
@@ -101,72 +106,74 @@ export async function fetchGoogleReviews(placeId: string): Promise<GoogleReviews
   }
 }
 
-export interface PlaceCandidate {
-  id: string;
-  name: string;
-  address: string;
-  rating: number | null;
-  ratingCount: number | null;
-}
+export type GoogleConnectionResult =
+  | { ok: true; name: string; rating: number | null; ratingCount: number | null; reviewCount: number }
+  | { ok: false; problem: "no-key" | "no-place-id" | "rejected"; message: string };
 
-interface SearchTextResponse {
-  places?: {
-    id?: string;
-    displayName?: { text?: string };
-    formattedAddress?: string;
-    rating?: number;
-    userRatingCount?: number;
-  }[];
+/** Turns a Places API error into what the person setting it up should do. Pure, so it can be checked offline. */
+export function explainPlacesError(status: number, body: string): string {
+  const text = body.toLowerCase();
+  if (/billing/.test(text)) {
+    return "La key es válida, pero la cuenta de Google Cloud no tiene la facturación activa. Hay que vincular una cuenta de facturación al proyecto.";
+  }
+  if (/has not been used|is disabled|not been enabled|service_disabled/.test(text)) {
+    return "Falta habilitar “Places API (New)” en el proyecto de Google Cloud donde se creó la key.";
+  }
+  if (/api key not valid|api_key_invalid|invalid api key/.test(text)) {
+    return "Google dice que la key no es válida. Revisa que esté copiada completa en Vercel (sin espacios) y que se hizo Redeploy.";
+  }
+  if (/referer|ip address|api_key_http_referrer|api_key_ip|not authorized|restricted|api_target_blocked/.test(text)) {
+    return "La key tiene una restricción que la bloquea. En Google Cloud debe estar restringida solo a “Places API (New)” y sin restricción de sitio web ni de IP.";
+  }
+  if (status === 404 || /not_found|not found/.test(text)) {
+    return "Google no encontró ese Place ID. Revisa que esté completo y que sea el de Club de Lobos Tours.";
+  }
+  if (status === 400) {
+    return "Google rechazó la consulta. Revisa la key y el Place ID.";
+  }
+  if (status === 403) {
+    return "Google rechazó la key. Suele ser la facturación sin activar o Places API (New) sin habilitar.";
+  }
+  return `Google respondió con un error (${status}). Inténtalo de nuevo en unos minutos.`;
 }
 
 /**
- * Text Search (New) — lets the admin find their Google Maps listing by name and
- * pick it, instead of hunting for the Place ID by hand. Admin-only, on demand,
- * never cached and never used on public requests.
+ * "Probar conexión" in Ajustes: one live call with the configured key + Place
+ * ID. Admin-only and on demand (never on public requests, never cached).
  */
-export async function searchPlaces(query: string): Promise<{ places: PlaceCandidate[] } | { error: string }> {
+export async function checkGoogleConnection(placeId: string): Promise<GoogleConnectionResult> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY?.trim();
   if (!apiKey) {
-    return { error: "Falta la variable GOOGLE_PLACES_API_KEY en Vercel (y un redeploy después de crearla)." };
+    return {
+      ok: false,
+      problem: "no-key",
+      message: "Aún no hay una API key en Vercel (GOOGLE_PLACES_API_KEY). Mientras tanto el sitio usa las reseñas manuales.",
+    };
+  }
+  if (!placeId) {
+    return { ok: false, problem: "no-place-id", message: "Falta el Place ID. Guárdalo primero en esta sección." };
   }
   try {
-    const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
-      method: "POST",
+    const response = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?languageCode=es`, {
       headers: {
-        "Content-Type": "application/json",
         "X-Goog-Api-Key": apiKey,
-        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount",
+        "X-Goog-FieldMask": "displayName,rating,userRatingCount,reviews",
       },
-      body: JSON.stringify({ textQuery: query, languageCode: "es", regionCode: "SV", pageSize: 6 }),
       cache: "no-store",
       signal: AbortSignal.timeout(8000),
     });
     if (!response.ok) {
-      console.error("Google Places search failed:", response.status);
-      return {
-        error:
-          response.status === 403 || response.status === 400
-            ? "Google rechazó la key. Revisa que “Places API (New)” esté habilitada, que la facturación esté activa y que la key no esté restringida a otra API."
-            : `Google respondió con un error (${response.status}). Inténtalo de nuevo.`,
-      };
+      return { ok: false, problem: "rejected", message: explainPlacesError(response.status, await response.text().catch(() => "")) };
     }
-    const data = (await response.json()) as SearchTextResponse;
-    const places = (data.places ?? []).flatMap((p) =>
-      p.id
-        ? [
-            {
-              id: p.id,
-              name: p.displayName?.text ?? "Sin nombre",
-              address: p.formattedAddress ?? "",
-              rating: typeof p.rating === "number" ? p.rating : null,
-              ratingCount: typeof p.userRatingCount === "number" ? p.userRatingCount : null,
-            },
-          ]
-        : [],
-    );
-    return { places };
-  } catch (error) {
-    console.error("Google Places search errored:", error instanceof Error ? error.message : error);
-    return { error: "No se pudo contactar a Google. Inténtalo de nuevo." };
+    const data = (await response.json()) as PlacesResponse & { displayName?: { text?: string } };
+    return {
+      ok: true,
+      name: data.displayName?.text ?? "Ficha de Google Maps",
+      rating: typeof data.rating === "number" ? data.rating : null,
+      ratingCount: typeof data.userRatingCount === "number" ? data.userRatingCount : null,
+      reviewCount: mapPlacesResponse(data).reviews.length,
+    };
+  } catch {
+    return { ok: false, problem: "rejected", message: "No se pudo contactar a Google. Inténtalo de nuevo." };
   }
 }

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { BrandPackageUploader } from "@/components/admin/BrandPackageUploader";
-import { GooglePlacePicker } from "./GooglePlacePicker";
+import { GoogleConnectionStatus } from "./GoogleConnectionStatus";
 import { BankAccountsManager, type BankAccountRow } from "./BankAccountsManager";
 import type { SiteSettingsData } from "@/lib/queries/site-content";
 import { findSitePaletteId, SITE_PALETTES, type SitePaletteId } from "@/lib/site-palettes";
@@ -46,7 +46,7 @@ function previewPalette(colors: Record<1 | 2 | 3 | 5 | 7 | 8, string>) {
   }
 }
 
-export function SettingsForm({ initial, bankAccounts }: { initial: SiteSettingsData; bankAccounts: BankAccountRow[] }) {
+export function SettingsForm({ initial, bankAccounts, googleKeyConfigured }: { initial: SiteSettingsData; bankAccounts: BankAccountRow[]; googleKeyConfigured: boolean }) {
   const [state, setState] = useState<FormState>(() => toFormState(initial));
   const [pending, startTransition] = useTransition();
   const [palettePending, setPalettePending] = useState<SitePaletteId | null>(null);
@@ -208,8 +208,22 @@ export function SettingsForm({ initial, bankAccounts }: { initial: SiteSettingsD
         </div>
       </Section>
 
-      <Section title="Reseñas de Google" description="Conecta el perfil de Google Maps para mostrar en Testimonios las reseñas reales y el botón “Deja tu comentario”.">
-        <GooglePlacePicker value={state.googlePlaceId} onChange={(id) => set("googlePlaceId", id)} />
+      <Section title="Reseñas de Google" description="Conecta la ficha de Google Maps: activa el botón “Deja tu comentario” en Testimonios y el enlace a todas las reseñas.">
+        <div className="flex flex-col gap-3">
+          <Field
+            label="Place ID de Google Maps"
+            hint="Identifica la ficha de Club de Lobos Tours (empieza con “ChIJ…”). Con esto el sitio muestra el botón “Deja tu comentario” y el enlace a todas las reseñas en Google Maps."
+          >
+            <input className={inputCls} value={state.googlePlaceId} onChange={(e) => set("googlePlaceId", e.target.value.trim())} placeholder="Sin configurar" spellCheck={false} />
+          </Field>
+          <GoogleConnectionStatus keyConfigured={googleKeyConfigured} placeId={initial.googlePlaceId} />
+          {state.googlePlaceId ? (
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold">
+              <a className="text-[var(--gn-palette-1)] underline" href={`https://search.google.com/local/writereview?placeid=${encodeURIComponent(state.googlePlaceId)}`} target="_blank" rel="noopener noreferrer">Probar “Escribir una reseña”</a>
+              <a className="text-[var(--gn-palette-1)] underline" href={`https://www.google.com/maps/place/?q=place_id:${encodeURIComponent(state.googlePlaceId)}`} target="_blank" rel="noopener noreferrer">Ver la ficha en Maps</a>
+            </div>
+          ) : null}
+        </div>
         <p className="mt-3 text-[11px] leading-4 text-[var(--gn-palette-5)]">Recuerda pulsar “Guardar ajustes” al final de la página.</p>
       </Section>
 

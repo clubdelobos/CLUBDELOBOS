@@ -1,4 +1,4 @@
-import { fetchGoogleReviews, writeReviewUrl } from "@/lib/google-reviews";
+import { fetchGoogleReviews, mapsPlaceUrl, writeReviewUrl } from "@/lib/google-reviews";
 import { createPublicClient } from "@/lib/supabase/public";
 import { findSitePaletteId, type SitePaletteId } from "@/lib/site-palettes";
 import type {
@@ -311,8 +311,6 @@ export interface ReviewsData {
   /** Set when a Google Place ID is configured: powers the "Deja tu comentario"
    *  button and the "ver todas" link. */
   google: { writeReviewUrl: string; mapsUrl: string | null } | null;
-  /** True when `reviews` came from Google Maps (vs. the admin's manual ones). */
-  fromGoogle: boolean;
 }
 
 export async function getReviews(): Promise<ReviewsData> {
@@ -325,7 +323,9 @@ export async function getReviews(): Promise<ReviewsData> {
 
   const placeId = settings?.google_place_id?.trim() ?? "";
   const google = placeId ? await fetchGoogleReviews(placeId) : null;
-  const googleLinks = placeId ? { writeReviewUrl: writeReviewUrl(placeId), mapsUrl: google?.mapsUrl ?? null } : null;
+  const googleLinks = placeId
+    ? { writeReviewUrl: writeReviewUrl(placeId), mapsUrl: google?.mapsUrl ?? mapsPlaceUrl(placeId) }
+    : null;
 
   // Real Google reviews win when they load; the manual list is the fallback
   // (no key, no Place ID, API down, or a place with no written reviews yet).
@@ -341,7 +341,6 @@ export async function getReviews(): Promise<ReviewsData> {
         stars: Math.round(rating),
       },
       google: googleLinks,
-      fromGoogle: true,
     };
   }
 
@@ -361,7 +360,6 @@ export async function getReviews(): Promise<ReviewsData> {
     reviews,
     summary: { rating: "LA MANADA", countLabel: "Aventuras que dejan huella", stars: 5 },
     google: googleLinks,
-    fromGoogle: false,
   };
 }
 

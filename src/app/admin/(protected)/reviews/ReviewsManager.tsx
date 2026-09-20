@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Star, Trash2 } from "lucide-react";
+import { ExternalLink, Plus, Star, Trash2 } from "lucide-react";
 import { Modal } from "@/components/admin/Modal";
 import { deleteReview, upsertReview } from "./actions";
 
@@ -138,10 +138,17 @@ function ReviewCard({ review, onEdit }: { review: ReviewRow; onEdit: () => void 
   );
 }
 
-export function ReviewsManager({ reviews: initial }: { reviews: ReviewRow[] }) {
+const REVIEW_CHECK_DAYS = 15;
+
+export function ReviewsManager({ reviews: initial, mapsUrl, lastLoadedAt }: { reviews: ReviewRow[]; mapsUrl: string | null; lastLoadedAt: string | null }) {
   const [reviews, setReviews] = useState(initial);
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Days since the newest review was loaded; computed once per mount (this is a
+  // reminder, not a live clock).
+  const [daysSinceLoad] = useState(() => (lastLoadedAt ? Math.floor((Date.now() - new Date(lastLoadedAt).getTime()) / 86_400_000) : null));
+  const dueForCheck = mapsUrl !== null && (daysSinceLoad === null || daysSinceLoad >= REVIEW_CHECK_DAYS);
 
   const editingReview = reviews.find((review) => review.id === editingId) ?? null;
 
@@ -156,6 +163,21 @@ export function ReviewsManager({ reviews: initial }: { reviews: ReviewRow[] }) {
           <span className="inline-flex items-center gap-2"><Plus className="h-4 w-4" />Nueva reseña</span>
         </button>
       </div>
+
+      {mapsUrl ? (
+        <div className={`flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between ${dueForCheck ? "border-amber-300 bg-amber-50" : "border-black/10 bg-white"}`}>
+          <div className="min-w-0 text-xs leading-5 text-[var(--gn-palette-3)]">
+            <strong className="block text-sm">{dueForCheck ? "Toca revisar si hay reseñas nuevas en Google" : "Reseñas al día"}</strong>
+            {daysSinceLoad === null
+              ? "Aún no hay reseñas cargadas."
+              : `La última reseña se cargó hace ${daysSinceLoad} ${daysSinceLoad === 1 ? "día" : "días"}.`}{" "}
+            Cópialas desde Google Maps con “Nueva reseña” (nombre, estrellas y texto); se revisa cada {REVIEW_CHECK_DAYS} días.
+          </div>
+          <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-black/15 bg-white px-3 py-2 text-xs font-bold text-[var(--gn-palette-3)] transition-colors hover:bg-[var(--gn-palette-8)]">
+            <ExternalLink className="h-4 w-4" />Abrir reseñas en Google Maps
+          </a>
+        </div>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {reviews.map((review) => (

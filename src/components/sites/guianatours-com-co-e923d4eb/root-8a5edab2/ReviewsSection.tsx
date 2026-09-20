@@ -69,11 +69,9 @@ export interface ReviewsSectionProps {
   summary: { rating: string; countLabel: string; stars: number };
   /** Google Maps links, when a Place ID is configured. */
   google?: { writeReviewUrl: string; mapsUrl: string | null } | null;
-  /** The reviews shown are the real ones fetched from Google Maps. */
-  fromGoogle?: boolean;
 }
 
-export function ReviewsSection({ reviews, summary, google = null, fromGoogle = false }: ReviewsSectionProps) {
+export function ReviewsSection({ reviews, summary, google = null }: ReviewsSectionProps) {
   const [page, setPage] = useState(0);
   const pages = Math.ceil(reviews.length / 4);
 
@@ -113,14 +111,14 @@ export function ReviewsSection({ reviews, summary, google = null, fromGoogle = f
                 <a href={google.writeReviewUrl} target="_blank" rel="noopener noreferrer" className="gn-button">
                   <span className="inline-flex items-center">Deja tu comentario</span>
                 </a>
-                {fromGoogle && google.mapsUrl ? (
+                {google.mapsUrl ? (
                   <a
                     href={google.mapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[12px] leading-[18px] text-[var(--gn-palette-1)] underline"
                   >
-                    Ver todas en Google Maps
+                    Ver todas las reseñas en Google Maps
                   </a>
                 ) : null}
               </div>
