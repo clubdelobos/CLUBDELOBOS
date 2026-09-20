@@ -65,7 +65,7 @@ function MobileReviewsMarquee({ reviews }: { reviews: Review[] }) {
   return (
     <div
       className="gn-reviews-marquee-viewport overflow-hidden sm:hidden"
-      style={{ "--gn-reviews-marquee-duration": `${Math.max(reviews.length * 9, 27)}s` } as CSSProperties}
+      style={{ "--gn-reviews-marquee-duration": `${Math.max(reviews.length * 11, 33)}s` } as CSSProperties}
     >
       <div className="gn-reviews-marquee-track flex w-max items-stretch">
         {[false, true].map((duplicate) => (
@@ -145,7 +145,7 @@ export function ReviewsSection({ reviews, summary, google = null }: ReviewsSecti
                     rel="noopener noreferrer"
                     className="text-[12px] leading-[18px] text-[var(--gn-palette-1)] underline"
                   >
-                    Ver todas las reseñas en Google Maps
+                    Ver todas las reseñas
                   </a>
                 ) : null}
               </div>

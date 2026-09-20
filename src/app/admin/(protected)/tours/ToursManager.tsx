@@ -303,48 +303,47 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
           ) : null}
         </Field>
 
-        <section className="grid gap-4 rounded-xl border border-[var(--admin-line)] bg-[var(--admin-surface-sunken)] p-4 sm:col-span-2 sm:p-5" aria-labelledby="tour-sheet-title">
-          <div>
-            <p id="tour-sheet-title" className="text-base font-extrabold text-[var(--gn-palette-3)]">Ficha de la salida</p>
-            <p className="mt-1 text-[11px] leading-4 text-[var(--gn-palette-5)]">Completa el itinerario y los cinco bloques que aparecerán en la página de esta salida.</p>
-          </div>
-
-          <div>
-            <p className="text-sm font-extrabold text-[var(--gn-palette-3)]">Itinerario general <span className="text-[11px] font-semibold text-red-600">Obligatorio</span></p>
-            <p className="mt-1 text-[11px] leading-4 text-[var(--gn-palette-5)]">Los 3 pasos que se ven en la página de la salida, en este orden.</p>
-          </div>
-          <div className="grid gap-3">
+        <details className="rounded-xl border border-[var(--admin-line)] bg-[var(--admin-surface-sunken)] sm:col-span-2">
+          <summary className="cursor-pointer px-4 py-3 text-sm font-extrabold text-[var(--gn-palette-3)]">
+            Ficha de salida <span className="ml-1 text-[10px] font-semibold text-red-600">Obligatorio</span>
+          </summary>
+          <div className="grid gap-3 border-t border-[var(--admin-line)] p-3.5 sm:p-4">
+            <p className="text-[11px] leading-4 text-[var(--gn-palette-5)]">Completa los 3 pasos del itinerario en el orden en que aparecerán.</p>
             {form.details.itinerary.map((step, index) => {
               const Icon = ITINERARY_ICONS[index] ?? Compass;
               return (
-                <div key={index} className="flex flex-col gap-2 rounded-xl border border-[var(--admin-line)] bg-white p-3.5">
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--gn-palette-1)] text-white"><Icon className="h-4 w-4" /></span>
+                <div key={index} className="grid gap-2 rounded-lg border border-[var(--admin-line)] bg-white p-3">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--gn-palette-1)] text-white"><Icon className="h-3.5 w-3.5" /></span>
                     <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--gn-palette-5)]">Paso {index + 1}</span>
                   </div>
-                  <Field label="Título">
-                    <input className="admin-input h-9 px-2.5 text-xs font-semibold text-[var(--gn-palette-3)]" maxLength={80} placeholder={ITINERARY_LABELS[index]} value={step.title} onChange={(e) => updateItinerary(index, { title: e.target.value })} />
-                  </Field>
-                  <Field label="Texto">
-                    <textarea className="admin-input min-h-20 px-3 py-2 text-xs" maxLength={500} value={step.body} onChange={(e) => updateItinerary(index, { body: e.target.value })} />
-                  </Field>
+                  <div className="grid gap-2 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+                    <Field label="Título">
+                      <input className="admin-input h-9 px-2.5 text-xs font-semibold text-[var(--gn-palette-3)]" maxLength={80} placeholder={ITINERARY_LABELS[index]} value={step.title} onChange={(e) => updateItinerary(index, { title: e.target.value })} />
+                    </Field>
+                    <Field label="Texto">
+                      <textarea className="admin-input min-h-16 px-2.5 py-2 text-xs" maxLength={500} value={step.body} onChange={(e) => updateItinerary(index, { body: e.target.value })} />
+                    </Field>
+                  </div>
                 </div>
               );
             })}
           </div>
+        </details>
 
-          <div className="mt-2">
-            <p className="text-sm font-extrabold text-[var(--gn-palette-3)]">Secciones informativas <span className="text-[11px] font-semibold text-red-600">Obligatorio</span></p>
-            <p className="mt-1 text-[11px] leading-4 text-[var(--gn-palette-5)]">Los bloques desplegables de la página: escribe el texto de cada uno.</p>
-          </div>
-          <div className="grid gap-3">
+        <details className="rounded-xl border border-[var(--admin-line)] bg-[var(--admin-surface-sunken)] sm:col-span-2">
+          <summary className="cursor-pointer px-4 py-3 text-sm font-extrabold text-[var(--gn-palette-3)]">
+            Secciones informativas <span className="ml-1 text-[10px] font-semibold text-red-600">Obligatorio</span>
+          </summary>
+          <div className="grid gap-2.5 border-t border-[var(--admin-line)] p-3.5 sm:p-4">
+            <p className="text-[11px] leading-4 text-[var(--gn-palette-5)]">Escribe el texto de los cinco bloques desplegables de la página.</p>
             {TOUR_INFO_SECTIONS.map(({ key, title }) => (
               <Field key={key} label={title}>
-                <textarea className="admin-input min-h-24 px-3 py-2" maxLength={1000} value={form.details.sections[key]} onChange={(e) => updateSection(key, e.target.value)} />
+                <textarea className="admin-input min-h-16 px-2.5 py-2 text-xs" maxLength={1000} value={form.details.sections[key]} onChange={(e) => updateSection(key, e.target.value)} />
               </Field>
             ))}
           </div>
-        </section>
+        </details>
 
         <details className="rounded-xl border border-[var(--admin-line)] bg-[var(--admin-surface-sunken)] sm:col-span-2">
           <summary className="cursor-pointer px-4 py-3.5 text-sm font-extrabold text-[var(--gn-palette-3)]">Información completa e íconos de la salida</summary>
