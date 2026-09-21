@@ -39,6 +39,7 @@ import {
 } from "@/lib/queries/site-content";
 import { getStoredTourDetailRecord, resolveTourDetailCopy } from "@/lib/queries/tour-details";
 import { TOUR_INFO_SECTIONS, type TourIconId, type TourInfoSectionKey } from "@/lib/tour-details";
+import { firstSentence, humanizeTitle, pageMetadata, truncate } from "@/lib/seo/metadata";
 import { buildBreadcrumbJsonLd, buildTourEventJsonLd, jsonLdString } from "@/lib/seo/schema";
 import { SITE_URL } from "@/lib/site-config";
 
@@ -54,22 +55,46 @@ export async function generateStaticParams() {
   return slugs.map((slug) => ({ slug }));
 }
 
+/** "26 de septiembre de 2026" from a stored YYYY-MM-DD date. */
+function longDate(iso: string): string {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString("es-SV", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+}
+
+function nextUpcoming(dates: string[]): string | undefined {
+  const today = new Date().toISOString().slice(0, 10);
+  return dates.find((date) => date >= today);
+}
+
 export async function generateMetadata({ params }: TourPageProps): Promise<Metadata> {
   const { slug } = await params;
   const [tour, storedDetails] = await Promise.all([getTourBySlug(slug), getStoredTourDetailRecord()]);
   if (!tour) return { title: "Salida no encontrada", robots: { index: false, follow: false } };
   const price = [tour.currencySymbol, tour.price].filter(Boolean).join(" ");
   const detail = resolveTourDetailCopy({ id: tour.id, slug, price }, storedDetails);
-  return {
-    title: tour.title,
-    description: detail.lead,
-    alternates: { canonical: `/salidas/${encodeURIComponent(slug)}` },
-    openGraph: {
-      title: tour.title,
-      description: detail.lead,
-      images: tour.images.slice(0, 1),
-    },
-  };
+
+  // Search snippet: "<Name>: <first sentence>. Próxima salida … Desde $X." —
+  // the admin's full multi-paragraph copy is far too long for a meta description.
+  const name = humanizeTitle(tour.title);
+  const international = tour.category === "internacional";
+  const next = nextUpcoming(tour.departureDates);
+  const numericPrice = Number(tour.price.replace(/[^0-9.]/g, ""));
+  const tail = [
+    next ? `Próxima salida: ${longDate(next)}.` : "",
+    numericPrice > 0 ? `Desde $${numericPrice}.` : "",
+  ].filter(Boolean).join(" ");
+  // Trim the intro (not the tail) so the date and price always survive.
+  const who = international ? `${name}: viaje guiado desde El Salvador con Club de Lobos.` : `${name} con Club de Lobos:`;
+  const intro = truncate(`${who} ${firstSentence(detail.lead)}`, 158 - (tail ? tail.length + 1 : 0));
+  const description = `${intro} ${tail}`.trim();
+
+  const cover = tour.images[0];
+  return pageMetadata({
+    title: `${name}: ${international ? "viaje guiado desde El Salvador" : "salida guiada en El Salvador"}`,
+    description,
+    path: `/salidas/${encodeURIComponent(slug)}`,
+    image: cover?.url,
+    imageSize: cover ? { width: cover.width, height: cover.height } : undefined,
+  });
 }
 
 const FACT_ICONS: Record<TourIconId, typeof Activity> = {
@@ -117,7 +142,7 @@ function TourGallery({ images, title }: { images: GalleryImage[]; title: string 
         </div>
         {rest.slice(0, 4).map((image, index) => (
           <div key={image.url} className={`relative h-full ${index === 0 ? "" : "hidden sm:block"}`}>
-            <Image src={image.url} alt={title} fill sizes="25vw" className="object-cover object-center" />
+            <Image src={image.url} alt={`${title} – foto ${index + 2}`} fill sizes="25vw" className="object-cover object-center" />
           </div>
         ))}
       </div>
@@ -151,7 +176,8 @@ export default async function TourPage({ params }: TourPageProps) {
   const duration = detail.facts.find((fact) => fact.key === "time")?.value ?? "Por confirmar";
   const visibleFacts = detail.facts.filter((fact) => fact.enabled);
   const eventJsonLd = buildTourEventJsonLd({
-    title: tour.title,
+    title: humanizeTitle(tour.title),
+    international: tour.category === "internacional",
     slug,
     departureDates: tour.departureDates,
     description: detail.lead,
@@ -161,7 +187,7 @@ export default async function TourPage({ params }: TourPageProps) {
   const breadcrumbJsonLd = buildBreadcrumbJsonLd([
     { name: "Inicio", url: SITE_URL },
     { name: "Próximas salidas", url: `${SITE_URL}/proximas-salidas` },
-    { name: tour.title, url: `${SITE_URL}/salidas/${encodeURIComponent(slug)}` },
+    { name: humanizeTitle(tour.title), url: `${SITE_URL}/salidas/${encodeURIComponent(slug)}` },
   ]);
 
   return (
@@ -204,7 +230,7 @@ export default async function TourPage({ params }: TourPageProps) {
                 <h1 className="mt-2 text-3xl font-extrabold leading-tight text-[var(--gn-palette-3)] sm:text-4xl">
                   {tour.title}
                 </h1>
-                <h2 className="mt-1 text-lg font-bold text-[var(--gn-palette-3)]">Información general de la salida</h2>
+                <h2 className="mt-1 text-lg font-bold text-[var(--gn-palette-3)]">Información general: {humanizeTitle(tour.title)}</h2>
               </header>
 
               <Reveal as="div" className="mt-8 space-y-5 text-[17px] leading-7 text-[var(--gn-palette-5)]">

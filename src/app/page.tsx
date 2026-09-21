@@ -4,6 +4,7 @@ import { ProximosDestinos } from "@/components/sites/guianatours-com-co-e923d4eb
 import { GuiasExpertos } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/GuiasExpertos";
 import { CampingSection } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/CampingSection";
 import { ReviewsSection } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/ReviewsSection";
+import { SeoIntro } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/SeoIntro";
 import { FotografiasSemana } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/FotografiasSemana";
 import { WhatsAppFab } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/WhatsAppFab";
 import { SiteFooter } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/SiteFooter";
@@ -18,7 +19,7 @@ import {
   getSiteSettings,
   getTours,
 } from "@/lib/queries/site-content";
-import { buildOrganizationJsonLd, jsonLdString } from "@/lib/seo/schema";
+import { buildOrganizationJsonLd, buildWebSiteJsonLd, jsonLdString } from "@/lib/seo/schema";
 
 export const revalidate = 86400;
 
@@ -72,12 +73,16 @@ export default async function Home() {
         logoUrl={settings.logoHeaderUrl}
       />
       <main className="w-full">
+        {/* The hero carries no page heading of its own, so this is the page's h1
+            (visually hidden to keep the design; still read by search engines). */}
+        <h1 className="sr-only">Club de Lobos El Salvador: senderismo, camping y viajes guiados</h1>
         <HeroSlider slides={heroSlides} />
         <ProximosDestinos tours={tours} />
         <GuiasExpertos block={blocks.guias} />
         <CampingSection block={blocks.camping} />
         <ReviewsSection reviews={reviewsData.reviews} summary={reviewsData.summary} google={reviewsData.google} />
         <FotografiasSemana block={blocks.fotografias} gallery={gallery} />
+        <SeoIntro />
       </main>
       <SiteFooter
         navLinks={navLinks}
@@ -95,6 +100,7 @@ export default async function Home() {
       <CookieNotice />
       <PageViewBeacon />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(buildOrganizationJsonLd(settings)) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdString(buildWebSiteJsonLd()) }} />
     </div>
   );
 }

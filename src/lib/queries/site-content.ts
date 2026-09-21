@@ -203,13 +203,14 @@ export interface TourDetailData {
   currencySymbol: string;
   departureDates: string[];
   images: { url: string; width: number; height: number }[];
+  category: "nacional" | "internacional";
 }
 
 export async function getTourBySlug(slug: string): Promise<TourDetailData | null> {
   const supabase = createPublicClient();
   const { data } = await supabase
     .from("tours")
-    .select("id, slug, title, price, currency_symbol, departure_dates, images")
+    .select("*")
     .eq("slug", slug)
     .eq("is_published", true)
     .maybeSingle();
@@ -223,6 +224,8 @@ export async function getTourBySlug(slug: string): Promise<TourDetailData | null
     currencySymbol: data.currency_symbol,
     departureDates: data.departure_dates,
     images: data.images,
+    // Falls back like getTours() does if migration 0010 isn't applied yet.
+    category: data.category === "internacional" ? "internacional" : "nacional",
   };
 }
 

@@ -2,14 +2,17 @@ import type { Metadata } from "next";
 import { AdventureCalendar } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/AdventureCalendar";
 import { PublicPageShell } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/PublicPageShell";
 import { getCalendarTours } from "@/lib/queries/site-content";
+import { pageMetadata } from "@/lib/seo/metadata";
+import { buildBreadcrumbJsonLd, jsonLdString } from "@/lib/seo/schema";
+import { SITE_URL } from "@/lib/site-config";
 
 export const revalidate = 86400;
 
-export const metadata: Metadata = {
-  title: "Calendario de salidas",
-  description: "Consulta las próximas aventuras y salidas programadas por Club de Lobos en El Salvador.",
-  alternates: { canonical: "/calendario" },
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Calendario de aventuras en El Salvador",
+  description: "Calendario de salidas de Club de Lobos: fechas de las próximas caminatas, viajes y aventuras guiadas por El Salvador y el mundo. Elige tu fecha y reserva.",
+  path: "/calendario",
+});
 
 export default async function CalendarPage() {
   const tours = await getCalendarTours();
@@ -24,6 +27,13 @@ export default async function CalendarPage() {
           <AdventureCalendar tours={tours} />
         </div>
       </main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(buildBreadcrumbJsonLd([
+          { name: "Inicio", url: SITE_URL },
+          { name: "Calendario de salidas", url: `${SITE_URL}/calendario` },
+        ])) }}
+      />
     </PublicPageShell>
   );
 }

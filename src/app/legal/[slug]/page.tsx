@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PublicPageShell } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/PublicPageShell";
 import { LEGAL_DOCS, getLegalDoc } from "@/lib/legal-content";
+import { pageMetadata, truncate } from "@/lib/seo/metadata";
 
 export const revalidate = 86400;
 
@@ -14,11 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const doc = getLegalDoc(slug);
   if (!doc) return { title: "Documento no encontrado", robots: { index: false, follow: false } };
-  return {
-    title: doc.title,
-    description: doc.intro.slice(0, 155),
-    alternates: { canonical: `/legal/${doc.slug}` },
-  };
+  return pageMetadata({ title: doc.title, description: truncate(doc.intro, 155), path: `/legal/${doc.slug}` });
 }
 
 export default async function LegalPage({ params }: { params: Promise<{ slug: string }> }) {

@@ -2,14 +2,18 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { PublicPageShell } from "@/components/sites/guianatours-com-co-e923d4eb/root-8a5edab2/PublicPageShell";
 import { getContentBlocks, getGalleryItems } from "@/lib/queries/site-content";
+import { pageMetadata } from "@/lib/seo/metadata";
+import { ORGANIZATION_ID, buildBreadcrumbJsonLd, jsonLdString } from "@/lib/seo/schema";
+import { SITE_URL } from "@/lib/site-config";
 
 export const revalidate = 86400;
 
-export const metadata: Metadata = {
-  title: "Quiénes somos",
-  description: "Conoce a Club de Lobos: guías y amigos que organizan senderismo, viajes, camping y aventuras para descubrir El Salvador en manada.",
-  alternates: { canonical: "/club-de-lobos" },
-};
+export const metadata: Metadata = pageMetadata({
+  title: "Club de Lobos: quiénes somos | Tour operadora en El Salvador",
+  absoluteTitle: true,
+  description: "Conoce a Club de Lobos, la manada salvadoreña de guías y amigos que organiza senderismo, camping y viajes para descubrir El Salvador y el mundo.",
+  path: "/club-de-lobos",
+});
 
 export default async function ClubDeLobosPage() {
   const [blocks, gallery] = await Promise.all([getContentBlocks(), getGalleryItems()]);
@@ -85,6 +89,24 @@ export default async function ClubDeLobosPage() {
           ) : null}
         </div>
       </main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString({
+          "@context": "https://schema.org",
+          "@type": "AboutPage",
+          name: "Club de Lobos: quiénes somos",
+          url: `${SITE_URL}/club-de-lobos`,
+          inLanguage: "es-SV",
+          about: { "@id": ORGANIZATION_ID },
+        }) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(buildBreadcrumbJsonLd([
+          { name: "Inicio", url: SITE_URL },
+          { name: "Quiénes somos", url: `${SITE_URL}/club-de-lobos` },
+        ])) }}
+      />
     </PublicPageShell>
   );
 }
