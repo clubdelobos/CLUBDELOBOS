@@ -51,7 +51,7 @@ const MAX_IMAGES = 5;
 const MAX_DATES = 10;
 const inputCls = "admin-input h-10 px-3";
 const EMPTY: Omit<TourRow, "id"> = {
-  slug: "", title: "", price: "Consultar", currency_symbol: CURRENCY_LABEL, departure_dates: [],
+  slug: "", title: "", price: "", currency_symbol: CURRENCY_LABEL, departure_dates: [],
   images: [], button_label: "Ver salida", is_published: true,
   category: "nacional", subcategory: "volcanes",
   // Itinerary and info sections start blank: they are required, written per salida.
@@ -92,6 +92,7 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
 
   function save() {
     const images = form.images.filter((image) => image.url);
+    if (!/^\d{1,7}(\.\d{1,2})?$/.test(form.price)) { setMessage("Precio: escribe solo números, por ejemplo 45 o 45.50."); return; }
     if (images.length === 0) { setMessage("Agrega al menos una imagen."); return; }
     if (form.departure_dates.length === 0) { setMessage("Agrega al menos una fecha de salida."); return; }
     if (form.details.itinerary.some((step) => !step.title.trim() || !step.body.trim())) {
@@ -238,9 +239,23 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
       <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         <Field label="Nombre de la aventura" className="sm:col-span-2"><input className={inputCls} maxLength={150} value={form.title} onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))} /></Field>
         <Field label="Identificador"><input className={inputCls} value={form.slug} placeholder={slugify(form.title) || "volcan-santa-ana"} onChange={(e) => setForm((current) => ({ ...current, slug: e.target.value }))} /></Field>
-        <Field label={`Precio en dólares (${CURRENCY_LABEL} se agrega solo)`}>
-          <input className={inputCls} maxLength={30} inputMode="decimal" placeholder="45" value={form.price} onChange={(e) => setForm((current) => ({ ...current, price: e.target.value }))} />
-          <span className="text-[11px] font-normal text-[var(--gn-palette-5)]">Escribe solo el número, o “Consultar”. Se mostrará como {formatPrice(form.price || "45")}.</span>
+        <Field label="Precio">
+          <div className="admin-input flex h-10 items-stretch overflow-hidden p-0">
+            <span className="flex shrink-0 items-center border-r border-[#d9ded9] bg-[var(--gn-palette-8)] px-3 text-sm font-bold text-[var(--gn-palette-3)]">{CURRENCY_LABEL}</span>
+            <input
+              className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm outline-none"
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder="45"
+              value={form.price}
+              onChange={(e) => {
+                // Digits only, with optional cents ("45" or "45.50"); pasted "$45" becomes "45".
+                const [whole, ...cents] = e.target.value.replace(/[^\d.]/g, "").split(".");
+                const price = cents.length ? `${whole.slice(0, 7)}.${cents.join("").slice(0, 2)}` : whole.slice(0, 7);
+                setForm((current) => ({ ...current, price }));
+              }}
+            />
+          </div>
         </Field>
         <Field label="Texto del botón"><input className={inputCls} maxLength={60} value={form.button_label} onChange={(e) => setForm((current) => ({ ...current, button_label: e.target.value }))} /></Field>
         <div className="flex items-end"><label className="flex h-10 items-center gap-2 text-xs font-semibold text-[var(--gn-palette-3)]"><input type="checkbox" checked={form.is_published} onChange={(e) => setForm((current) => ({ ...current, is_published: e.target.checked }))} />Publicado</label></div>

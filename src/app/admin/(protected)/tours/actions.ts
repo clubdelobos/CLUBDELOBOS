@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
-import { CURRENCY_LABEL, cleanPrice, formatPrice } from "@/lib/currency";
+import { CURRENCY_LABEL, formatPrice } from "@/lib/currency";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { SUBCATEGORY_IDS, TOUR_CATEGORIES } from "@/lib/tour-categories";
 import { TOUR_ICON_IDS, TOUR_INFO_SECTIONS, TOUR_ITINERARY_STEP_COUNT, type TourInfoSectionKey } from "@/lib/tour-details";
@@ -61,7 +61,7 @@ const TourSchema = z.object({
   id: z.string().uuid().optional(),
   slug: z.string().min(1, EMPTY).regex(/^[a-z0-9-]+$/, "Solo minúsculas, números y guiones."),
   title: z.string().trim().min(1, EMPTY).max(150, maxChars(150)),
-  price: z.string().trim().min(1, EMPTY).max(30, maxChars(30)),
+  price: z.string().trim().regex(/^\d{1,7}(\.\d{1,2})?$/, "Precio: escribe solo números, por ejemplo 45 o 45.50."),
   departureDates: z.array(z.string().min(1)).min(1, "Agrega al menos una fecha.").max(10, "Máximo 10 fechas por salida."),
   images: z.array(TourImageSchema).min(1, "Agrega al menos una imagen.").max(5, "Máximo 5 imágenes por salida."),
   buttonLabel: z.string().trim().min(1, EMPTY).max(60, maxChars(60)),
@@ -133,8 +133,7 @@ export async function upsertTour(raw: z.input<typeof TourSchema>): Promise<Actio
   const parsed = TourSchema.safeParse(raw);
   if (!parsed.success) return { error: issueMessage(parsed.error.issues[0]) };
   const d = parsed.data;
-  const price = cleanPrice(d.price);
-  if (!price) return { error: `Precio: ${EMPTY}` };
+  const price = d.price;
   // The currency is system-managed: the "Precio" card always mirrors price + $USD.
   d.details.facts = d.details.facts.map((fact) => fact.key === "price" ? { ...fact, value: formatPrice(price) } : fact);
 

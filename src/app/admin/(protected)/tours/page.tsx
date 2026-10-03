@@ -27,7 +27,8 @@ export default async function ToursPage() {
     <ToursManager
       tours={tours.map((tour) => ({
         ...tour,
-        price: tourMoney(tour.price).price,
+        // The editor takes numbers only; older free-text prices ("Consultar", "60 P/P") reopen as their number, or empty.
+        price: tourMoney(tour.price).price.match(/\d[\d.,]*/)?.[0].replace(/,/g, "") ?? "",
         currency_symbol: tourMoney(tour.price).currencySymbol,
         category: tour.category ?? "nacional",
         subcategory: tour.subcategory ?? null,

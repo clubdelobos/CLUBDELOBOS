@@ -284,7 +284,8 @@
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
-.admin-input:focus {
+.admin-input:focus,
+.admin-input:focus-within {
   border-color: var(--gn-palette-1);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--gn-palette-1) 12%, transparent);
   outline: none;
