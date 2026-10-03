@@ -3,31 +3,47 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth/dal";
+import { CURRENCY_LABEL, cleanPrice, formatPrice } from "@/lib/currency";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { SUBCATEGORY_IDS, TOUR_CATEGORIES } from "@/lib/tour-categories";
 import { TOUR_ICON_IDS, TOUR_INFO_SECTIONS, TOUR_ITINERARY_STEP_COUNT, type TourInfoSectionKey } from "@/lib/tour-details";
 import { assetUrlSchema } from "@/lib/validation";
 
+// Messages are fragments ("no puede estar vacío"); issueMessage() prefixes the
+// field name so the admin sees exactly which box failed. A message ending in
+// "." is already a full sentence and is shown as is.
+const EMPTY = "no puede estar vacío";
+const maxChars = (n: number) => `máximo ${n} caracteres`;
+
 const TourFactSchema = z.object({
   key: z.string().min(1).max(40),
-  label: z.string().min(1).max(40),
-  value: z.string().min(1).max(100),
+  label: z.string().max(40, maxChars(40)),
+  value: z.string().max(100, maxChars(100)),
   icon: z.enum(TOUR_ICON_IDS),
   enabled: z.boolean().optional().default(true),
+}).superRefine((fact, ctx) => {
+  // Hidden cards never reach the public page, so they may stay blank.
+  if (!fact.enabled) return;
+  for (const field of ["label", "value"] as const) {
+    if (!fact[field].trim()) ctx.addIssue({ code: "custom", path: [field], message: EMPTY });
+  }
 });
 
 const ItineraryStepSchema = z.object({
-  title: z.string().trim().min(1, "Completa el título de cada paso del itinerario.").max(80),
-  body: z.string().trim().min(1, "Completa el texto de cada paso del itinerario.").max(500),
+  title: z.string().trim().min(1, "Completa el título de cada paso del itinerario.").max(80, "El título de un paso del itinerario admite máximo 80 caracteres."),
+  body: z.string().trim().min(1, "Completa el texto de cada paso del itinerario.").max(500, "El texto de un paso del itinerario admite máximo 500 caracteres."),
 });
 
 function requiredSection(title: string) {
-  return z.string().trim().min(1, `Completa la sección “${title}”.`).max(1000);
+  return z.string().trim().min(1, `Completa la sección “${title}”.`).max(1000, `La sección “${title}” admite máximo 1000 caracteres.`);
 }
 
 const TourDetailSchema = z.object({
-  lead: z.string().min(1).max(600),
-  paragraphs: z.array(z.string().min(1).max(1200)).min(1).max(4),
+  lead: z.string().trim().min(1, EMPTY).max(600, maxChars(600)),
+  // Blank descriptions are dropped instead of rejected.
+  paragraphs: z.array(z.string().max(1200, maxChars(1200))).max(4)
+    .transform((items) => items.map((item) => item.trim()).filter(Boolean))
+    .pipe(z.array(z.string()).min(1, "Escribe al menos una descripción.")),
   facts: z.array(TourFactSchema).min(1).max(24),
   itinerary: z.array(ItineraryStepSchema).length(TOUR_ITINERARY_STEP_COUNT, "El itinerario necesita los 3 pasos."),
   sections: z.object(
@@ -43,13 +59,12 @@ const TourImageSchema = z.object({
 
 const TourSchema = z.object({
   id: z.string().uuid().optional(),
-  slug: z.string().min(1).regex(/^[a-z0-9-]+$/, "Solo minúsculas, números y guiones."),
-  title: z.string().min(1),
-  price: z.string().min(1),
-  currencySymbol: z.string().max(4),
+  slug: z.string().min(1, EMPTY).regex(/^[a-z0-9-]+$/, "Solo minúsculas, números y guiones."),
+  title: z.string().trim().min(1, EMPTY).max(150, maxChars(150)),
+  price: z.string().trim().min(1, EMPTY).max(30, maxChars(30)),
   departureDates: z.array(z.string().min(1)).min(1, "Agrega al menos una fecha.").max(10, "Máximo 10 fechas por salida."),
   images: z.array(TourImageSchema).min(1, "Agrega al menos una imagen.").max(5, "Máximo 5 imágenes por salida."),
-  buttonLabel: z.string().min(1),
+  buttonLabel: z.string().trim().min(1, EMPTY).max(60, maxChars(60)),
   isPublished: z.boolean(),
   category: z.enum(TOUR_CATEGORIES),
   subcategory: z.enum(SUBCATEGORY_IDS).nullable(),
@@ -58,6 +73,25 @@ const TourSchema = z.object({
   (value) => !(value.category === "nacional" && !value.subcategory),
   { path: ["subcategory"], message: "Elige una subcategoría para la salida nacional." },
 );
+
+const FIELD_LABELS: Record<string, string> = {
+  title: "Nombre de la aventura",
+  price: "Precio",
+  buttonLabel: "Texto del botón",
+  slug: "Identificador",
+};
+
+function issueMessage(issue: z.core.$ZodIssue): string {
+  if (issue.message.endsWith(".")) return issue.message;
+  const path = issue.path.map(String);
+  let label = FIELD_LABELS[path[0]];
+  if (path[0] === "details" && path[1] === "lead") label = "Introducción";
+  if (path[0] === "details" && path[1] === "paragraphs") label = `Descripción ${Number(path[2]) + 1}`;
+  if (path[0] === "details" && path[1] === "facts") {
+    label = `Tarjeta ${Number(path[2]) + 1} (${path[3] === "value" ? "Valor" : "Nombre"})`;
+  }
+  return label ? `${label}: ${issue.message}` : "Hay un dato inválido en el formulario.";
+}
 
 export interface ActionState {
   error?: string;
@@ -94,18 +128,22 @@ async function writeTourDetails(tourId: string, details: z.infer<typeof TourDeta
   return error;
 }
 
-export async function upsertTour(raw: z.infer<typeof TourSchema>): Promise<ActionState> {
+export async function upsertTour(raw: z.input<typeof TourSchema>): Promise<ActionState> {
   await requireRole(["admin"]);
   const parsed = TourSchema.safeParse(raw);
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  if (!parsed.success) return { error: issueMessage(parsed.error.issues[0]) };
   const d = parsed.data;
+  const price = cleanPrice(d.price);
+  if (!price) return { error: `Precio: ${EMPTY}` };
+  // The currency is system-managed: the "Precio" card always mirrors price + $USD.
+  d.details.facts = d.details.facts.map((fact) => fact.key === "price" ? { ...fact, value: formatPrice(price) } : fact);
 
   const supabase = createServiceRoleClient();
   const row = {
     slug: d.slug,
     title: d.title,
-    price: d.price,
-    currency_symbol: d.currencySymbol,
+    price,
+    currency_symbol: CURRENCY_LABEL,
     departure_dates: [...d.departureDates].sort(),
     images: d.images,
     button_label: d.buttonLabel,

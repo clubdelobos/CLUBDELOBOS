@@ -1,4 +1,5 @@
 import { requireRole } from "@/lib/auth/dal";
+import { formatPrice, tourMoney } from "@/lib/currency";
 import { getStoredTourDetailRecord, resolveTourDetailCopies } from "@/lib/queries/tour-details";
 import { createClient } from "@/lib/supabase/server";
 import { ToursManager } from "./ToursManager";
@@ -19,13 +20,15 @@ export default async function ToursPage() {
   const details = resolveTourDetailCopies(tours.map((tour) => ({
     id: tour.id,
     slug: tour.slug,
-    price: [tour.currency_symbol, tour.price].filter(Boolean).join(" "),
+    price: formatPrice(tour.price),
   })), storedDetails);
 
   return (
     <ToursManager
       tours={tours.map((tour) => ({
         ...tour,
+        price: tourMoney(tour.price).price,
+        currency_symbol: tourMoney(tour.price).currencySymbol,
         category: tour.category ?? "nacional",
         subcategory: tour.subcategory ?? null,
         details: details[tour.id],

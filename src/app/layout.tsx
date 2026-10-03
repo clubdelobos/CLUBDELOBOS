@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import { getIconTheme } from "@/lib/queries/site-content";
 import { SITE_NAME, SITE_URL } from "@/lib/site-config";
+import { SmoothScroll } from "@/components/SmoothScroll";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -72,7 +73,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es-SV" className={`${montserrat.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <SmoothScroll />
+        {children}
+      </body>
     </html>
   );
 }

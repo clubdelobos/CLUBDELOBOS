@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "lenis/dist/lenis.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -130,6 +131,11 @@
     /* Anchor jumps (and the "Volver arriba" links) clear the sticky header
        instead of landing under it. */
     scroll-padding-top: 84px;
+  }
+
+  /* Lenis drives the smoothing; native smooth-scroll on top would fight it. */
+  html.lenis {
+    scroll-behavior: auto;
   }
 
   /* One global opt-out: kill smooth scrolling, scroll-triggered reveals, and

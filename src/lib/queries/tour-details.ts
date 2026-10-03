@@ -40,7 +40,10 @@ export async function getTourDetailCopies(sources: TourDetailSource[]): Promise<
 
 export function resolveTourDetailCopy(source: TourDetailSource, stored: Record<string, unknown>): TourDetailCopy {
   const fallback = getDefaultTourDetail(source.slug, source);
-  return normalizeTourDetail(stored[source.id], fallback);
+  const detail = normalizeTourDetail(stored[source.id], fallback);
+  if (source.price === undefined) return detail;
+  // The "Precio" card is system-managed: it always mirrors the tour's price + $USD.
+  return { ...detail, facts: detail.facts.map((fact) => fact.key === "price" ? { ...fact, value: source.price! } : fact) };
 }
 
 export function resolveTourDetailCopies(sources: TourDetailSource[], stored: Record<string, unknown>): Record<string, TourDetailCopy> {

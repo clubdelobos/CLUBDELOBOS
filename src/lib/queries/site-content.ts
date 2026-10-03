@@ -1,4 +1,5 @@
 import { fetchGoogleReviews, mapsPlaceUrl, writeReviewUrl } from "@/lib/google-reviews";
+import { tourMoney } from "@/lib/currency";
 import { createPublicClient } from "@/lib/supabase/public";
 import { findSitePaletteId, type SitePaletteId } from "@/lib/site-palettes";
 import type {
@@ -151,8 +152,7 @@ export async function getTours(): Promise<ProductCard[]> {
     return {
       id: t.id,
       title: t.title,
-      price: t.price,
-      currencySymbol: t.currency_symbol,
+      ...tourMoney(t.price),
       nextDeparture: next ? formatDate(next) : "Fechas por confirmar",
       image: t.images[0]?.url ?? "",
       hoverImage: t.images[1]?.url ?? t.images[0]?.url ?? "",
@@ -190,8 +190,7 @@ export async function getCalendarTours(): Promise<CalendarTourData[]> {
     title: tour.title,
     departureDate: date,
     imageUrl: tour.images[0]?.url ?? "",
-    price: tour.price,
-    currencySymbol: tour.currency_symbol,
+    ...tourMoney(tour.price),
   }))).sort((a, b) => a.departureDate.localeCompare(b.departureDate));
 }
 
@@ -220,8 +219,7 @@ export async function getTourBySlug(slug: string): Promise<TourDetailData | null
     id: data.id,
     slug: data.slug,
     title: data.title,
-    price: data.price,
-    currencySymbol: data.currency_symbol,
+    ...tourMoney(data.price),
     departureDates: data.departure_dates,
     images: data.images,
     // Falls back like getTours() does if migration 0010 isn't applied yet.

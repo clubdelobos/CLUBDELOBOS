@@ -30,7 +30,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
       <SaveTourButton
         slug={decodeURIComponent(product.href.split("/").pop() ?? "")}
         title={product.title}
-        price={`${product.currencySymbol} ${product.price}`}
+        price={[product.currencySymbol, product.price].filter(Boolean).join(" ")}
         image={product.image}
       />
 
@@ -63,8 +63,7 @@ export function ProductCard({ product }: { product: ProductCardData }) {
           <Link href={product.href}>{product.title}</Link>
         </h2>
         <span className="mb-[14.569px] block text-[14.569px] leading-[23.31px] font-normal text-[var(--gn-palette-5)]">
-          <span>{product.currencySymbol}</span>
-          &nbsp;{product.price}
+          {product.currencySymbol ? <><span>{product.currencySymbol}</span>&nbsp;</> : null}{product.price}
         </span>
 
         {/* .product-action-wrap */}

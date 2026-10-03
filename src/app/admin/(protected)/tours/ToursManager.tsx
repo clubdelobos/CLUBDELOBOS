@@ -11,6 +11,7 @@ import { AddImageTile } from "@/components/admin/AddImageTile";
 import { AdminSelect } from "@/components/admin/AdminSelect";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { ImageUploader } from "@/components/admin/ImageUploader";
+import { CURRENCY_LABEL, formatPrice } from "@/lib/currency";
 import { Modal } from "@/components/admin/Modal";
 import {
   NATIONAL_SUBCATEGORIES,
@@ -50,7 +51,7 @@ const MAX_IMAGES = 5;
 const MAX_DATES = 10;
 const inputCls = "admin-input h-10 px-3";
 const EMPTY: Omit<TourRow, "id"> = {
-  slug: "", title: "", price: "Consultar", currency_symbol: "$", departure_dates: [],
+  slug: "", title: "", price: "Consultar", currency_symbol: CURRENCY_LABEL, departure_dates: [],
   images: [], button_label: "Ver salida", is_published: true,
   category: "nacional", subcategory: "volcanes",
   // Itinerary and info sections start blank: they are required, written per salida.
@@ -106,7 +107,6 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
         slug: form.slug || slugify(form.title),
         title: form.title,
         price: form.price,
-        currencySymbol: form.currency_symbol,
         departureDates: form.departure_dates,
         images,
         buttonLabel: form.button_label,
@@ -236,13 +236,13 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
       </div>
 
       <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-        <Field label="Nombre de la aventura" className="sm:col-span-2"><input className={inputCls} value={form.title} onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))} /></Field>
+        <Field label="Nombre de la aventura" className="sm:col-span-2"><input className={inputCls} maxLength={150} value={form.title} onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))} /></Field>
         <Field label="Identificador"><input className={inputCls} value={form.slug} placeholder={slugify(form.title) || "volcan-santa-ana"} onChange={(e) => setForm((current) => ({ ...current, slug: e.target.value }))} /></Field>
-        <div className="grid grid-cols-[72px_1fr] gap-2">
-          <Field label="Moneda"><input className={inputCls} value={form.currency_symbol} onChange={(e) => setForm((current) => ({ ...current, currency_symbol: e.target.value }))} placeholder="$" /></Field>
-          <Field label="Precio"><input className={inputCls} value={form.price} onChange={(e) => setForm((current) => ({ ...current, price: e.target.value }))} /></Field>
-        </div>
-        <Field label="Texto del botón"><input className={inputCls} value={form.button_label} onChange={(e) => setForm((current) => ({ ...current, button_label: e.target.value }))} /></Field>
+        <Field label={`Precio en dólares (${CURRENCY_LABEL} se agrega solo)`}>
+          <input className={inputCls} maxLength={30} inputMode="decimal" placeholder="45" value={form.price} onChange={(e) => setForm((current) => ({ ...current, price: e.target.value }))} />
+          <span className="text-[11px] font-normal text-[var(--gn-palette-5)]">Escribe solo el número, o “Consultar”. Se mostrará como {formatPrice(form.price || "45")}.</span>
+        </Field>
+        <Field label="Texto del botón"><input className={inputCls} maxLength={60} value={form.button_label} onChange={(e) => setForm((current) => ({ ...current, button_label: e.target.value }))} /></Field>
         <div className="flex items-end"><label className="flex h-10 items-center gap-2 text-xs font-semibold text-[var(--gn-palette-3)]"><input type="checkbox" checked={form.is_published} onChange={(e) => setForm((current) => ({ ...current, is_published: e.target.checked }))} />Publicado</label></div>
 
         <Field label="Categoría">
@@ -348,13 +348,13 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
         <details className="rounded-xl border border-[var(--admin-line)] bg-[var(--admin-surface-sunken)] sm:col-span-2">
           <summary className="cursor-pointer px-4 py-3.5 text-sm font-extrabold text-[var(--gn-palette-3)]">Información completa e íconos de la salida</summary>
           <div className="grid gap-5 border-t border-[var(--admin-line)] p-4 sm:p-5">
-            <Field label="Introducción">
-              <textarea className="admin-input min-h-24 px-3 py-2" value={form.details.lead} onChange={(e) => setForm((current) => ({ ...current, details: { ...current.details, lead: e.target.value } }))} />
+            <Field label={`Introducción (${form.details.lead.length}/600)`}>
+              <textarea className="admin-input min-h-24 px-3 py-2" maxLength={600} value={form.details.lead} onChange={(e) => setForm((current) => ({ ...current, details: { ...current.details, lead: e.target.value } }))} />
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
               {form.details.paragraphs.map((paragraph, index) => (
-                <Field key={index} label={`Descripción ${index + 1}`}>
-                  <textarea className="admin-input min-h-28 px-3 py-2" value={paragraph} onChange={(e) => setForm((current) => ({ ...current, details: { ...current.details, paragraphs: current.details.paragraphs.map((item, paragraphIndex) => paragraphIndex === index ? e.target.value : item) } }))} />
+                <Field key={index} label={`Descripción ${index + 1} (${paragraph.length}/1200)`}>
+                  <textarea className="admin-input min-h-28 px-3 py-2" maxLength={1200} value={paragraph} onChange={(e) => setForm((current) => ({ ...current, details: { ...current.details, paragraphs: current.details.paragraphs.map((item, paragraphIndex) => paragraphIndex === index ? e.target.value : item) } }))} />
                 </Field>
               ))}
             </div>
@@ -400,7 +400,7 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
                       </div>
                       <label className="flex flex-col gap-1 text-[11px] font-bold text-[var(--gn-palette-5)]">
                         Nombre
-                        <input className="admin-input h-9 px-2.5 text-xs font-semibold text-[var(--gn-palette-3)]" value={fact.label} onChange={(e) => updateFact(index, { label: e.target.value })} />
+                        <input className="admin-input h-9 px-2.5 text-xs font-semibold text-[var(--gn-palette-3)]" maxLength={40} value={fact.label} onChange={(e) => updateFact(index, { label: e.target.value })} />
                       </label>
                       <div className="grid grid-cols-2 gap-2">
                         <label className="flex flex-col gap-1 text-[11px] font-bold text-[var(--gn-palette-5)]">
@@ -411,7 +411,13 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
                         </label>
                         <label className="flex flex-col gap-1 text-[11px] font-bold text-[var(--gn-palette-5)]">
                           Valor
-                          <input className="admin-input h-9 px-2.5 text-xs" value={fact.value} onChange={(e) => updateFact(index, { value: e.target.value })} />
+                          <input
+                            className="admin-input h-9 px-2.5 text-xs read-only:opacity-70"
+                            maxLength={100}
+                            readOnly={fact.key === "price"}
+                            title={fact.key === "price" ? "Se calcula solo con el precio de la salida" : undefined}
+                            value={fact.key === "price" ? formatPrice(form.price) : fact.value}
+                            onChange={(e) => updateFact(index, { value: e.target.value })} />
                         </label>
                       </div>
                     </div>
@@ -478,7 +484,7 @@ function TourCard({ tour, index, total, onEdit, onMove }: {
           </span>
           <span className="flex items-center justify-between gap-2 text-xs text-[var(--gn-palette-5)]">
             <span className="truncate">{next ? formatDeparture(next) : "Sin fecha"}{tour.departure_dates.length > 1 ? ` (+${tour.departure_dates.length - 1})` : ""}</span>
-            <span className="shrink-0 font-bold text-[var(--gn-palette-1)]">{tour.currency_symbol} {tour.price}</span>
+            <span className="shrink-0 font-bold text-[var(--gn-palette-1)]">{[tour.currency_symbol, tour.price].filter(Boolean).join(" ")}</span>
           </span>
         </span>
       </button>
