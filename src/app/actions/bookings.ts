@@ -7,7 +7,7 @@ import { buildBookingNotificationEmail } from "@/lib/email/booking-notification"
 import { sendEmail } from "@/lib/email/send";
 import { clientIpFrom } from "@/lib/net/client-ip";
 import { PAYMENT_METHODS } from "@/lib/payment-methods";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 
 const BookingSchema = z.object({
   tourId: z.string().uuid(),
@@ -109,7 +109,10 @@ export async function createBooking(raw: unknown): Promise<BookingState> {
     return { error: "Ya recibimos tu solicitud. Te contactaremos pronto — intenta de nuevo en unos minutos." };
   }
 
-  const { error } = await supabase.from("bookings").insert({
+  // Inserted with the service role: anon has no INSERT policy on `bookings`
+  // (0016), so the only way in is this action — and its rate limit, honeypot
+  // and date check — not a direct PostgREST call with the public anon key.
+  const { error } = await createServiceRoleClient().from("bookings").insert({
     tour_id: d.tourId,
     customer_name: d.customerName,
     email: d.email,

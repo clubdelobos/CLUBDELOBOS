@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 import { clientIpFrom } from "@/lib/net/client-ip";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 
 const EventSchema = z.object({
   eventType: z.enum(["page_view", "tour_click", "cta_click", "social_click"]),
@@ -49,6 +49,9 @@ export async function trackEvent(raw: unknown): Promise<void> {
     label: parsed.data.label || null,
   };
 
-  const { error } = await supabase.from("analytics_events").insert({ ...base, country, device });
-  if (error) await supabase.from("analytics_events").insert(base);
+  // Service role: anon has no INSERT policy on `analytics_events` (0016), so the
+  // flood guard above can't be skipped by calling PostgREST directly.
+  const db = createServiceRoleClient();
+  const { error } = await db.from("analytics_events").insert({ ...base, country, device });
+  if (error) await db.from("analytics_events").insert(base);
 }
