@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Trash2, TriangleAlert } from "lucide-react";
+import { lockBodyScroll } from "@/lib/scroll-lock";
 
 export interface ConfirmDialogProps {
   open: boolean;
@@ -42,11 +43,10 @@ export function ConfirmDialog({
       if (event.key === "Escape" && !pending) onCancel();
     };
     document.addEventListener("keydown", onKeyDown);
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const unlock = lockBodyScroll();
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previous;
+      unlock();
     };
   }, [open, pending, onCancel]);
 

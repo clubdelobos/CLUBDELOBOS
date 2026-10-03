@@ -1,13 +1,13 @@
 // Automated slice of the Khoopper security block (S01, S02, S03, S15, S18, S20 + server-action auth).
 // Usage: npm run security   → exits 1 on any FAIL. Prints locations only, never secret values.
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const run = (cmd, args) => {
   try { return execFileSync(cmd, args, { encoding: "utf8", maxBuffer: 1 << 28, shell: cmd === "npm" && process.platform === "win32" }); }
   catch (e) { return e.stdout ?? ""; }
 };
-const files = run("git", ["ls-files", "src", "scripts", "supabase", "next.config.ts", "vercel.json"]).split("\n").filter(Boolean);
+const files = run("git", ["ls-files", "src", "scripts", "supabase", "next.config.ts", "vercel.json"]).split("\n").filter((f) => f && existsSync(f));
 const code = files.filter((f) => /\.(tsx?|mjs|js)$/.test(f));
 let failed = false;
 const report = (id, ok, msg) => { if (!ok) failed = true; console.log(`${ok ? "PASS" : "FAIL"}  ${id}  ${msg}`); };

@@ -15,6 +15,7 @@ import {
 import { WhatsAppGlyph } from "@/components/sites/guianatours-com-co-e923d4eb/shared/WhatsAppGlyph";
 import { SalidasCart } from "./SalidasCart";
 import type { NavLink, SocialLink } from "@/types/guianatours-com-co-e923d4eb";
+import { lockBodyScroll } from "@/lib/scroll-lock";
 
 const HOME_HREF = "/";
 
@@ -78,11 +79,10 @@ export function SiteHeader({ navLinks, socialLinks, phoneLabel, phoneHref, logoU
     };
     document.addEventListener("keydown", onKey);
     // Freeze the page behind the open drawer.
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const unlock = lockBodyScroll();
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
+      unlock();
     };
   }, [drawerOpen]);
 

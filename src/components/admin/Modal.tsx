@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { X } from "lucide-react";
+import { lockBodyScroll } from "@/lib/scroll-lock";
 
 interface ModalProps {
   title: string;
@@ -17,11 +18,10 @@ export function Modal({ title, onClose, children, maxWidthClassName = "max-w-lg"
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const unlock = lockBodyScroll();
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
+      unlock();
     };
   }, [onClose]);
 
@@ -35,7 +35,7 @@ export function Modal({ title, onClose, children, maxWidthClassName = "max-w-lg"
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 [scrollbar-width:thin] sm:p-6">{children}</div>
       </div>
     </div>
   );

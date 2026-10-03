@@ -20,6 +20,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { logout } from "@/app/admin/login/actions";
+import { lockBodyScroll } from "@/lib/scroll-lock";
 
 interface NavItem {
   href: string;
@@ -58,11 +59,10 @@ export function AdminShellNav({ role, email }: { role: "admin" | "worker"; email
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     document.addEventListener("keydown", onKey);
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const unlock = lockBodyScroll();
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previous;
+      unlock();
     };
   }, [open]);
 

@@ -241,7 +241,7 @@ function TourEditor({ tour, onDeleted, onSaved }: { tour: TourRow | null; onDele
         <Field label="Identificador"><input className={inputCls} value={form.slug} placeholder={slugify(form.title) || "volcan-santa-ana"} onChange={(e) => setForm((current) => ({ ...current, slug: e.target.value }))} /></Field>
         <Field label="Precio">
           <div className="admin-input flex h-10 items-stretch overflow-hidden p-0">
-            <span className="flex shrink-0 items-center border-r border-[#d9ded9] bg-[var(--gn-palette-8)] px-3 text-sm font-bold text-[var(--gn-palette-3)]">{CURRENCY_LABEL}</span>
+            <span className="flex shrink-0 items-center border-r border-[#d9ded9] bg-white px-3 text-sm font-bold text-[var(--gn-palette-3)]">{CURRENCY_LABEL}</span>
             <input
               className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm outline-none"
               inputMode="decimal"

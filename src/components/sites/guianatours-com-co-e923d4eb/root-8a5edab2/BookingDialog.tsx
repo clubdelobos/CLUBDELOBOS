@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { CalendarCheck2, X } from "lucide-react";
 import { BookingForm } from "./BookingForm";
+import { lockBodyScroll } from "@/lib/scroll-lock";
 
 export interface BookingDialogProps {
   onClose: () => void;
@@ -23,11 +24,10 @@ export function BookingDialog({ onClose, tourId, tourTitle, availableDates, init
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const unlock = lockBodyScroll();
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previous;
+      unlock();
     };
   }, [onClose]);
 
